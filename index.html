@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Alphabet Garden 🌱</title>
+<link rel="icon" href="art/assets/ui/logo_badge.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══════════ SKY & WORLD ══════════ -->
+<div id="sky">
+  <img id="sun" class="celestial" src="art/assets/sky/sun.png" alt="">
+  <img id="moon" class="celestial" src="art/assets/sky/moon.png" alt="">
+  <div id="stars"></div>
+  <div id="clouds"></div>
+  <img id="hills" src="art/assets/garden/hills_backdrop.png" alt="">
+  <div id="critters"></div>
+  <div id="rain-layer"></div>
+  <img id="rainbow" src="art/assets/sky/rainbow.png" alt="">
+</div>
+
+<!-- ══════════ HUD ══════════ -->
+<header id="hud">
+  <div id="hud-title"><img src="art/assets/ui/logo_badge.png" alt="" class="hud-logo"> Alphabet Garden</div>
+  <div id="hud-stats">
+    <span id="stat-grown" class="stat" title="Plants grown">🌼 <b>0</b></span>
+    <span id="stat-stickers" class="stat" title="Stickers collected">⭐ <b>0</b>/78</span>
+  </div>
+  <div id="hud-buttons">
+    <button id="btn-rain" class="hud-btn" title="Make it rain!"><img src="art/assets/ui/icon_rain.png" alt="Rain"></button>
+    <button id="btn-book" class="hud-btn" title="Sticker book"><img src="art/assets/ui/icon_book.png" alt="Book"></button>
+    <button id="btn-shovel" class="hud-btn" title="Shovel"><img src="art/assets/ui/icon_shovel.png" alt="Shovel"></button>
+    <button id="btn-sound" class="hud-btn" title="Sound on/off"><img src="art/assets/ui/icon_sound.png" alt="Sound"></button>
+  </div>
+</header>
+
+<!-- ══════════ GARDEN ══════════ -->
+<main id="garden-wrap">
+  <div id="garden"></div>
+  <div id="ground"></div>
+</main>
+
+<div id="toast"></div>
+<div id="confetti-layer"></div>
+
+<!-- ══════════ LETTER PICKER ══════════ -->
+<div id="modal-letters" class="modal hidden">
+  <div class="modal-card">
+    <button class="modal-close">✖</button>
+    <h2 class="modal-title">Pick a seed letter!</h2>
+    <div id="letter-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════ BLOOM CHOICE ══════════ -->
+<div id="modal-choice" class="modal hidden">
+  <div class="modal-card wide">
+    <button class="modal-close">✖</button>
+    <h2 class="modal-title" id="choice-title">What will your seed become?</h2>
+    <div id="choice-cards"></div>
+  </div>
+</div>
+
+<!-- ══════════ STICKER BOOK ══════════ -->
+<div id="modal-book" class="modal hidden">
+  <div class="modal-card wide tall">
+    <button class="modal-close">✖</button>
+    <h2 class="modal-title">⭐ My Sticker Book ⭐</h2>
+    <div id="book-progress"><div id="book-progress-fill"></div><span id="book-progress-label"></span></div>
+    <div id="book-pages"></div>
+  </div>
+</div>
+
+<!-- ══════════ CELEBRATION ══════════ -->
+<div id="modal-grown" class="modal hidden">
+  <div class="modal-card celebrate">
+    <div id="grown-svg"></div>
+    <h2 id="grown-name"></h2>
+    <p id="grown-fact"></p>
+    <div id="grown-sticker">⭐ New sticker! ⭐</div>
+    <button id="grown-ok" class="big-btn">Hooray! 🎉</button>
+  </div>
+</div>
+
+<!-- ══════════ TITLE SCREEN ══════════ -->
+<div id="title-screen">
+  <img id="title-logo" src="art/assets/ui/logo.png" alt="Alphabet Garden">
+  <div id="title-word"></div>
+  <div id="title-sub">Plant seed letters. Grow silly surprises!</div>
+  <button id="btn-play" class="big-btn">▶ Play</button>
+  <div id="title-hint"></div>
+</div>
+
+<script src="js/plants/plants_a_f.js"></script>
+<script src="js/plants/plants_g_l.js"></script>
+<script src="js/plants/plants_m_r.js"></script>
+<script src="js/plants/plants_s_z.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
