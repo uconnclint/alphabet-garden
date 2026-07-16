@@ -146,16 +146,71 @@ const sfx = {
   page:   () => noise(0.15, 1800, 0.06)
 };
 
-/* ---------- speech ---------- */
-function speak(text, opts) {
+/* ---------- voice (pre-rendered ElevenLabs clips) ----------
+   Plays a real ElevenLabs clip (art/audio/<key>.mp3) when present.
+   If a clip has not been generated yet, it gracefully falls back to
+   the browser's speech synthesis using the same words — so the game is
+   always fully narrated, and each clip added later replaces its fallback
+   automatically with no code changes. */
+const ART_AUDIO = 'art/audio/';
+let currentVoice = null;
+const voiceCache = {};       // key -> HTMLAudioElement, or 'missing'
+const VOICE_UI_TEXT = {
+  'ui-plant': 'Yay! You planted a seed! Now tap it with water to help it grow!',
+  'ui-rain': 'Rain, rain, water the garden!',
+  'ui-offline': 'Wow! Your garden grew while you were away!',
+  'ui-sound-on': 'Sound is on!',
+  'ui-welcome': 'Welcome to Alphabet Garden! Tap the dirt to plant a seed letter!',
+  'ui-welcome-back': 'Welcome back to your Alphabet Garden!'
+};
+function voiceText(key) {
+  if (key in VOICE_UI_TEXT) return VOICE_UI_TEXT[key];
+  if (key.slice(0, 7) === 'letter-') return key.slice(7).toUpperCase() + '!';
+  if (key.slice(0, 6) === 'plant-') {
+    const id = key.slice(6);
+    const info = getPlant(id.charAt(0).toUpperCase(), id);
+    return info ? info.name + '! ' + info.fact : null;
+  }
+  return null;
+}
+function speakFallback(key) {
   if (state.muted || !('speechSynthesis' in window)) return;
+  const text = voiceText(key);
+  if (!text) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = (opts && opts.rate) || 0.95;
-    u.pitch = (opts && opts.pitch) || 1.15;
+    u.rate = 0.95; u.pitch = 1.1;
     speechSynthesis.speak(u);
   } catch (e) {}
+}
+// Play a narration clip by key (e.g. "plant-b-butterfly-bush", "letter-a", "ui-rain").
+function voice(key) {
+  if (state.muted || !key) return;
+  stopVoice();
+  const cached = voiceCache[key];
+  if (cached === 'missing') { speakFallback(key); return; }
+  let a = cached;
+  if (!a) {
+    a = new Audio(ART_AUDIO + key + '.mp3');
+    a.preload = 'auto';
+    a.addEventListener('error', function () {
+      voiceCache[key] = 'missing';
+      if (currentVoice === a) { currentVoice = null; speakFallback(key); }
+    });
+    voiceCache[key] = a;
+  }
+  try { a.currentTime = 0; } catch (e) {}
+  currentVoice = a;
+  const p = a.play();
+  if (p && p.catch) p.catch(function () {});
+}
+function stopVoice() {
+  if (currentVoice) {
+    try { currentVoice.pause(); currentVoice.currentTime = 0; } catch (e) {}
+    currentVoice = null;
+  }
+  try { speechSynthesis.cancel(); } catch (e) {}
 }
 
 /* ---------- dom helpers ---------- */
@@ -409,7 +464,7 @@ function celebrate(i, replay) {
   $('#grown-sticker').style.display = (firstLook && plant.newSticker) ? '' : 'none';
   openModal('#modal-grown');
   if (firstLook) { sfx.fanfare(); confetti(60); } else { sfx.grow(); confetti(18); }
-  speak(info.name + '! ' + info.fact);
+  voice('plant-' + info.id);
 }
 
 /* ---------- letter picker ---------- */
@@ -422,7 +477,7 @@ function openLetterPicker() {
     b.style.background = 'hsl(' + ((idx * 137) % 360) + ', 75%, 58%)';
     b.addEventListener('click', () => {
       sfx.click();
-      speak(L + '!', { rate: 0.8 });
+      voice('letter-' + L.toLowerCase());
       openChoice(L);
     });
     grid.appendChild(b);
@@ -458,7 +513,7 @@ function plantSeed(L, p) {
   sfx.plop();
   renderPlot(pendingPlot);
   sparkleFX(pendingPlot, 4);
-  speak('You planted a ' + p.name + ' seed! Tap it to water it!');
+  voice('ui-plant');
   toast('🌱 ' + p.name + ' seed planted! Tap it to water it! 💧');
   pendingPlot = -1;
 }
@@ -478,7 +533,7 @@ function openBook() {
       if (has) found++;
       const slot = el('div', 'book-slot ' + (has ? 'unlocked' : 'locked'),
         '<div class="thumb">' + (has ? plantArt(p) : '?') + '</div>' + (has ? p.emoji + ' ' + p.name : '? ? ?'));
-      if (has) slot.addEventListener('click', () => speak(p.name + '! ' + p.fact));
+      if (has) slot.addEventListener('click', () => voice('plant-' + p.id));
       slots.appendChild(slot);
     });
     row.appendChild(slots);
@@ -505,7 +560,7 @@ function makeItRain() {
   setTimeout(() => { btn.disabled = false; }, RAIN_COOLDOWN);
 
   sfx.rain();
-  speak('Rain, rain, water the garden!');
+  voice('ui-rain');
   const layer = $('#rain-layer');
   const clouds = [];
   for (let c = 0; c < 3; c++) {
@@ -572,7 +627,7 @@ function applyOfflineGrowth() {
     save();
     setTimeout(() => {
       toast('✨ Your garden grew while you were away! ✨', 3500);
-      speak('Wow! Your garden grew while you were away!');
+      voice('ui-offline');
       confetti(25);
     }, 1200);
   }
@@ -668,12 +723,12 @@ $('#btn-sound').addEventListener('click', () => {
   state.muted = !state.muted;
   save(); updateHud();
   if (state.muted) {
-    // Kill everything already in flight: scheduled tones/noise and any narration.
-    try { speechSynthesis.cancel(); } catch (e) {}
+    // Kill everything already in flight: scheduled tones/noise, clip playback, and any narration.
+    stopVoice();
     if (actx && actx.suspend) { try { actx.suspend(); } catch (e) {} }
   } else {
     if (actx && actx.resume) { try { actx.resume(); } catch (e) {} }
-    sfx.grow(); speak('Sound is on!');
+    sfx.grow(); voice('ui-sound-on');
   }
 });
 
@@ -694,8 +749,7 @@ $('#btn-play').addEventListener('click', () => {
   renderAll();
   const hasSave = state.plots.some(Boolean);
   if (!grew) {
-    speak(hasSave ? 'Welcome back to your Alphabet Garden!'
-                  : 'Welcome to Alphabet Garden! Tap the dirt to plant a seed letter!');
+    voice(hasSave ? 'ui-welcome-back' : 'ui-welcome');
   }
 });
 
