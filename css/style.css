@@ -330,6 +330,14 @@ body.night #stars { opacity: 1; }
 #title-word { display: none; }
 #title-sub { font-size: clamp(16px, 3vw, 24px); color: #fff; text-shadow: 1px 2px 0 rgba(60,90,30,.4); }
 #title-hint { font-size: 15px; color: rgba(255,255,255,.95); min-height: 20px; }
+#grownups-link {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  font-size: 13px; font-weight: bold; white-space: nowrap;
+  color: rgba(255,255,255,.9); background: rgba(79,139,58,.55);
+  padding: 7px 16px; border-radius: 18px; text-decoration: none;
+  border: 2px solid rgba(255,255,255,.55);
+}
+#grownups-link:hover { background: rgba(79,139,58,.8); color: #fff; }
 
 /* confetti */
 #confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 90; overflow: hidden; }

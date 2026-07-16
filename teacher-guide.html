@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alphabet Garden — Grown-Ups' Corner (Teacher Guide &amp; Standards)</title>
+<style>
+  :root {
+    --accent: #ff8a3d;
+    --accent-soft: #ffe6d2;
+    --sun: #ffd23f;
+    --grass: #7ec850;
+    --grass-deep: #4f8b3a;
+    --sky: #6ec6ff;
+    --berry: #c65fd1;
+    --ink: #3f3026;
+    --ink-soft: #6a5949;
+    --card: #fffdf7;
+    --line: #ece2cf;
+    --page: #fbf4e6;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 22px 80px; }
+
+  /* ---------- header ---------- */
+  header.hero {
+    background: linear-gradient(135deg, #fff6e9, #ffe9d3 60%, #e9f7d8);
+    border: 3px solid var(--sun);
+    border-radius: 26px;
+    padding: 30px 32px;
+    margin-bottom: 26px;
+    box-shadow: 0 8px 0 rgba(0,0,0,.05);
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    margin: 0 0 6px;
+    font-size: 34px;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .hero h1 .leaf { color: var(--grass-deep); }
+  .hero p.sub { margin: 0 0 14px; font-size: 19px; color: var(--ink-soft); }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .chip b { color: var(--accent); }
+
+  /* ---------- generic sections ---------- */
+  section { margin: 30px 0; }
+  h2 {
+    font-size: 25px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .num {
+    background: var(--grass);
+    color: #fff;
+    width: 34px; height: 34px;
+    flex: none;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 3px 0 rgba(0,0,0,.08);
+  }
+  h2 + .lede { margin: 0 0 18px 44px; color: var(--ink-soft); }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 0 rgba(0,0,0,.03);
+  }
+
+  /* mechanics list */
+  .mech { display: grid; gap: 14px; }
+  .mech .item {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 14px;
+    align-items: start;
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    padding: 15px 18px;
+  }
+  .mech .ico {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 27px;
+  }
+  .mech h3 { margin: 2px 0 4px; font-size: 18px; }
+  .mech p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead th {
+    background: var(--grass-deep);
+    color: #fff;
+    text-align: left;
+    padding: 11px 13px;
+    font-size: 14px;
+  }
+  thead th:first-child { border-radius: 12px 0 0 0; }
+  thead th:last-child { border-radius: 0 12px 0 0; }
+  tbody td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) { background: #fff9ef; }
+  .code {
+    font-family: "SF Mono", "Consolas", monospace;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  td .stitle { font-weight: 600; display: block; margin-bottom: 3px; }
+
+  .note {
+    background: #eef7ff;
+    border: 2px solid #cfe8ff;
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-size: 15px;
+    color: #3a5670;
+    margin-top: 16px;
+  }
+  .note b { color: #1f4e79; }
+
+  /* lessons */
+  .lesson { border-left: 6px solid var(--berry); }
+  .lesson .tag {
+    display: inline-block;
+    background: var(--berry);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 14px;
+    padding: 4px 12px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .lesson h3 { margin: 0 0 10px; font-size: 20px; }
+  .lesson .row { margin: 10px 0; }
+  .lesson .row .lab {
+    font-weight: 700; color: var(--grass-deep);
+    text-transform: uppercase; font-size: 12.5px; letter-spacing: .4px;
+    display: block; margin-bottom: 3px;
+  }
+  .vocab { display: flex; flex-wrap: wrap; gap: 7px; }
+  .vocab span {
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 3px 11px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #a5581f;
+  }
+  ol.steps { margin: 4px 0 0; padding-left: 22px; }
+  ol.steps li { margin-bottom: 6px; }
+  ul.disc { margin: 4px 0 0; padding-left: 20px; }
+  ul.disc li { margin-bottom: 5px; }
+  .tool { font-weight: 700; color: var(--accent); }
+
+  /* conversation */
+  .starters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .starters .q {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 15.5px;
+  }
+  .starters .q::before { content: "💬"; margin-right: 8px; }
+
+  /* rubric */
+  .rubric td:first-child { font-weight: 700; width: 30%; }
+  .lvl { font-weight: 700; }
+  .lvl.e { color: #c98a2f; }
+  .lvl.g { color: var(--grass-deep); }
+  .lvl.b { color: var(--berry); }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    border-top: 2px dashed var(--line);
+    padding-top: 20px;
+  }
+  .printbtn {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 22px;
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #c45806;
+    margin-top: 8px;
+  }
+  .printbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #c45806; }
+
+  a.back { color: var(--accent); font-weight: 700; text-decoration: none; }
+  a.back:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .starters { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 27px; }
+    .mech .item { grid-template-columns: 1fr; }
+    .mech .ico { width: 46px; height: 46px; }
+  }
+
+  /* ---------- print ---------- */
+  @media print {
+    body { background: #fff; font-size: 12pt; }
+    .wrap { max-width: 100%; padding: 0; }
+    .no-print { display: none !important; }
+    header.hero { box-shadow: none; border-color: #ddd; }
+    .card, .mech .item, .starters .q { box-shadow: none; break-inside: avoid; }
+    section { break-inside: avoid; }
+    .lesson { break-inside: avoid; }
+    thead th { background: #4f8b3a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tbody tr:nth-child(even) { background: #f4f4f4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">🍎 Grown-Ups' Corner</span>
+    <h1>🌱 Alphabet <span class="leaf">Garden</span> — Teacher &amp; Family Guide</h1>
+    <p class="sub">Planting the alphabet, one seed letter at a time.</p>
+    <div class="meta">
+      <span class="chip">Grade band: <b>Kindergarten (K)</b></span>
+      <span class="chip">Subject: <b>Early Reading &amp; Phonics</b></span>
+      <span class="chip">Aligned to: <b>Connecticut Core Standards · ELA</b></span>
+      <span class="chip">Play time: <b>5–15 min sessions</b></span>
+    </div>
+  </header>
+
+  <!-- ========================= 1 · OVERVIEW ========================= -->
+  <section>
+    <h2><span class="num">1</span> What Is Alphabet Garden?</h2>
+    <div class="card">
+      <p style="margin-top:0">
+        <strong>Alphabet Garden</strong> is a gentle, wacky planting game for kindergarteners.
+        A child plants a <strong>seed letter</strong> and then chooses what it grows into — from
+        the totally real to the gloriously impossible. Plant a <strong>B</strong> and pick whether
+        it blooms into a <strong>Banana Tree</strong>, a <strong>Butterfly Bush</strong>, or a
+        <strong>Burger Bush</strong>. Every plant's name begins with the letter that was planted, so
+        each round quietly rehearses the same reading skill: <em>this letter makes this sound, and
+        these are words that start with it.</em> The garden is saved between visits and keeps growing,
+        so children return to a world that remembers them — building 26 letters of familiarity across
+        many short, joyful sessions.
+      </p>
+      <p style="margin-bottom:0">
+        There is no reading required to play and no way to "lose." A warm voice reads every plant's
+        name and a fun fact aloud, making the game fully accessible to pre-readers and emerging readers alike.
+      </p>
+    </div>
+
+    <p class="lede" style="margin-left:0"><strong>The tools your child actually uses:</strong></p>
+    <div class="mech">
+      <div class="item">
+        <div class="ico">🔤</div>
+        <div>
+          <h3>Seed-Letter Picker (A–Z)</h3>
+          <p>Tapping an empty dirt patch opens a rainbow grid of all 26 letters. When a child taps a
+          letter, the game <em>says its name aloud</em> and shows a small ⭐ counter of how many of that
+          letter's three plants they have discovered. This is the game's core letter-recognition moment.</p>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ico">🌼</div>
+        <div>
+          <h3>Bloom Choice (three plants per letter)</h3>
+          <p>After picking a letter, the child chooses one of three plants — a <em>Real!</em> one, a
+          <em>Silly!</em> one, and a <em>Wacky!</em> one — <strong>all beginning with that same letter</strong>
+          (e.g. for <strong>P</strong>: Palm Tree, Panda Pansy, Pizza Palm). This is where letter–sound
+          correspondence and beginning sounds come to life.</p>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ico">💧</div>
+        <div>
+          <h3>Watering &amp; the Rain Cloud</h3>
+          <p>Tapping a young plant (or the ☁️ rain button) waters it. Plants grow through stages —
+          seed → sprout → full bloom — giving children a reason to return and a gentle sense of cause,
+          effect, and patience. Gardens also grow a little on their own between visits.</p>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ico">🗣️</div>
+        <div>
+          <h3>Plant Reveal &amp; Read-Aloud Fact</h3>
+          <p>When a plant fully blooms, a celebration reads its <strong>name and a one-sentence fact</strong>
+          aloud ("Sunflower! Sunflowers turn their faces to follow the sun!"). Hearing rich words spoken in
+          context builds vocabulary and listening comprehension.</p>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ico">📖</div>
+        <div>
+          <h3>Sticker Book (78 plants)</h3>
+          <p>The book (📖) shows every plant the child has discovered — 3 per letter, 78 in all — grouped
+          A to Z. Tapping any unlocked sticker replays its name and fact. It doubles as a print-free progress
+          tracker and a vocabulary review shelf.</p>
+        </div>
+      </div>
+      <div class="item">
+        <div class="ico">🪏</div>
+        <div>
+          <h3>Shovel, Sound &amp; a Living World</h3>
+          <p>The shovel (🪏) digs up a plant to free a plot; the speaker toggles sound. A day/night sky,
+          drifting clouds, butterflies, and rainbows reward attention and keep young children happily engaged
+          between reading moments.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= 2 · STANDARDS ========================= -->
+  <section>
+    <h2><span class="num">2</span> Standards Alignment</h2>
+    <p class="lede">
+      Connecticut adopted the <strong>Connecticut Core Standards</strong> for English Language Arts,
+      which use the Common Core (CCSS.ELA-LITERACY) codes below. These are the <strong>Kindergarten Reading
+      Foundational Skills</strong>, Speaking &amp; Listening, and Language standards that Alphabet Garden
+      most directly supports. Standard text is quoted verbatim.
+    </p>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Standard</th>
+            <th style="width:42%">What it says</th>
+            <th style="width:38%">How Alphabet Garden addresses it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="code">RF.K.1.D</span></td>
+            <td><span class="stitle">Print Concepts</span>"Recognize and name all upper- and lowercase letters of the alphabet."</td>
+            <td>The <strong>Seed-Letter Picker</strong> presents all 26 letters and names each one aloud when tapped, so children match a letter's shape to its name every time they plant.</td>
+          </tr>
+          <tr>
+            <td><span class="code">RF.K.3.A</span></td>
+            <td><span class="stitle">Phonics &amp; Word Recognition</span>"Demonstrate basic knowledge of one-to-one letter-sound correspondences by producing the primary sound or many of the most frequent sounds for each consonant."</td>
+            <td>Every plant in the <strong>Bloom Choice</strong> begins with the planted letter (B → Banana, Butterfly, Burger). Choosing repeatedly reinforces that a letter maps to a sound and to words that start with it.</td>
+          </tr>
+          <tr>
+            <td><span class="code">RF.K.2.D</span></td>
+            <td><span class="stitle">Phonological Awareness</span>"Isolate and pronounce the initial, medial vowel, and final sounds (phonemes) in three-phoneme (consonant-vowel-consonant, or CVC) words."</td>
+            <td>Because the three choices for a letter share the same <em>initial sound</em>, the game is a natural springboard for isolating beginning phonemes ("/b/… Banana!") — see Lesson 2.</td>
+          </tr>
+          <tr>
+            <td><span class="code">SL.K.2</span></td>
+            <td><span class="stitle">Speaking &amp; Listening</span>"Confirm understanding of a text read aloud or information presented orally or through other media by asking and answering questions about key details and requesting clarification if something is not understood."</td>
+            <td>Each <strong>Plant Reveal</strong> reads a name and fact aloud. Adults pause the moment to ask and answer "what did we just learn?" — turning narration into listening comprehension.</td>
+          </tr>
+          <tr>
+            <td><span class="code">L.K.5.A</span></td>
+            <td><span class="stitle">Vocabulary — Word Relationships</span>"Sort common objects into categories (e.g., shapes, foods) to gain a sense of the concepts the categories represent."</td>
+            <td>Every letter's plants are labeled <strong>Real!</strong>, <strong>Silly!</strong>, and <strong>Wacky!</strong> — an explicit sorting of "could this really grow?" that children extend in Lesson 3.</td>
+          </tr>
+          <tr>
+            <td><span class="code">L.K.6</span></td>
+            <td><span class="stitle">Vocabulary Acquisition &amp; Use</span>"Use words and phrases acquired through conversations, reading and being read to, and responding to texts."</td>
+            <td>The <strong>Sticker Book</strong> and read-aloud facts expose children to 78 plant names and nature words (vine, bloom, sprout, nectar) they hear, replay, and reuse in discussion.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>Connecticut context.</b> Connecticut's <b>Right to Read</b> legislation (Public Act 21-116) and the
+      state's K–3 literacy model emphasize the <em>science of reading</em>: systematic <strong>phonemic
+      awareness</strong> and <strong>phonics</strong>. Alphabet Garden is a supplemental, play-based
+      reinforcement of exactly those foundational skills — letter naming and letter–sound correspondence —
+      not a replacement for a core reading program.
+    </div>
+  </section>
+
+  <!-- ========================= 3 · LESSON PLANS ========================= -->
+  <section>
+    <h2><span class="num">3</span> Ready-to-Run Lesson Plans</h2>
+    <p class="lede">Three 20–30 minute lessons that span the kindergarten year, from letter naming in the
+      fall to sorting and storytelling in the spring. Each pairs a few minutes of guided play with off-screen talk.</p>
+
+    <!-- Lesson 1 -->
+    <div class="card lesson">
+      <span class="tag">Lesson 1 · Early K</span>
+      <h3>🔤 Letter of the Day</h3>
+      <div class="row"><span class="lab">Objective</span>
+        Children recognize and name a target uppercase letter and identify it by shape. <span class="code">RF.K.1.D</span></div>
+      <div class="row"><span class="lab">Vocabulary</span>
+        <div class="vocab"><span>letter</span><span>name</span><span>alphabet</span><span>plant</span><span>seed</span></div>
+      </div>
+      <div class="row"><span class="lab">Steps (~20 min)</span>
+        <ol class="steps">
+          <li>Gather on the rug. Sing the alphabet song and announce today's letter (e.g. <strong>S</strong>).</li>
+          <li>Project the game and tap an empty plot to open the <span class="tool">Seed-Letter Picker</span>. Ask a volunteer to find and tap <strong>S</strong>; the game names it aloud.</li>
+          <li>Trace the letter's shape in the air together. "Big line down, curve, curve — S!"</li>
+          <li>Plant the seed and choose any <span class="tool">Bloom Choice</span>. Water it with the <span class="tool">Rain Cloud</span> and watch it grow.</li>
+          <li>At the <span class="tool">Plant Reveal</span>, cheer and repeat the plant's name, stretching the first sound: "Ssss-unflower!"</li>
+          <li>Give each child a whiteboard to write the letter, then compare shapes.</li>
+        </ol>
+      </div>
+      <div class="row"><span class="lab">Discussion</span>
+        <ul class="disc">
+          <li>What is this letter's name? Can you find it on our alphabet wall?</li>
+          <li>What sound did you hear at the start of our plant's name?</li>
+          <li>Where else do we see the letter S in our classroom?</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Lesson 2 -->
+    <div class="card lesson">
+      <span class="tag">Lesson 2 · Mid K</span>
+      <h3>🌼 Beginning-Sounds Garden</h3>
+      <div class="row"><span class="lab">Objective</span>
+        Children connect a letter to its primary sound and isolate the initial phoneme in spoken words.
+        <span class="code">RF.K.3.A</span> <span class="code">RF.K.2.D</span></div>
+      <div class="row"><span class="lab">Vocabulary</span>
+        <div class="vocab"><span>sound</span><span>beginning sound</span><span>starts with</span><span>real</span><span>silly</span><span>wacky</span></div>
+      </div>
+      <div class="row"><span class="lab">Steps (~25 min)</span>
+        <ol class="steps">
+          <li>Review 3–4 letters and their sounds with quick call-and-response ("/m/… M!").</li>
+          <li>Open the <span class="tool">Seed-Letter Picker</span> and let a child pick a letter, e.g. <strong>P</strong>. Say its sound together: "/p/".</li>
+          <li>Look at the three <span class="tool">Bloom Choices</span> (Palm Tree, Panda Pansy, Pizza Palm). Read each name aloud, punching the first sound: "/p/…izza!"</li>
+          <li>Ask: "Do they ALL start with /p/? How do you know?" Let the class vote on which plant to grow.</li>
+          <li>After the <span class="tool">Plant Reveal</span>, brainstorm more /p/ words (pig, pancake, purple) and add them to a chart.</li>
+          <li>Repeat with a second letter if time allows, then open the <span class="tool">Sticker Book</span> to admire the growing collection.</li>
+        </ol>
+      </div>
+      <div class="row"><span class="lab">Discussion</span>
+        <ul class="disc">
+          <li>What sound do all three plants share? Say it with me.</li>
+          <li>Can you think of a food that starts with /p/? A name?</li>
+          <li>Which plant was your favorite, and what sound does it start with?</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Lesson 3 -->
+    <div class="card lesson">
+      <span class="tag">Lesson 3 · Later K</span>
+      <h3>🌈 Real, Silly, or Wacky? — Sorting &amp; Storytelling</h3>
+      <div class="row"><span class="lab">Objective</span>
+        Children sort plants into categories and use newly heard vocabulary in complete spoken sentences.
+        <span class="code">L.K.5.A</span> <span class="code">L.K.6</span> <span class="code">SL.K.2</span></div>
+      <div class="row"><span class="lab">Vocabulary</span>
+        <div class="vocab"><span>category</span><span>real</span><span>imaginary</span><span>sort</span><span>because</span><span>bloom</span><span>sprout</span></div>
+      </div>
+      <div class="row"><span class="lab">Steps (~30 min)</span>
+        <ol class="steps">
+          <li>Make three labeled hoops or columns on the floor: <strong>Real</strong>, <strong>Silly</strong>, <strong>Wacky</strong>.</li>
+          <li>Open the <span class="tool">Sticker Book</span> and revisit plants the class has grown. Tap a sticker to replay its <span class="tool">name and fact</span>.</li>
+          <li>For each plant, ask "Could this really grow in a garden?" and have children place a picture card (or stand) in the matching hoop — mirroring the game's Real/Silly/Wacky labels.</li>
+          <li>Plant one brand-new letter together and predict which category each <span class="tool">Bloom Choice</span> belongs to <em>before</em> revealing it.</li>
+          <li>Each child finishes a sentence frame aloud: "My plant is a ___ because ___." Encourage a fact word they heard in the game.</li>
+          <li>Optional: children draw their own wacky plant for a letter and label it.</li>
+        </ol>
+      </div>
+      <div class="row"><span class="lab">Discussion</span>
+        <ul class="disc">
+          <li>How did you decide if a plant was real or make-believe?</li>
+          <li>What is a new word you learned from a plant fact today?</li>
+          <li>If you invented a plant for the letter Z, what would it be?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= 4 · CONVERSATION ========================= -->
+  <section>
+    <h2><span class="num">4</span> Talking With Your Child</h2>
+    <p class="lede">Short questions that turn a few minutes of play into a reading conversation — great for
+      families at home or a teacher circling the room.</p>
+    <div class="starters">
+      <div class="q">Which letter did you plant today? What is its name?</div>
+      <div class="q">What sound does that letter make? Can you hear it at the start of your plant?</div>
+      <div class="q">Was your plant real, silly, or wacky? How can you tell?</div>
+      <div class="q">Tell me one thing you learned about your plant.</div>
+      <div class="q">Can you think of another word that starts with the same sound?</div>
+      <div class="q">Which plant in your Sticker Book is your favorite, and why?</div>
+      <div class="q">If you could grow any plant for the letter in your name, what would it be?</div>
+      <div class="q">What do plants need to grow big? What did you do to help yours?</div>
+    </div>
+  </section>
+
+  <!-- ========================= 5 · RUBRIC ========================= -->
+  <section>
+    <h2><span class="num">5</span> Capstone &amp; Assessment</h2>
+    <p class="lede"><strong>Capstone task — "Make Your Own Seed-Letter Plant":</strong> A child chooses a letter,
+      invents a plant whose name begins with that letter, draws it, and tells you about it (real, silly, or wacky).
+      Use the simple 3-level rubric below to note where each child is on the foundational reading skills.</p>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="rubric">
+        <thead>
+          <tr>
+            <th style="width:26%">Skill</th>
+            <th><span class="lvl e">🌱 Emerging</span></th>
+            <th><span class="lvl g">🌿 Growing</span></th>
+            <th><span class="lvl b">🌸 Blooming</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Names the letter <span class="code">RF.K.1.D</span></td>
+            <td>Identifies the letter with adult help.</td>
+            <td>Names the chosen letter independently.</td>
+            <td>Names the letter and points out others like it around the room.</td>
+          </tr>
+          <tr>
+            <td>Beginning sound <span class="code">RF.K.3.A</span></td>
+            <td>Repeats the letter's sound when modeled.</td>
+            <td>Gives a plant name that starts with the correct sound.</td>
+            <td>Offers several words with that beginning sound unprompted.</td>
+          </tr>
+          <tr>
+            <td>Sorting &amp; reasoning <span class="code">L.K.5.A</span></td>
+            <td>Labels the plant real or make-believe with prompting.</td>
+            <td>Sorts it correctly and says which category it fits.</td>
+            <td>Explains <em>why</em> using "because" and a detail.</td>
+          </tr>
+          <tr>
+            <td>Vocabulary &amp; talk <span class="code">L.K.6 · SL.K.2</span></td>
+            <td>Names the plant in a word or two.</td>
+            <td>Describes the plant in a full sentence.</td>
+            <td>Uses a new word from the game and answers a follow-up question.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>🌱 <strong>Alphabet Garden</strong> · Grown-Ups' Corner · Kindergarten Early Reading<br>
+    Aligned to the Connecticut Core Standards for English Language Arts (Reading Foundational Skills, Speaking &amp; Listening, Language).</p>
+    <button class="printbtn no-print" onclick="window.print()">🖨️ Print this guide</button>
+    <p class="no-print" style="margin-top:14px"><a class="back" href="./index.html">← Back to the garden</a></p>
+  </footer>
+
+</div>
+</body>
+</html>
