@@ -79,6 +79,9 @@ GRASS_V = [("#9ddb76", "#79b85c"), ("#a8de88", "#86bd6b"), ("#8fd472", "#6faf55"
 SOIL_V = [("#c2946b", "#a37855", "#dbad7f", "#8a6345"),
           ("#cb9d74", "#ab8060", "#e2b689", "#916b4d"),
           ("#b98a63", "#9a704e", "#d3a577", "#82603f")]
+# Bushes sit a depth step BELOW the interactive layer (TOCA 3.8 layer 4 vs 5),
+# so they read against a #9ddb76 grass field instead of dissolving into it.
+BUSH_V = [("#8ac96e", "#6ba851"), ("#96cf7e", "#76b160"), ("#7fc164", "#61a04a")]
 CLOUD_V = ["#c6d8e6", "#cbdae4", "#c0d5e8"]
 HILL_V = [("#d0edbe", "#badea9"), ("#c9ecc6", "#b4ddb1"), ("#d6ecb8", "#c1dda8")]
 
@@ -417,7 +420,7 @@ def build_hill(i):
 #    that punched a 744px transparent hole through the tall blade is gone; the
 #    oddity is now a notch that opens onto the silhouette.
 # =========================================================================
-GRASS_OL = 9
+GRASS_OL = 10
 
 
 def blade_path(bx, by, tx, ty, hw, tw, bend, notch=None, n=10):
@@ -526,7 +529,7 @@ def build_grass(i):
 #      * round-capped scrape marks (the old tapered furrow strokes are gone)
 #      * NO cream pebble -- an every-plot constant is instancing (C7)
 # =========================================================================
-DIRT_OL = 6
+DIRT_OL = 7
 DIRT_RIMS = [
     [(76, 640), (96, 556), (150, 486), (218, 424), (290, 394), (362, 424),
      (430, 456), (512, 468), (592, 456), (664, 424), (736, 396), (802, 402),
@@ -621,7 +624,7 @@ def build_dirt(i):
         scrapes += ('<path d="%s" fill="none" stroke="%s" stroke-width="%d" '
                     '%s/>' % (dd, dark, w, RJ))
     cols = [soil, deep, lite]
-    clods = "".join(clod(a, b, c, d, cols[e], f) for a, b, c, d, e, f
+    clods = "".join(clod(a, b, c, d, cols[e], f, ol=6) for a, b, c, d, e, f
                     in DIRT_CLODS[i])
     return f'''
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
@@ -722,7 +725,7 @@ def bush_path(s):
 
 def build_bush(i):
     s = BUSH_SETS[i]
-    base, deep = GRASS_V[i]
+    base, deep = BUSH_V[i]
     d = bush_path(s)
     seams = "".join('<path d="%s" fill="none" stroke="%s" stroke-width="%d" '
                     '%s/>' % (x, INK, BUSH_OL, RJ) for x in s["seams"])
@@ -754,7 +757,9 @@ def build_bush(i):
 # 7. NARRATIVE PROPS   512x512   object height ~250-300 -> outline 4px
 #    These replace the cream pebble that used to be baked into every plot.
 # =========================================================================
-PROP_OL = 4
+PROP_OL = 4      # seed (h 252 -> 1.59%)
+TROWEL_OL = 5    # trowel (h 345 -> 1.45%)
+WORM_OL = 3      # worm  (h 189 -> 1.59%)
 
 _seed_d = smooth_closed([(256, 168), (306, 196), (322, 258), (300, 320),
                          (256, 344), (212, 320), (190, 258), (206, 196)])
@@ -805,13 +810,13 @@ prop_trowel = f'''
   <defs>{clip("tbClip", _tr_blade)}{clip("tfClip", _tr_ferrule)}{clip("thClip", _tr_handle)}</defs>
   {contact(232, 386, 150, 18)}
   {twotone("tbClip", _tr_blade, STONE, STONE_DEEP, -16, -20)}
-  <path d="{_tr_blade}" fill="none" stroke="{INK}" stroke-width="{PROP_OL}" {RJ}/>
+  <path d="{_tr_blade}" fill="none" stroke="{INK}" stroke-width="{TROWEL_OL}" {RJ}/>
   <path d="M198,224 C182,262 168,296 156,330" fill="none" stroke="{INK}"
         stroke-width="4" {RJ}/>
   {twotone("tfClip", _tr_ferrule, STONE_DEEP, "#7f8b99", -10, -12)}
-  <path d="{_tr_ferrule}" fill="none" stroke="{INK}" stroke-width="{PROP_OL}" {RJ}/>
+  <path d="{_tr_ferrule}" fill="none" stroke="{INK}" stroke-width="{TROWEL_OL}" {RJ}/>
   {twotone("thClip", _tr_handle, ACCENT, "#e08e52", -12, -14)}
-  <path d="{_tr_handle}" fill="none" stroke="{INK}" stroke-width="{PROP_OL}" {RJ}/>
+  <path d="{_tr_handle}" fill="none" stroke="{INK}" stroke-width="{TROWEL_OL}" {RJ}/>
 </svg>'''
 
 # arched worm: thick through the arch, round-capped at both ends
@@ -824,7 +829,7 @@ prop_worm = f'''
   <defs>{clip("wClip", _worm_d)}</defs>
   {contact(224, 388, 132, 16)}
   {twotone("wClip", _worm_d, WORM, WORM_DEEP, -14, -18)}
-  <path d="{_worm_d}" fill="none" stroke="{INK}" stroke-width="{PROP_OL}" {RJ}/>
+  <path d="{_worm_d}" fill="none" stroke="{INK}" stroke-width="{WORM_OL}" {RJ}/>
   <path d="M168,256 C176,268 180,280 180,294" fill="none" stroke="{WORM_DEEP}"
         stroke-width="7" {RJ}/>
   <path d="M262,250 C266,264 268,278 266,292" fill="none" stroke="{WORM_DEEP}"

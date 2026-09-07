@@ -129,10 +129,48 @@ Accents are the **only** fills permitted above S 0.55, and must stay under ~10% 
 | token | hex | use |
 |---|---|---|
 | `accent` | `#ffb77e` | warm accent, buttons |
+| `accent-deep` | `#e08e52` | shadow for `accent` (ΔV 0.122) |
 | `berry` | `#c65fd1` | rare high-sat accent — sparingly, never on a background prop |
 | `ink` | `#000000` | outlines |
 | `ink-soft` | `#3f3026` | eyes |
 | `brow` | `#6b5342` | brows — must NOT share the eye hex, or the distinction collapses |
+
+### Layer 4 — fixed set dressing (bushes, shrubs)
+
+A depth step **below** the interactive layer (TOCA §3.8: layer 4 sits at S 0.25–0.50,
+V 0.55–0.90, layer 5 at V 0.50–0.97). A bush painted in `grass` / `grass-deep` dissolves
+into a `grass` ground field. Use these instead — they still take a full black outline.
+
+| token | hex | pair | S / V |
+|---|---|---|---|
+| `bush` | `#8ac96e` | with `bush-deep` | 0.453 / 0.788 |
+| `bush-deep` | `#6ba851` | ΔV 0.129 | 0.518 / 0.659 |
+| `bush-b` / `bush-b-deep` | `#96cf7e` / `#76b160` | ΔV 0.118 | variant B |
+| `bush-c` / `bush-c-deep` | `#7fc164` / `#61a04a` | ΔV 0.129 | variant C |
+
+### Prop variant bands
+
+Instanced props are an instant tell (#22). Ship **three** of every prop: recolour
+*within* the band **and** change at least one shape. These are the sanctioned bands.
+
+| prop | A | B | C |
+|---|---|---|---|
+| grass | `#9ddb76` / `#79b85c` | `#a8de88` / `#86bd6b` | `#8fd472` / `#6faf55` |
+| soil | `#c2946b` / `#a37855` / `#dbad7f` / `#8a6345` | `#cb9d74` / `#ab8060` / `#e2b689` / `#916b4d` | `#b98a63` / `#9a704e` / `#d3a577` / `#82603f` |
+| cloud-shade | `#c6d8e6` | `#cbdae4` | `#c0d5e8` |
+| hill / hill-deep | `#d0edbe` / `#badea9` | `#c9ecc6` / `#b4ddb1` | `#d6ecb8` / `#c1dda8` |
+
+### Narrative props
+
+| token | hex | use |
+|---|---|---|
+| `soil-dark` | `#8a6345` | scrape marks on a dug hole floor — ΔV 0.098 from `soil-deep` |
+| `ground-contact` | `#93d56c` | contact shadow on a `grass` field — ΔV 0.024, hard edge |
+| `stone` | `#b8c2cc` | trowel blade, pebbles — tinted neutral, never `#808080` grey |
+| `stone-deep` | `#9aa6b3` | shadow for `stone` (ΔV 0.098) |
+| `stone-dark` | `#7f8b99` | ferrules, deep metal (ΔV 0.098 from `stone-deep`) |
+| `worm` | `#f0a8a0` | worm body |
+| `worm-deep` | `#d98f88` | shadow for `worm` (ΔV 0.090) |
 
 **Contact shadows:** every object that sits on the ground gets one — hue-matched to the ground
 green, ~2% value delta, hard edge. Without it everything floats.

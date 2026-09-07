@@ -2,7 +2,7 @@
   <defs><clipPath id="wClip"><path d="M110,374 C100,296 142,236 218,220 C296,204 336,266 334,346 A24,24 0 0 1 286,346 C288,282 264,262 216,274 C156,288 140,318 144,374 A17,17 0 0 1 110,374 Z"/></clipPath></defs>
   <ellipse cx="224" cy="388" rx="132" ry="16" fill="#93d56c"/>
   <path d="M110,374 C100,296 142,236 218,220 C296,204 336,266 334,346 A24,24 0 0 1 286,346 C288,282 264,262 216,274 C156,288 140,318 144,374 A17,17 0 0 1 110,374 Z" fill="#d98f88"/><g clip-path="url(#wClip)"><path d="M110,374 C100,296 142,236 218,220 C296,204 336,266 334,346 A24,24 0 0 1 286,346 C288,282 264,262 216,274 C156,288 140,318 144,374 A17,17 0 0 1 110,374 Z" fill="#f0a8a0" transform="translate(-14.0,-18.0)"/></g>
-  <path d="M110,374 C100,296 142,236 218,220 C296,204 336,266 334,346 A24,24 0 0 1 286,346 C288,282 264,262 216,274 C156,288 140,318 144,374 A17,17 0 0 1 110,374 Z" fill="none" stroke="#000000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M110,374 C100,296 142,236 218,220 C296,204 336,266 334,346 A24,24 0 0 1 286,346 C288,282 264,262 216,274 C156,288 140,318 144,374 A17,17 0 0 1 110,374 Z" fill="none" stroke="#000000" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M168,256 C176,268 180,280 180,294" fill="none" stroke="#d98f88"
         stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M262,250 C266,264 268,278 266,292" fill="none" stroke="#d98f88"
