@@ -254,7 +254,7 @@ export function createGardenScene(o) {
       lock: lock, label: label, pad: pad, plus: plus,
       col: 0, row: 0, cx: 0, soilY: 0, dirtTint: 0xffffff,
       texUrl: null, texStage: -1, texToken: 0, plantBase: { x: 10, y: 10 },
-      idle: null, busy: false, locked: false,
+      idle: null, propIdle: null, busy: false, locked: false, pressing: null,
       // Fixed-at-birth randomness: this is what stops sixteen plants breathing in lockstep.
       r1: Math.random(), r2: Math.random(), r3: Math.random()
     };
@@ -306,18 +306,61 @@ export function createGardenScene(o) {
     const big = p.stage >= 2;
     cell.plant.material.rotation = 0;
     cell.idle = [
-      // Amounts sit at the low end of the house spec — visible motion, never a wobbling toy.
+      // Breathe: scaleY 1.00↔1.018 with scaleX 1.00↔0.994, period 1.85–2.55s. Every amount and
+      // period here is drawn from the cell's fixed-at-birth randomness, which is what keeps
+      // sixteen plants from inhaling together.
       tweens.breathe(cell.plant, {
-        amount: big ? 0.022 : 0.048,
-        ms: 1900 + cell.r1 * 900,
+        amount: (big ? 0.016 : 0.022) * (0.85 + cell.r2 * 0.4),
+        ms: 1850 + cell.r1 * 700,
         phase: cell.r2
       }),
+      // Sway: the house spec is ±0.8–1.5°, i.e. 0.014–0.026 rad. It used to run to ±4°, which
+      // reads as a toy being shaken rather than a plant standing in moving air.
       tweens.swayLoop(cell.plant, {
-        angle: (big ? 0.028 : 0.055) * (0.7 + cell.r3 * 0.7),
-        ms: 2500 + cell.r3 * 1300,
+        angle: (big ? 0.016 : 0.020) * (0.8 + cell.r3 * 0.5),
+        ms: 2450 + cell.r3 * 1100,
         phase: cell.r1
       })
     ];
+  }
+
+  /**
+   * The plot furniture breathes too — all eight dirt mounds, both sign pieces and the letter tag.
+   *
+   * These are the biggest objects on screen AND the main interactive ones, and §4.1 gives no
+   * interactive object leave to sit perfectly still for more than 400ms. Amplitudes are tiny
+   * (a mound is heavy; it should look heavy) and every phase and period is derived from the
+   * cell's own r1/r2/r3, so no two plots ever share a rhythm.
+   *
+   * Started once per cell at birth and never restarted: breathe() re-reads `userData.baseScale`
+   * every tick, so a resize or an art swap is picked up without tearing the loop down.
+   */
+  function startPropIdle(cell) {
+    if (cell.propIdle) return;
+    const r1 = cell.r1, r2 = cell.r2, r3 = cell.r3;
+    cell.propIdle = [
+      // Soil: a slow, shallow settle — 1.0% on Y, 2.05–2.75s.
+      tweens.breathe(cell.dirt, { amount: 0.010 + r1 * 0.004, ms: 2050 + r3 * 700, phase: r2 }),
+      tweens.swayLoop(cell.dirt, { angle: 0.011 + r2 * 0.007, ms: 2900 + r1 * 900, phase: r3 }),
+      // Sign post: it is on a stick in the ground, so it gets the freest sway in the scene —
+      // still inside the ±1.5° ceiling.
+      tweens.breathe(cell.lock, { amount: 0.014 + r3 * 0.005, ms: 1900 + r2 * 700, phase: r1 }),
+      tweens.swayLoop(cell.lock, { angle: 0.017 + r1 * 0.009, ms: 2500 + r3 * 1000, phase: r2 }),
+      tweens.breathe(cell.label, { amount: 0.012 + r2 * 0.006, ms: 2200 + r1 * 600, phase: r3 }),
+      tweens.swayLoop(cell.label, { angle: 0.015 + r3 * 0.010, ms: 2750 + r2 * 850, phase: r1 }),
+      // Letter badge: a light bob, offset from everything else on the plot.
+      tweens.breathe(cell.tag, { amount: 0.016 + r1 * 0.006, ms: 1950 + r3 * 650, phase: r2 }),
+      tweens.swayLoop(cell.tag, { angle: 0.014 + r2 * 0.008, ms: 3050 + r1 * 500, phase: r3 }),
+      // Even the water meter's track breathes. Its FILL cannot go through breathe() — scale.x is
+      // the water level and belongs to setMeter — so the ripple below only touches scale.y.
+      tweens.breathe(cell.track, { amount: 0.020 + r2 * 0.008, ms: 2300 + r1 * 800, phase: r1 })
+    ];
+  }
+
+  function stopPropIdle(cell) {
+    if (!cell.propIdle) return;
+    cell.propIdle.forEach(h => h && h.cancel && h.cancel());
+    cell.propIdle = null;
   }
 
   /** Point the plant sprite at the art for its current stage. Async, and re-entrant-safe. */
@@ -538,9 +581,10 @@ export function createGardenScene(o) {
             { duration: 300, ease: 'quartOut' })
         .call(() => {
           if (!full) return;
-          // Full bloom gets the layered celebration: confetti, a second sparkle wave, and
-          // the neighbours noticing (§4.8 "environment reaction").
-          fx.emit('confetti', cell.cx, sparkleY, { count: 22 });
+          // Full bloom gets the layered celebration: 10–20 flat confetti chips (never a
+          // 60-piece dump), a second sparkle wave, and the neighbours noticing
+          // (§4.8 "environment reaction").
+          fx.emit('confetti', cell.cx, sparkleY, { count: 16 });
           fx.emit('sparkle', cell.cx, sparkleY, { count: 16, size: [26, 54] });
           nudgeNeighbours(i);
         })
@@ -548,18 +592,44 @@ export function createGardenScene(o) {
     });
   }
 
-  /** Nearby plants wobble when something big happens next door. */
+  /**
+   * §4.8 "environment reaction": 2–5 nearby background objects each take a one-off wobble,
+   * staggered 50ms apart. Not just the neighbouring PLANTS — the mounds and the sign posts
+   * too, because they are the things actually next to the bloom, and a celebration that only
+   * moves its own plot reads as a sticker being applied rather than as an event in a world.
+   */
   function nudgeNeighbours(i) {
     const cell = plots[i];
-    let d = 0;
-    plots.forEach(other => {
-      if (other === cell || other.busy || !game.plot(other.i)) return;
-      const dist = Math.hypot(other.cx - cell.cx, other.soilY - cell.soilY);
-      if (dist > lay.colW * 1.4) return;
-      tweens.delay(50 + (d++) * 60, () => {
-        if (!other.busy) tweens.wobble(other.plant, { angle: 0.09, ms: 460, cycles: 2 });
+    const near = plots
+      .filter(o => o !== cell && !o.busy)
+      .map(o => ({ o: o, d: Math.hypot(o.cx - cell.cx, o.soilY - cell.soilY) }))
+      .filter(e => e.d <= lay.colW * 1.6)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 5);                       // 2–5 objects, never the whole garden
+
+    near.forEach((e, k) => {
+      const other = e.o;
+      tweens.delay(50 + k * 50, () => {   // staggered 50ms, per the spec
+        if (other.busy) return;
+        tweens.nudge(other.dirt, { angle: 0.026, ms: 220 });
+        if (other.locked) {
+          tweens.nudge(other.lock, { angle: 0.05, ms: 260 });
+          tweens.nudge(other.label, { angle: 0.042, ms: 240 });
+        } else if (game.plot(other.i)) {
+          tweens.nudge(other.plant, { angle: 0.055, ms: 260 });
+          tweens.nudge(other.tag, { angle: 0.05, ms: 220 });
+        }
       });
     });
+
+    // The wider world notices too — the grass fringe and the nearest cloud both take a beat.
+    tweens.delay(90, () => tweens.nudge(fringe, { angle: 0.006, ms: 320 }));
+    let best = null, bd = Infinity;
+    clouds.forEach(c => {
+      const d = Math.abs(c.position.x - cell.cx);
+      if (d < bd) { bd = d; best = c; }
+    });
+    if (best) tweens.delay(140, () => tweens.nudge(best, { angle: 0.05, ms: 300 }));
   }
 
   /* ── layout ─────────────────────────────────────────────────────────── */
@@ -660,7 +730,8 @@ export function createGardenScene(o) {
       const tw = dw * 0.62, th = Math.max(11, lay.rowH * 0.11);
       cell.track.scale.set(tw, th, 1);
       cell.track.userData.baseScale = { x: tw, y: th };
-      cell.fill.scale.y = th * 0.72;
+      cell.fillH = th * 0.72;
+      cell.fill.scale.y = cell.fillH;
       cell.fill.position.set(cell.cx - tw / 2, cell.track.position.y, z + 0.1);
 
       sizeTo(cell.plus, plusTexture(), Math.max(24, lay.rowH * 0.26));
@@ -687,18 +758,55 @@ export function createGardenScene(o) {
   function padHandlers(i) {
     if (padHandlerCache[i]) return padHandlerCache[i];
     const cell = plots[i];
+
+    /**
+     * Reduced motion must REDUCE motion, not delete the feedback. When the press cycle is off we
+     * still owe the child a confirmation, so the plot takes an instant, non-animated tint step —
+     * one frame, no tween — and steps back on release.
+     */
+    function tintAck(down) {
+      setDirtTint(cell, down ? 0xffe9b0 : 0xffffff);
+      cell.plantBoost = down ? 1.32 : 1;
+      setPlantShade(cell);
+    }
+
+    function endPress() {
+      if (!cell.pressing) return;
+      cell.pressing.forEach(h => h.release());
+      cell.pressing = null;
+    }
+
     padHandlerCache[i] = {
       onPressStart: () => {
         if (cell.locked) return;
+        endPress();
+        // The whole cycle is driven from here: an eased press-down now, the overshoot + settle
+        // when the finger lifts. tintAck fires only in reduced motion (tween.press calls it),
+        // so the two feedback paths never double up.
         setDirtTint(cell, 0xffe9b0);
+        const dir = cell.r3 < 0.5 ? -1 : 1;
+        const h = [tweens.press(cell.dirt, {
+          squash: 0.085, stretch: 0.038, rotate: 0.028, pop: Math.max(2, lay.rowH * 0.022),
+          dir: dir, onAcknowledge: tintAck
+        })];
         // Never touch a plant that is mid-growth: a competing scale tween would kill the
         // growth timeline outright (tween.js resolves conflicts by killing the loser).
-        if (game.plot(i) && !cell.busy) tweens.squashStretch(cell.plant, 0.09, 240);
+        if (game.plot(i) && !cell.busy) {
+          h.push(tweens.press(cell.plant, {
+            squash: 0.10, stretch: 0.045, rotate: 0.042,
+            pop: Math.max(2, lay.rowH * 0.028), dir: -dir
+          }));
+        }
+        cell.pressing = h;
       },
-      onPressEnd: () => { if (!cell.locked) setDirtTint(cell, 0xffffff); },
+      onPressEnd: () => {
+        // endPress() runs even if the plot locked or unlocked under the finger — otherwise a
+        // press whose release was skipped would sit in its long-press anticipation forever.
+        endPress();
+        if (!cell.locked) setDirtTint(cell, 0xffffff);
+      },
       onTap: info => {
         fx.emit('sparkle', info.x, info.y, { count: 5, size: [16, 30] });
-        tweens.squashStretch(cell.dirt, 0.13, 380);
         game.tapPlot(i);
       }
     };
@@ -736,11 +844,24 @@ export function createGardenScene(o) {
     const g = 1 - 0.74 * n;
     meadow.material.color.setRGB(g * 0.80, g * 0.98, g * 1.05);
     fringe.material.color.setRGB(g * 0.80, g * 0.98, g * 1.05);
-    const pl = 1 - 0.55 * n;
     plots.forEach(c => {
-      c.plant.material.color.setRGB(pl * 0.90, pl * 0.98, Math.min(1, pl * 1.06));
+      setPlantShade(c);
       setDirtTint(c, c.dirtTint != null ? c.dirtTint : 0xffffff);
     });
+  }
+
+  /**
+   * The plant's colour, combining the night wash with the plot's own brightness boost.
+   *
+   * Same discipline as setDirtTint, and for the same reason: two code paths write this colour
+   * (the day/night wash and the reduced-motion press acknowledgement) and whichever wrote last
+   * used to win. The press ack was silently erased on the very next frame the sky repainted.
+   */
+  function setPlantShade(cell) {
+    const pl = 1 - 0.55 * sky.night;
+    const k = cell.plantBoost || 1;
+    cell.plant.material.color.setRGB(
+      Math.min(1, pl * 0.90 * k), Math.min(1, pl * 0.98 * k), Math.min(1, pl * 1.06 * k));
   }
 
   applyDayNight(game.isNight(), true);
@@ -761,9 +882,18 @@ export function createGardenScene(o) {
 
   /* ── ambient life ───────────────────────────────────────────────────── */
 
-  tweens.breathe(sun, { amount: 0.05, ms: 3300 });
-  tweens.swayLoop(sun, { angle: 0.06, ms: 5200 });
-  tweens.breathe(moon, { amount: 0.035, ms: 4100 });
+  // Amounts are now Y-amplitudes with a reciprocal X, so these read smaller than the old numbers
+  // even where the number is unchanged. The sun is allowed a touch more than a plant: it is the
+  // one openly cartoon object in the sky.
+  tweens.breathe(sun, { amount: 0.026, ms: 3300 });
+  tweens.swayLoop(sun, { angle: 0.030, ms: 5200 });
+  tweens.breathe(moon, { amount: 0.020, ms: 4100 });
+  tweens.swayLoop(moon, { angle: 0.018, ms: 6100 });
+  // Clouds are soft things in moving air: each gets its own slow deform on its own period.
+  clouds.forEach((c, k) => {
+    tweens.breathe(c, { amount: 0.014 + (k % 3) * 0.004, ms: 3400 + k * 520, phase: Math.random() });
+    tweens.swayLoop(c, { angle: 0.010 + (k % 2) * 0.006, ms: 4700 + k * 610, phase: Math.random() });
+  });
 
   // Cloud drift: each cloud on its own speed, wrapping across the world.
   tweens.driver((elapsed, dtms) => {
@@ -777,16 +907,46 @@ export function createGardenScene(o) {
     return false;
   });
 
-  // Empty plots pulse their ＋ so no part of the garden is ever perfectly still (§4.1). One
+  // Empty plots breathe their ＋ so no part of the garden is ever perfectly still (§4.1). One
   // driver for all of them, each on its own phase and period.
+  //
+  // This used to multiply BOTH axes by the same number at ±11%, which is not a breath at all —
+  // equal deltas on x and y are a zoom, and a 22% peak-to-peak zoom on a hint badge is a pulse
+  // you cannot look away from. It is now the house breathe: scaleY 1.00↔1.018 against
+  // scaleX 1.00↔0.994, one tenth the amplitude, and volume-conserving.
   tweens.driver(elapsed => {
     if (isReducedMotion()) return false;
     for (let i = 0; i < plots.length; i++) {
       const c = plots[i];
       if (c.plus.material.opacity <= 0.01) continue;
       const b2 = c.plus.userData.baseScale;
-      const k = 1 + Math.sin(elapsed / (1500 + c.r1 * 800) + c.r2 * 6.28) * 0.11;
-      c.plus.scale.set(b2.x * k, b2.y * k, 1);
+      const u = 0.5 + 0.5 * Math.sin(elapsed / (1900 + c.r1 * 700) + c.r2 * 6.28);
+      c.plus.scale.set(b2.x * (1 - 0.006 * u), b2.y * (1 + 0.018 * u), 1);
+    }
+    return false;
+  });
+
+  // The far scenery is not a painted backdrop either. The hills drift a hair against the
+  // parallax and the grass fringe leans in the same breeze the plants do — both far enough
+  // below the plant amplitudes to stay atmospheric rather than distracting.
+  tweens.breathe(hills, { amount: 0.006, ms: 5200, phase: 0.2 });
+  tweens.driver(elapsed => {
+    if (isReducedMotion()) return false;
+    hills.position.x = Math.sin(elapsed / 9000) * (stage.worldWidth * 0.008);
+    return false;
+  }, { target: hills, keys: ['position.x'] });
+  tweens.swayLoop(fringe, { angle: 0.005, ms: 4300, phase: 0.55 });
+  tweens.breathe(fringe, { amount: 0.010, ms: 3100, phase: 0.15 });
+
+  // The water in each meter ripples. scale.x is the level and is off limits, so this only ever
+  // writes scale.y — which is why it is a hand-rolled driver rather than a breathe().
+  tweens.driver(elapsed => {
+    if (isReducedMotion()) return false;
+    for (let i = 0; i < plots.length; i++) {
+      const c = plots[i];
+      if (!c.fillH || c.fill.material.opacity <= 0.02) continue;
+      const u = 0.5 + 0.5 * Math.sin(elapsed / (1700 + c.r2 * 900) + c.r3 * 6.28);
+      c.fill.scale.y = c.fillH * (1 + 0.07 * u);
     }
     return false;
   });
@@ -799,13 +959,49 @@ export function createGardenScene(o) {
   const offReduced = onReducedMotionChange(() => {
     plots.forEach(cell => {
       stopIdle(cell);
+      stopPropIdle(cell);
+      startPropIdle(cell);
       if (!cell.busy && !cell.locked && game.plot(cell.i)) startIdle(cell);
     });
+    if (isReducedMotion()) clearCritters(); else ensureCritters();
   });
 
+  /**
+   * The nearest DISCRETE prop to a world point — clouds, critters, the sun or moon, a mound, a
+   * plant, a sign. Deliberately excludes the full-bleed plates (sky, meadow, hills, grass fringe):
+   * tilting a band that spans the whole world by 2° swings its corners off screen and shows the
+   * sky behind, so those get their own idle motion instead and never take the tap ack.
+   *
+   * There are always sixteen mounds on screen, so this never comes back empty.
+   */
+  function nearestProp(x, y) {
+    let best = null, bd = Infinity;
+    function consider(obj, wx, wy, weight) {
+      if (!obj || obj.material.opacity <= 0.02) return;
+      const d = Math.hypot(wx - x, wy - y) * (weight || 1);
+      if (d < bd) { bd = d; best = obj; }
+    }
+    clouds.forEach(c => consider(c, c.position.x, c.position.y));
+    critters.forEach(c => consider(c, c.position.x, c.position.y));
+    consider(sun, sun.position.x, sun.position.y);
+    consider(moon, moon.position.x, moon.position.y);
+    plots.forEach(c => {
+      consider(c.dirt, c.cx, c.soilY);
+      if (c.locked) consider(c.lock, c.cx, c.lock.position.y);
+      else if (game.plot(c.i)) consider(c.plant, c.cx, c.soilY + c.plantBase.y * 0.5);
+    });
+    return best;
+  }
+
   input.onTapAnywhere(p => {
-    // §4.9: nothing in the world is inert. A tap on empty sky still answers.
-    if (!p.hit) fx.emit('sparkle', p.x, p.y, { count: 6, size: [16, 32] });
+    // §4.9 / Instant Tell #30: nothing in the world is inert. A tap that hits no interactive
+    // object still gets an acknowledgement inside 100ms — a small poof of dust where the finger
+    // landed, and a 200ms ±2° backOut tilt on whatever was nearest to it.
+    if (p.hit) return;
+    fx.emit('poof', p.x, p.y, { count: 4, size: [22, 44], life: [340, 560], alpha: 0.5 });
+    fx.emit('sparkle', p.x, p.y, { count: 5, size: [14, 28] });
+    const prop = nearestProp(p.x, p.y);
+    if (prop) tweens.nudge(prop, { angle: 0.035, ms: 200 });
   });
 
   input.register(sun, {
@@ -819,9 +1015,42 @@ export function createGardenScene(o) {
   /* ── critters ───────────────────────────────────────────────────────── */
 
   const critters = [];
-  function spawnCritter() {
-    if (!game.isStarted() || document.hidden || isReducedMotion()) return;
-    if (critters.length > 4) return;
+
+  /**
+   * Keep the critter layer populated. It is not decoration: two or three butterflies and a bee
+   * crossing the meadow on desynced curved paths carry a big slice of the never-static rule by
+   * themselves, and the layer sitting empty is what made the garden read as a painted backdrop.
+   *
+   * Note what is NOT a gate here any more: `document.hidden`. Bailing on a hidden document meant
+   * that anything sampling the game with the tab backgrounded — including an automated pass —
+   * found a permanently empty layer, and a real player returning from another tab waited up to
+   * nine seconds for the first one.
+   */
+  const CRITTER_TARGET = 3;
+  function ensureCritters() {
+    if (isReducedMotion()) return;
+    for (let n = critters.length; n < CRITTER_TARGET; n++) spawnCritter();
+  }
+
+  /** Retire every flier at once — what turning reduced motion ON has to do. */
+  function clearCritters() {
+    critters.slice().forEach(spr => {
+      if (spr.userData.driver && spr.userData.driver.cancel) spr.userData.driver.cancel();
+      input.unregister(spr);
+      L.critters.remove(spr);
+      if (spr.material) spr.material.dispose();
+    });
+    critters.length = 0;
+  }
+
+  /**
+   * @param {number} [startT] 0..1 — begin this critter part-way along its flight path. Used for
+   *        the ones seeded at boot, so the layer is populated with critters already IN the
+   *        frame instead of three sprites queued up off the left edge.
+   */
+  function spawnCritter(startT) {
+    if (isReducedMotion()) return;
+    if (critters.length >= 5) return;
     const pool = game.isNight() ? NIGHT_CRITTERS : DAY_CRITTERS;
     const url = pool[(Math.random() * pool.length) | 0];
     const b = stage.bounds;
@@ -841,11 +1070,15 @@ export function createGardenScene(o) {
       const dur = (12 + Math.random() * 12) * 1000;
       const waves = 1.4 + Math.random() * 1.8;
       const amp = 40 + Math.random() * 80;
-      const flap = 70 + Math.random() * 70;
+      // Wing flutter at 3.5–7Hz. Each critter also carries its own phase offset, so two
+      // butterflies in frame never beat their wings on the same frame.
+      const flap = 22 + Math.random() * 23;
+      const flapPhase = Math.random() * Math.PI * 2;
+      const t0 = startT ? Math.min(0.92, startT) : 0;
 
       spr.userData.kick = 0;
       const drv = tweens.driver((elapsed, dtms) => {
-        const t2 = elapsed / dur;
+        const t2 = t0 + elapsed / dur;
         if (t2 >= 1) {
           input.unregister(spr);
           L.critters.remove(spr);
@@ -857,7 +1090,7 @@ export function createGardenScene(o) {
         spr.position.x = fromX + (toX - fromX) * t2;
         spr.position.y = baseY + Math.sin(t2 * Math.PI * 2 * waves) * amp;
         // Wing flutter is a scale pulse, not a sprite swap — cheap, and it reads at any size.
-        const w = Math.sin(elapsed / flap);
+        const w = Math.sin(elapsed / flap + flapPhase);
         // A tapped critter startles: the reaction has to live INSIDE this driver, because the
         // driver rewrites rotation and scale every frame and would erase an outside tween.
         const kick = spr.userData.kick;
@@ -1006,35 +1239,79 @@ export function createGardenScene(o) {
           tweens.pop(cell.plant, { from: 0.55, ms: 460, onComplete: () => startIdle(cell) });
         });
       });
-      tweens.delay(900, spawnCritter);
+      ensureCritters();
     })
   ];
 
   /* ── timers: critters and idle "life beats" ─────────────────────────── */
 
-  let critterAcc = 0, beatAcc = 0, beatNext = 7;
-  const offUpdate = stage.onUpdate(dt => {
-    critterAcc += dt;
-    if (critterAcc >= 9) { critterAcc = 0; spawnCritter(); }
+  // These live on the tween manager's clock rather than on stage.onUpdate. Same cadence — the
+  // stage drives the manager — but it keeps every piece of scheduled life in one place, and it
+  // means a harness that steps tweens deterministically also steps the critter population and
+  // the life beats instead of watching a frozen garden.
+  let critterAcc = 0, beatAcc = 0, beatNext = 7000;
+  const timers = tweens.driver((elapsed, dtms) => {
+    critterAcc += dtms;
+    // Top the population back up quickly — the layer must never be empty, and one spawn every
+    // nine seconds against a 12–24s flight meant it regularly was.
+    if (critterAcc >= 3000) { critterAcc = 0; ensureCritters(); }
 
-    beatAcc += dt;
+    beatAcc += dtms;
     if (beatAcc >= beatNext) {
       beatAcc = 0;
-      beatNext = 6 + Math.random() * 6;   // never a fixed timer
+      beatNext = 6000 + Math.random() * 6000;   // never a fixed timer
       const live = plots.filter(c => !c.busy && !c.locked && game.plot(c.i));
       if (live.length) {
         const c = live[(Math.random() * live.length) | 0];
-        tweens.wobble(c.plant, { angle: 0.10 + Math.random() * 0.06, ms: 620, cycles: 2 });
+        // A one-off "life beat" (§4.2): small, and well under the ±1.5° idle ceiling's cousin —
+        // a beat is allowed to be bigger than an idle, but not by much.
+        tweens.wobble(c.plant, { angle: 0.055 + Math.random() * 0.03, ms: 620, cycles: 2 });
       }
     }
+    return false;
   });
+  const offUpdate = () => timers.cancel();
 
   /* ── boot ───────────────────────────────────────────────────────────── */
   syncAll();
+  // Every mound, sign and badge starts breathing at birth, on its own phase. These loops read
+  // their base pose live, so nothing here needs restarting on a resize or an art swap.
+  plots.forEach(startPropIdle);
+  // Seed the critter layer already mid-flight, so the first frame of the garden has life in it
+  // rather than three sprites waiting off the left edge.
+  spawnCritter(0.18); spawnCritter(0.46); spawnCritter(0.72);
+
+  /**
+   * A world-wide confetti burst, for the celebration beats game.js owns (a bloom, a sticker,
+   * a garden that grew overnight).
+   *
+   * This used to be a DOM layer of 60 emoji divs falling on a `linear` CSS keyframe — a `linear`
+   * tween on a visible property is an automatic cap on the whole response category, and 60 pieces
+   * is its own instant tell. It is now the WebGL `confetti` preset: 10–20 flat palette chips per
+   * launch point, real gravity, real tumble, fading only in the last quarter of their life.
+   *
+   * @param {number} [n] a rough total; split across 1–3 launch points so it reads as a spray
+   *                     rather than a single fountain.
+   */
+  function burstConfetti(n) {
+    const b = stage.bounds;
+    const total = Math.max(8, Math.min(48, n || 16));
+    const points = total > 34 ? 3 : (total > 18 ? 2 : 1);
+    const per = Math.round(total / points);
+    for (let k = 0; k < points; k++) {
+      const x = b.left + stage.worldWidth * ((k + 0.5) / points + (Math.random() - 0.5) * 0.12);
+      const y = lay.horizonY + stage.worldHeight * 0.06;
+      tweens.delay(k * 90, () => {
+        fx.emit('confetti', x, y, { count: per });
+        fx.emit('sparkle', x, y, { count: Math.max(4, (per / 3) | 0), size: [22, 44] });
+      });
+    }
+  }
 
   return {
     plots: plots,
     relayout: relayout,
+    burstConfetti: burstConfetti,
     // The clock lives in game.js and only ticks once a minute; this is how a dev (or a future
     // teacher toggle) previews the other half of the day without waiting for it.
     setNight: applyDayNight,
@@ -1044,6 +1321,7 @@ export function createGardenScene(o) {
       offReduced();
       pollen.cancel();
       plots.forEach(stopIdle);
+      plots.forEach(stopPropIdle);
     }
   };
 }

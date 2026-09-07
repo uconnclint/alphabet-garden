@@ -268,24 +268,15 @@ function updateHud() {
 }
 
 /* ---------- particles ----------
-   Plot-local effects live in WebGL now; the confetti layer stays DOM because it has to
-   rain down OVER the celebration modal, which is DOM. */
+   ALL of it lives in WebGL now, confetti included. The old DOM confetti layer was 60 emoji divs
+   riding a `linear` CSS keyframe: linear easing on a visible tween is an automatic cap on the
+   response-and-juice score, and a 60-piece dump is its own tell. The WebGL preset does 10–20
+   flat palette chips per launch point with real gravity and tumble. */
 function dropletFX(i) { emit('water', { i: i }); }
 function sparkleFX(i, n) { emit('sparkle', { i: i, n: n || 6 }); }
 function confetti(n) {
-  const layer = $('#confetti-layer');
-  const emo = ['🎉', '⭐', '🌸', '🌼', '💛', '🦋'];
-  const colors = ['#ff6b6b', '#ffd23f', '#6ec6ff', '#8ed46a', '#c65fd1', '#ff8a3d'];
-  for (let k = 0; k < (n || 50); k++) {
-    const paper = Math.random() < 0.6;
-    const c = el('div', 'confetto' + (paper ? ' paper' : ''), paper ? '' : emo[(Math.random() * emo.length) | 0]);
-    if (paper) c.style.background = colors[(Math.random() * colors.length) | 0];
-    c.style.left = (Math.random() * 100) + 'vw';
-    c.style.animationDuration = (1.8 + Math.random() * 1.8) + 's';
-    c.style.animationDelay = (Math.random() * 0.5) + 's';
-    layer.appendChild(c);
-    setTimeout(() => c.remove(), 4200);
-  }
+  const g3 = window.__garden3d;
+  if (g3 && g3.scene && g3.scene.burstConfetti) g3.scene.burstConfetti(n || 16);
 }
 
 /* ---------- planting flow ---------- */
@@ -381,7 +372,7 @@ function advanceStage(i, interactive) {
       save();
       renderAll();                       // may unlock plots
       sfx.fanfare();
-      confetti(60);
+      confetti(40);
       // Let the bloom actually play before the modal covers it. The bloom is the payoff for
       // every tap the child has spent on this plot; opening the card on the same frame threw
       // it away. Everything else about the flow is unchanged.
@@ -417,9 +408,21 @@ function celebrate(i, replay) {
   $('#grown-name').textContent = info.emoji + ' ' + info.name;
   $('#grown-fact').textContent = info.fact;
   $('#grown-sticker').style.display = (firstLook && plant.newSticker) ? '' : 'none';
+  stagger($('#modal-grown .modal-card').children, 1);
   openModal('#modal-grown');
-  if (firstLook) { sfx.fanfare(); confetti(60); } else { sfx.grow(); confetti(18); }
+  if (firstLook) { sfx.fanfare(); confetti(40); } else { sfx.grow(); confetti(18); }
   voice('plant-' + info.id);
+}
+
+/* ---------- panel entry stagger ----------
+   Panel contents arrive one at a time, 45ms apart, each on a backOut pop (§4.7 / §5.3). All the
+   CSS needs is the sibling index; a screen where 26 buttons land on one frame is a slideshow. */
+function stagger(nodes, from) {
+  const list = Array.prototype.slice.call(nodes);
+  list.forEach((n, k) => {
+    n.style.setProperty('--i', (from || 0) + k);
+    n.classList.add('stagger-in');
+  });
 }
 
 /* ---------- letter picker ---------- */
@@ -437,6 +440,7 @@ function openLetterPicker() {
     });
     grid.appendChild(b);
   });
+  stagger(grid.children);
   openModal('#modal-letters');
 }
 
@@ -454,6 +458,7 @@ function openChoice(L) {
     card.addEventListener('click', () => plantSeed(L, p));
     wrap.appendChild(card);
   });
+  stagger(wrap.children, 1);   // the title has already landed; the cards follow it in
   openModal('#modal-choice');
 }
 
@@ -494,6 +499,9 @@ function openBook() {
     row.appendChild(slots);
     pages.appendChild(row);
   });
+  // Only the first dozen rows stagger: past that the delay outruns the child's patience, and
+  // the rest are below the fold anyway.
+  stagger(Array.prototype.slice.call(pages.children, 0, 12), 1);
   const pct = Math.round((found / TOTAL_PLANTS) * 100);
   $('#book-progress-fill').style.width = pct + '%';
   $('#book-progress-label').textContent = found + ' of ' + TOTAL_PLANTS + ' plants discovered!';
@@ -652,7 +660,10 @@ $('#btn-play').addEventListener('click', () => {
   started = true;
   audio();
   sfx.fanfare();
+  // Scale-and-fade, not a crossfade: the title shrinks to 0.94 and the HUD grows in from 1.06
+  // (see #title-screen / .screen-in in the stylesheet).
   $('#title-screen').classList.add('gone');
+  document.body.classList.add('playing');
   const grew = applyOfflineGrowth();
   renderAll();
   emit('start', { grew: grew });

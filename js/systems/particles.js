@@ -90,6 +90,8 @@ void main() {
  *  gravity   {number}  world units/s² (negative pulls down; +Y is up)
  *  drag      {number}  velocity retained per second (1 = none, 0.2 = heavy air)
  *  spin      {[r,r]}   radians per second
+ *  spinMag   {[r,r]}   radians per second as a MAGNITUDE, sign randomised per particle
+ *                      (use instead of `spin` when every particle must actually tumble)
  *  scale     {[n,n]}   size multiplier at birth → death
  *  fadeIn    {number}  fraction of life spent fading in (0..1)
  *  fadeOut   {number}  fraction of life spent fading out (0..1)
@@ -112,15 +114,22 @@ const PRESETS = {
     colors: ['#fff8d0', '#ffe680', '#fffbe9', '#bff0ff']
   },
 
+  // Straight off the house spec sheet: 10–20 pieces (NOT 60 — a 200-piece dump is an instant
+  // tell), each a flat chip in a scene-palette colour, launched 300–500 u/s upward-biased,
+  // pulled down at 900–1400 u/s², spinning 180–540°/s, alive 700–1100ms and fading only in the
+  // last 25%. Flat and opaque on purpose: additive glow blobs are the #1 particle tell.
   confetti: {
     texture: null, // procedural: a plain rounded chip is cheaper and crisper than a PNG
     fallback: { shape: 'roundrect', color: '#ffffff', radius: 0.3, size: 64 },
     additive: false,
-    count: [26, 40], life: [1100, 1900], size: [16, 30], aspect: [0.35, 0.75],
-    angle: [Math.PI * 0.15, Math.PI * 0.85], speed: [280, 620], spread: 20,
-    gravity: -900, drag: 0.55, spin: [-11, 11],
-    scale: [1, 1], fadeIn: 0.02, fadeOut: 0.28, alpha: 1,
-    colors: ['#ff6b8a', '#ffd23f', '#5ec8f2', '#8fd15b', '#c58bf2', '#ff9f45']
+    count: [12, 18], life: [700, 1100], size: [16, 30], aspect: [0.35, 0.75],
+    angle: [Math.PI * 0.22, Math.PI * 0.78], speed: [300, 500], spread: 20,
+    gravity: -1150, drag: 0.72,
+    // 180–540°/s, sign picked per particle — a plain [-9.4, 9.4] range would hand half the
+    // chips a spin near zero, and a chip that does not tumble reads as a falling brick.
+    spinMag: [Math.PI, Math.PI * 3],
+    scale: [1, 1], fadeIn: 0.02, fadeOut: 0.25, alpha: 1,
+    colors: ['#ff8a3d', '#ffd23f', '#7ecbf2', '#8fd15b', '#f2a3c7', '#fff0c2']
   },
 
   waterDroplets: {
@@ -297,7 +306,9 @@ export function createParticles(stage, opts = {}) {
     p.size = rng(cfg.size, 24);
     p.aspect = rng(cfg.aspect, 1);
     p.rot = Math.random() * Math.PI * 2;
-    p.spin = rng(cfg.spin, 0);
+    p.spin = cfg.spinMag
+      ? rng(cfg.spinMag, 0) * (Math.random() < 0.5 ? -1 : 1)
+      : rng(cfg.spin, 0);
     p.s0 = cfg.scale ? cfg.scale[0] : 1;
     p.s1 = cfg.scale ? cfg.scale[1] : 1;
     p.fadeIn = cfg.fadeIn != null ? cfg.fadeIn : 0.05;

@@ -36,6 +36,8 @@
 //   pop(obj)                    scale punch-in (planting, appearing)
 //   squashStretch(obj, amt, ms) squash then elastic recovery (landing, watering)
 //   wobble(obj, opts)           damped rotational wobble (bumped, wrong answer)
+//   nudge(obj, opts)            ONE out-and-back tilt (±2°/200ms) — the "everything reacts" ack
+//   press(obj, opts)            the full §4.3 press cycle; handle.release() on pointer-up
 //   shake(obj, opts)            damped positional shake (impact)
 //   breathe(obj, opts)          LOOPING gentle scale idle — returns { cancel() }
 //   swayLoop(obj, opts)         LOOPING gentle rotation idle — returns { cancel() }
@@ -124,6 +126,9 @@ export const Easing = {
 
   quartOut: t => 1 - Math.pow(1 - t, 4),
   quartInOut: t => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2),
+
+  // The house "settle" curve — cubic-bezier(0.22, 1, 0.36, 1) in the standard's table.
+  quintOut: t => 1 - Math.pow(1 - t, 5),
 
   sineIn: t => 1 - Math.cos((t * Math.PI) / 2),
   sineOut: t => Math.sin((t * Math.PI) / 2),
@@ -571,6 +576,161 @@ export function createTweenManager() {
   };
 
   /**
+   * A single out-and-back rotational tick — the "I noticed you" acknowledgement the house style
+   * owes every tap that lands on nothing in particular (§4.9), and what a neighbouring prop does
+   * when something happens next door (§4.8).
+   *
+   * Distinct from wobble(): this is one shaped move on a backOut envelope, not a damped ring-down.
+   * @param {object} [o] { angle=0.035 rad (±2°), ms=200, dir=±1, onComplete }
+   */
+  mgr.nudge = function (obj, o) {
+    o = o || {};
+    const path = rotationPath(obj);
+    if (isReducedMotion()) { if (o.onComplete) o.onComplete(obj); return { cancel() {}, finish() {} }; }
+    const angle = o.angle != null ? o.angle : 0.035;
+    const ms = o.ms != null ? o.ms : 200;
+    const dir = o.dir != null ? o.dir : (Math.random() < 0.5 ? -1 : 1);
+    // Base is read on the first tick, once any idle sway has stood down — same reason as wobble().
+    let base = null;
+    return mgr.driver(elapsed => {
+      if (base === null) base = Number(getPath(obj, path)) || 0;
+      const t = Math.min(1, elapsed / ms);
+      // Out fast on backOut, back to level on backOut: asymmetric, never a symmetric sine.
+      const e = t < 0.38 ? Easing.backOut(t / 0.38) : 1 - Easing.backOut((t - 0.38) / 0.62);
+      setPath(obj, path, base + e * angle * dir);
+      if (t >= 1) { setPath(obj, path, base); if (o.onComplete) o.onComplete(obj); return true; }
+      return false;
+    }, { target: obj, keys: [path], onKilled: () => { if (base !== null) setPath(obj, path, base); } });
+  };
+
+  /**
+   * THE PRESS CYCLE (§4.3), start to finish, in one driver.
+   *
+   *   press-down   0 → 80ms     eased to scale(1+a, 1-a) + a rotation kick + a push INTO the surface
+   *   long-press   80ms → …     a slow load-up to (1.02, 1.05) so a held finger has weight (§4.9)
+   *   release      → +110ms     backOut overshoot to (1-o, 1+o) plus a 2–5 unit upward pop
+   *   settle       → +120ms     quintOut back to rest, the rotation kick unwinding with it
+   *
+   * Call on pointer-down, call the handle's release() on pointer-up. A flick therefore reads at
+   * ~290ms end to end and a held press at up to ~630ms — the two are measurably different curves,
+   * which is the whole point of anticipation.
+   *
+   * ONE driver owns scale.x, scale.y, position.y AND rotation for the entire cycle, so the idle
+   * loops are suspended exactly once and there is no frame where breathe() sneaks the base pose
+   * back in between phases.
+   *
+   * @param {THREE.Object3D} obj
+   * @param {object} [o] { squash=0.10, stretch=0.045, rotate=0.038 rad, pop=3.5 units,
+   *                       holdMs=400, dir=±1, onAcknowledge(down), onComplete }
+   * @returns {object} handle { release(), cancel() }
+   */
+  mgr.press = function (obj, o) {
+    o = o || {};
+    const base = baseScaleOf(obj);
+    const path = rotationPath(obj);
+    const baseY = obj.position.y;
+    const amt = o.squash != null ? o.squash : 0.10;      // (1.10, 0.90) → sx·sy = 0.99
+    const over = o.stretch != null ? o.stretch : 0.045;  // (0.955, 1.045) → sx·sy = 0.998
+    const kick = (o.rotate != null ? o.rotate : 0.038) * (o.dir || (Math.random() < 0.5 ? -1 : 1));
+    const pop = o.pop != null ? o.pop : 3.5;
+    const DOWN = 80, UP = 110, SETTLE = 130;
+    const HOLD = o.holdMs != null ? o.holdMs : 400;
+    // Even the fastest flick gets a press-down long enough to SEE, which also puts the shortest
+    // possible cycle at 72 + 110 + 130 = 312ms — inside the 280–340ms window. Without this floor
+    // a 17ms tap released from an almost-unsquashed pose, which is the "1-frame snap" failure.
+    const MIN_DOWN = 72;
+
+    // Reduced motion must still CONFIRM the press — it just does it without moving anything.
+    // The caller supplies an instant, non-animated acknowledgement (a tint or opacity step).
+    if (isReducedMotion()) {
+      if (o.onAcknowledge) o.onAcknowledge(true);
+      let spent = false;
+      return {
+        release() {
+          if (spent) return; spent = true;
+          if (o.onAcknowledge) o.onAcknowledge(false);
+          if (o.onComplete) o.onComplete(obj);
+        },
+        cancel() { this.release(); }
+      };
+    }
+
+    let baseRot = null;          // read on the first tick, after any sway loop has stood down
+    let wantRelease = false, releasedAt = -1, done = false;
+    let relSX = 0, relSY = 0, relRot = 0, relY = 0;
+
+    function restore() {
+      const b = baseScaleOf(obj);
+      obj.scale.set(b.x, b.y, 1);
+      if (baseRot !== null) setPath(obj, path, baseRot);
+      obj.position.y = baseY;
+    }
+
+    const drv = mgr.driver(elapsed => {
+      if (baseRot === null) baseRot = Number(getPath(obj, path)) || 0;
+
+      if (releasedAt < 0) {
+        if (wantRelease && elapsed >= MIN_DOWN) {
+          releasedAt = elapsed;
+          relSX = obj.scale.x; relSY = obj.scale.y;
+          relRot = Number(getPath(obj, path)) || 0;
+          relY = obj.position.y;
+        } else if (elapsed <= DOWN) {
+          const t = Easing.sineInOut(elapsed / DOWN);
+          obj.scale.x = base.x * (1 + amt * t);
+          obj.scale.y = base.y * (1 - amt * t);
+          setPath(obj, path, baseRot + kick * t);
+          obj.position.y = baseY - pop * 0.4 * t;     // pressed INTO the ground, not floating
+          return false;
+        } else {
+          const t = Easing.sineInOut(Math.min(1, (elapsed - DOWN) / HOLD));
+          obj.scale.x = base.x * ((1 + amt) + (1.02 - (1 + amt)) * t);
+          obj.scale.y = base.y * ((1 - amt) + (1.05 - (1 - amt)) * t);
+          setPath(obj, path, baseRot + kick * (1 + 0.6 * t));
+          obj.position.y = baseY - pop * 0.4 * (1 - t);
+          return false;
+        }
+      }
+
+      const e = elapsed - releasedAt;
+      if (e <= UP) {
+        const t = Easing.backOut(e / UP);
+        obj.scale.x = relSX + (base.x * (1 - over) - relSX) * t;
+        obj.scale.y = relSY + (base.y * (1 + over) - relSY) * t;
+        setPath(obj, path, relRot);                    // the kick holds through the release…
+        obj.position.y = relY + (baseY + pop - relY) * t;
+        return false;
+      }
+      const t = Easing.quintOut(Math.min(1, (e - UP) / SETTLE));
+      obj.scale.x = base.x * ((1 - over) + over * t);
+      obj.scale.y = base.y * ((1 + over) - over * t);
+      setPath(obj, path, relRot + (baseRot - relRot) * t);   // …and unwinds through the settle
+      obj.position.y = (baseY + pop) + (baseY - (baseY + pop)) * t;
+      if (e >= UP + SETTLE) {
+        restore(); done = true;
+        if (o.onComplete) o.onComplete(obj);
+        return true;
+      }
+      return false;
+    }, { target: obj, keys: ['scale.x', 'scale.y', 'position.y', path], onKilled: restore });
+
+    return {
+      release() {
+        if (done || wantRelease) return;
+        wantRelease = true;
+        // A release that lands before the driver's very first tick still gets its MIN_DOWN.
+        if (drv.started && drv.elapsed >= MIN_DOWN) {
+          releasedAt = drv.elapsed;
+          relSX = obj.scale.x; relSY = obj.scale.y;
+          relRot = Number(getPath(obj, path)) || 0;
+          relY = obj.position.y;
+        }
+      },
+      cancel() { done = true; drv.cancel(); }
+    };
+  };
+
+  /**
    * Damped positional shake around the object's current position.
    * @param {object} [o] { amount=14 world units, ms=380, freq=26, axis='both'|'x'|'y', onComplete }
    */
@@ -603,32 +763,48 @@ export function createTweenManager() {
   };
 
   /**
-   * LOOPING idle: a slow, gentle in-out scale, like something quietly breathing.
-   * @param {object} [o] { amount=0.035, ms=2600, phase=random }
+   * LOOPING idle: breathing, exactly as the house style specs it —
+   * `scaleY 1.00 → 1.018 → 1.00` paired with `scaleX 1.00 → 0.994`, sine in-out.
+   *
+   * The pairing is the point: equal deltas on both axes is a ZOOM, and a zoom is an instant tell.
+   * `amount` is the Y amplitude; X gets a third of it in the opposite direction, which is what
+   * conserves volume (1.018 × 0.994 ≈ 1.012).
+   *
+   * The base pose is re-read every tick from `userData.baseScale`, so a resize (which rewrites
+   * every sprite's base) is picked up without having to tear the loop down and restart it.
+   *
+   * @param {object} [o] { amount=0.018, ms=2200, phase=random 0..1 }
    * @returns {object} handle { cancel() } — keep it, cancel it when the object dies
    */
   mgr.breathe = function (obj, o) {
     o = o || {};
-    const base = baseScaleOf(obj);
-    if (isReducedMotion()) { obj.scale.set(base.x, base.y, 1); return { cancel() {} }; }
-    const amount = o.amount != null ? o.amount : 0.035;
-    const ms = o.ms != null ? o.ms : 2600;
+    if (isReducedMotion()) {
+      const b = baseScaleOf(obj);
+      obj.scale.set(b.x, b.y, 1);
+      return { cancel() {} };
+    }
+    const amount = o.amount != null ? o.amount : 0.018;
+    const ms = o.ms != null ? o.ms : 2200;
     const phase = (o.phase != null ? o.phase : Math.random()) * ms;
     return mgr.driver((elapsed) => {
-      const s = Math.sin(((elapsed + phase) / ms) * Math.PI * 2);
-      obj.scale.x = base.x * (1 + s * amount);
-      obj.scale.y = base.y * (1 - s * amount * 0.6); // slight volume preservation reads as alive
+      const b = baseScaleOf(obj);
+      // Unipolar 0..1, so the loop runs 1.00 ↔ 1+amount rather than straddling the base pose.
+      const u = 0.5 + 0.5 * Math.sin(((elapsed + phase) / ms) * Math.PI * 2);
+      obj.scale.y = b.y * (1 + amount * u);
+      obj.scale.x = b.x * (1 - amount * u / 3);
       return false;
     }, {
       loop: true,
       target: obj, keys: ['scale.x', 'scale.y'],
-      onKilled: () => obj.scale.set(base.x, base.y, 1)
+      onKilled: () => { const b = baseScaleOf(obj); obj.scale.set(b.x, b.y, 1); }
     });
   };
 
   /**
    * LOOPING idle: a lazy rotational sway, like a plant in a breeze.
-   * @param {object} [o] { angle=0.05 rad, ms=3400, phase=random }
+   * House spec is ±0.8–1.5° (0.014–0.026 rad) over 2.4–3.6s — small enough to read as air moving,
+   * not as a toy wobbling.
+   * @param {object} [o] { angle=0.021 rad ≈ 1.2°, ms=3000, phase=random 0..1 }
    * @returns {object} handle { cancel() }
    */
   mgr.swayLoop = function (obj, o) {
@@ -636,8 +812,8 @@ export function createTweenManager() {
     const path = rotationPath(obj);
     const base = Number(getPath(obj, path)) || 0;
     if (isReducedMotion()) { setPath(obj, path, base); return { cancel() {} }; }
-    const angle = o.angle != null ? o.angle : 0.05;
-    const ms = o.ms != null ? o.ms : 3400;
+    const angle = o.angle != null ? o.angle : 0.021;
+    const ms = o.ms != null ? o.ms : 3000;
     const phase = (o.phase != null ? o.phase : Math.random()) * ms;
     return mgr.driver((elapsed) => {
       setPath(obj, path, base + Math.sin(((elapsed + phase) / ms) * Math.PI * 2) * angle);
@@ -800,6 +976,8 @@ export function attachTweensTo(stage, manager) {
 export const pop = (obj, o) => tweens.pop(obj, o);
 export const squashStretch = (obj, amount, ms) => tweens.squashStretch(obj, amount, ms);
 export const wobble = (obj, o) => tweens.wobble(obj, o);
+export const nudge = (obj, o) => tweens.nudge(obj, o);
+export const press = (obj, o) => tweens.press(obj, o);
 export const shake = (obj, o) => tweens.shake(obj, o);
 export const breathe = (obj, o) => tweens.breathe(obj, o);
 export const swayLoop = (obj, o) => tweens.swayLoop(obj, o);

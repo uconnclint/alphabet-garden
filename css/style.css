@@ -14,6 +14,31 @@
   --accent: #ff8a3d;
   --accent2: #ffd23f;
   --font: "Comic Sans MS", "Chalkboard SE", "Marker Felt", "Segoe Print", cursive, sans-serif;
+
+  /* ── THE HOUSE CURVES ──────────────────────────────────────────────────────
+     Every timed thing in this stylesheet names one of these. `ease` (the CSS default),
+     `ease-in-out` and `linear` are all banned on visible properties: the first two are
+     symmetric and lifeless, and the third reads as a machine moving something.
+     The literal values are also written out inline at each use site so the curve is
+     readable where it is applied, not just where it is defined. */
+  --backOut:   cubic-bezier(0.34, 1.56, 0.64, 1);   /* the workhorse: appearing, landing, release */
+  --expoOut:   cubic-bezier(0.16, 1, 0.30, 1);      /* screen transitions, panel slides */
+  --quintOut:  cubic-bezier(0.22, 1, 0.36, 1);      /* settles, drifts to rest */
+  --backIn:    cubic-bezier(0.36, 0, 0.66, -0.56);  /* anticipation, exits */
+  --sineInOut: cubic-bezier(0.37, 0, 0.63, 1);      /* looping idles only */
+  --stagger:   45ms;                                /* sibling entry interval (§5.3) */
+}
+
+/* Sibling stagger. Panel contents arrive one at a time on a backOut pop, 45ms apart, instead of
+   26 letter buttons and 3 choice cards landing on a single frame like a slideshow (§4.7).
+   `backwards` fill, not `both`: once the pop is over the element must hand its transform back so
+   :hover and :active can own it again. */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(.72, .84) translateY(10px); }
+}
+.stagger-in {
+  animation: pop-in .34s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
 }
 
 html, body { height: 100%; overflow: hidden; }
@@ -24,7 +49,7 @@ body {
      GPU context. Kept so the page is never white. */
   background: linear-gradient(var(--sky-top), var(--sky-bottom) 40%, var(--grass) 40%);
   user-select: none;
-  transition: background 3s;
+  transition: background 3s cubic-bezier(0.37, 0, 0.63, 1);
   /* iPad rubber-band + pinch-zoom lock, per house style. */
   position: fixed; inset: 0;
   touch-action: none;
@@ -65,7 +90,9 @@ body.night {
 .hud-btn {
   width: 52px; height: 52px; padding: 7px; border: none; border-radius: 50%;
   background: #fff; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.15);
-  transition: transform .12s; flex: none;
+  transition: transform .16s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow .16s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex: none;
 }
 /* narrow phones: hide the wordmark, shrink chrome so all four tools fit */
 @media (max-width: 620px) {
@@ -81,8 +108,11 @@ body.night {
   .stat { font-size: 12px; padding: 5px 7px; }
 }
 .hud-btn img { width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; pointer-events: none; }
-.hud-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
-.hud-btn.active { background: var(--accent2); outline: 4px solid #fff; animation: wiggle .6s ease-in-out infinite; }
+/* Press and hover are RECIPROCAL — squash one axis, stretch the other. A uniform scale()
+   is a zoom, not a press, and reads as a web page rather than a toy. */
+.hud-btn:hover { transform: translateY(-2px) scale(0.968, 1.038); }
+.hud-btn:active { transform: translateY(3px) scale(1.07, 0.93); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
+.hud-btn.active { background: var(--accent2); outline: 4px solid #fff; animation: wiggle .6s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
 @keyframes wiggle { 0%,100% { transform: rotate(-6deg);} 50% { transform: rotate(6deg);} }
 .hud-btn:disabled { opacity: .45; cursor: default; }
 #btn-sound.muted { position: relative; }
@@ -96,7 +126,7 @@ body.night {
 .modal {
   position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
   background: rgba(40, 70, 40, .45); backdrop-filter: blur(3px);
-  animation: modalfade .25s;
+  animation: modalfade .22s cubic-bezier(0.16, 1, 0.30, 1) backwards;
 }
 @keyframes modalfade { from { opacity: 0; } }
 .modal.hidden { display: none; }
@@ -105,9 +135,10 @@ body.night {
   max-width: min(92vw, 560px); max-height: 88vh; overflow-y: auto;
   border: 6px solid var(--accent2);
   box-shadow: 0 12px 0 rgba(0,0,0,.18);
-  animation: cardpop .35s cubic-bezier(.2, 1.5, .4, 1);
+  /* §5.3: a modal enters from 0.88 on backOut over 320ms. */
+  animation: cardpop .32s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
-@keyframes cardpop { from { transform: scale(.6); opacity: 0; } }
+@keyframes cardpop { from { transform: scale(.88, .82); opacity: 0; } }
 .modal-card.wide { max-width: min(94vw, 760px); }
 .modal-card.tall { height: 86vh; }
 .modal-title { text-align: center; margin-bottom: 18px; font-size: clamp(20px, 3vw, 28px); color: var(--ink); }
@@ -115,8 +146,10 @@ body.night {
   position: absolute; top: 10px; right: 10px; width: 42px; height: 42px;
   border: none; border-radius: 50%; background: #ffb3ab; font-size: 17px; cursor: pointer;
   box-shadow: 0 3px 0 rgba(0,0,0,.15);
+  transition: transform .14s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.modal-close:active { transform: translateY(2px); }
+.modal-close:hover { transform: scale(0.965, 1.04); }
+.modal-close:active { transform: translateY(2px) scale(1.08, 0.92); }
 
 /* letter grid */
 #letter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
@@ -124,10 +157,11 @@ body.night {
   aspect-ratio: 1; font-family: var(--font); font-size: clamp(22px, 4vw, 34px); font-weight: bold;
   border: none; border-radius: 18px; cursor: pointer; color: #fff;
   box-shadow: 0 5px 0 rgba(0,0,0,.2);
-  transition: transform .1s;
+  transition: transform .14s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.letter-btn:hover { transform: scale(1.08); }
-.letter-btn:active { transform: translateY(3px); }
+/* Reciprocal, not a uniform scale(1.08): hover stretches the button tall, press squashes it wide. */
+.letter-btn:hover { transform: scale(0.962, 1.062); }
+.letter-btn:active { transform: translateY(3px) scale(1.075, 0.928); }
 .letter-btn .mini-count { display: block; font-size: 11px; font-weight: normal; opacity: .9; }
 
 /* choice cards */
@@ -135,11 +169,12 @@ body.night {
 .choice-card {
   width: 190px; background: #fff; border: 5px solid #dfe8d0; border-radius: 22px;
   padding: 12px 10px 14px; cursor: pointer; text-align: center;
-  transition: transform .15s, border-color .15s;
+  transition: transform .18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color .18s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 6px 0 rgba(0,0,0,.12);
 }
-.choice-card:hover { transform: translateY(-6px) scale(1.03); border-color: var(--accent); }
-.choice-card:active { transform: translateY(0); }
+.choice-card:hover { transform: translateY(-6px) scale(0.982, 1.048); border-color: var(--accent); }
+.choice-card:active { transform: translateY(2px) scale(1.06, 0.942); }
 .choice-card .preview { width: 120px; height: 132px; margin: 0 auto; }
 .choice-card .preview svg, .choice-card .preview img { width: 100%; height: 100%; object-fit: contain; }
 .choice-card h3 { font-size: 17px; margin: 6px 0 4px; }
@@ -151,7 +186,7 @@ body.night {
 
 /* sticker book */
 #book-progress { position: relative; height: 26px; background: #eee3c8; border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
-#book-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #ffd23f, #ff8a3d); border-radius: 14px; transition: width .6s; }
+#book-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #ffd23f, #ff8a3d); border-radius: 14px; transition: width .6s cubic-bezier(0.22, 1, 0.36, 1); }
 #book-progress-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
 .book-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 2px dashed #e8dfc6; }
 .book-letter { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #7a5b1e; }
@@ -164,41 +199,60 @@ body.night {
 .book-slot .thumb svg, .book-slot .thumb img { width: 92%; height: 92%; object-fit: contain; }
 .book-slot.locked .thumb { background: #eee; border-color: #ddd; color: #bbb; font-size: 26px; }
 .book-slot.locked { color: #aaa; }
-.book-slot.unlocked .thumb { border-color: var(--accent2); background: #fffbe8; animation: stickerin .5s cubic-bezier(.2,1.5,.4,1); }
-@keyframes stickerin { from { transform: scale(.4) rotate(-15deg); } }
+.book-slot.unlocked .thumb { border-color: var(--accent2); background: #fffbe8; animation: stickerin .46s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+@keyframes stickerin { from { transform: scale(.44, .52) rotate(-15deg); } }
 
 /* celebration modal */
 .modal-card.celebrate { text-align: center; border-color: #ff8a3d; }
-#grown-svg { width: 190px; height: 210px; margin: 0 auto; animation: growncheer 1.2s ease-in-out infinite alternate; }
+#grown-svg { width: 190px; height: 210px; margin: 0 auto; animation: growncheer 1.2s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate; }
 #grown-svg svg, #grown-svg img { width: 100%; height: 100%; object-fit: contain; }
-@keyframes growncheer { from { transform: rotate(-3deg) scale(1); } to { transform: rotate(3deg) scale(1.06); } }
+@keyframes growncheer { from { transform: rotate(-3deg) scale(1.03, 0.97); } to { transform: rotate(3deg) scale(0.97, 1.06); } }
 #grown-name { font-size: 30px; margin: 8px 0 6px; color: var(--accent); }
 #grown-fact { font-size: 18px; margin-bottom: 12px; }
-#grown-sticker { font-size: 20px; color: #c9930a; margin-bottom: 14px; animation: wiggle 1s ease-in-out infinite; }
+#grown-sticker { font-size: 20px; color: #c9930a; margin-bottom: 14px; animation: wiggle 1s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
 
 .big-btn {
   font-family: var(--font); font-size: 24px; font-weight: bold; color: #fff;
   background: linear-gradient(#ff9d52, #ff7a1f); border: none; border-radius: 40px;
   padding: 14px 44px; cursor: pointer; box-shadow: 0 7px 0 #c45806;
-  transition: transform .12s;
+  transition: transform .16s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow .16s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.big-btn:hover { transform: scale(1.05); }
-.big-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 #c45806; }
+.big-btn:hover { transform: translateY(-2px) scale(0.972, 1.042); }
+.big-btn:active { transform: translateY(5px) scale(1.075, 0.93); box-shadow: 0 2px 0 #c45806; }
 
 /* ══════════ TITLE SCREEN ══════════ */
 #title-screen {
   position: fixed; inset: 0; z-index: 100;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
   background: linear-gradient(#6ec6ff, #cdefff 55%, #7ec850 55%);
-  transition: opacity .8s, visibility .8s;
+  /* NOT a crossfade (Instant Tell #28). Scale-and-fade at 420ms on expoOut: the outgoing screen
+     shrinks away to 0.94 while the world it uncovers grows in from 1.06 (see .screen-in below),
+     and the logo carries the move as the transition's motif. */
+  transform-origin: 50% 46%;
+  transition: opacity .42s cubic-bezier(0.16, 1, 0.30, 1),
+              transform .42s cubic-bezier(0.16, 1, 0.30, 1),
+              visibility .42s step-end;
 }
-#title-screen.gone { opacity: 0; visibility: hidden; }
+#title-screen.gone { opacity: 0; visibility: hidden; transform: scale(.94); }
+#title-screen.gone #title-logo {
+  /* the motif: the logo lifts and tips out of frame ahead of the ground it was standing on */
+  animation: none;
+  transform: translateY(-11vh) rotate(-5deg) scale(1.08, 0.94);
+  transition: transform .46s cubic-bezier(0.36, 0, 0.66, -0.56);
+}
+/* The incoming side of the same move. */
+@keyframes screen-in { from { opacity: 0; transform: scale(1.06); } }
+body.playing #hud { animation: screen-in .46s cubic-bezier(0.16, 1, 0.30, 1) backwards; }
 #title-logo {
   width: min(78vw, 560px); height: auto; margin-bottom: -6px;
   filter: drop-shadow(0 8px 6px rgba(60, 90, 30, .28));
-  animation: titlebounce 3.2s ease-in-out infinite;
+  animation: titlebounce 3.2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
-@keyframes titlebounce { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(-1.2deg); } }
+@keyframes titlebounce {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1, 1); }
+  50% { transform: translateY(-14px) rotate(-1.2deg) scale(0.985, 1.018); }
+}
 #title-word { display: none; }
 #title-sub { font-size: clamp(16px, 3vw, 24px); color: #fff; text-shadow: 1px 2px 0 rgba(60,90,30,.4); }
 #title-hint { font-size: 15px; color: rgba(255,255,255,.95); min-height: 20px; }
@@ -208,27 +262,49 @@ body.night {
   color: rgba(255,255,255,.9); background: rgba(79,139,58,.55);
   padding: 7px 16px; border-radius: 18px; text-decoration: none;
   border: 2px solid rgba(255,255,255,.55);
+  transition: background .2s cubic-bezier(0.22, 1, 0.36, 1),
+              transform .2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-#grownups-link:hover { background: rgba(79,139,58,.8); color: #fff; }
+#grownups-link:hover { background: rgba(79,139,58,.8); color: #fff; transform: translateX(-50%) scale(0.98, 1.05); }
+#grownups-link:active { transform: translateX(-50%) translateY(2px) scale(1.05, 0.95); }
 
 #title-copyright {
   position: absolute; bottom: 6px; right: 12px;
   font-size: 11px; color: rgba(255,255,255,.55);
 }
 
-/* confetti */
-#confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 90; overflow: hidden; }
-.confetto { position: absolute; top: -20px; font-size: 22px; animation: confetti-fall linear forwards; }
-@keyframes confetti-fall {
-  to { transform: translateY(110vh) rotate(720deg); opacity: .6; }
-}
-.confetto.paper { width: 12px; height: 12px; border-radius: 3px; font-size: 0; }
+/* Confetti is WebGL now — see the `confetti` preset in js/systems/particles.js. The DOM layer
+   that used to live here rode a `linear` CSS keyframe, and linear easing on a visible tween is
+   an automatic cap on the whole response-and-juice score. */
 
 /* toast */
 #toast {
   position: fixed; top: 76px; left: 50%; transform: translateX(-50%) translateY(-20px); z-index: 60;
   background: #fffdf5; border: 4px solid var(--accent2); color: var(--ink);
   padding: 10px 26px; border-radius: 30px; font-size: 18px; box-shadow: 0 5px 0 rgba(0,0,0,.15);
-  opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s cubic-bezier(0.16, 1, 0.30, 1),
+              transform .38s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════ REDUCED MOTION ══════════
+   Reduce motion; do NOT remove feedback. Loops stop and transitions collapse to an instant state
+   change — but every pressable thing keeps an unmistakable, non-animated acknowledgement, because
+   a press that produces nothing at all is a bug, not an accessibility feature. (The WebGL half of
+   this lives in GardenScene's tintAck / tween.press.) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0s !important;
+  }
+  .hud-btn:active, .big-btn:active, .letter-btn:active,
+  .modal-close:active, .choice-card:active {
+    transform: none;
+    filter: brightness(1.25) saturate(1.15);
+    outline: 4px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
