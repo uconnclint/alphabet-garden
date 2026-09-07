@@ -38,9 +38,24 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 ORIG = os.path.join(ROOT, "art", "assets", "plants")
 CMP = os.path.join(HERE, "_compare")
 
-IDS = ["s-sunflower", "a-apple-tree", "m-maple-tree", "b-butterfly-bush",
-       "p-pizza-palm", "u-ufo-tree", "r-robot-rosebush", "x-xylophone-tree",
-       "b-banana-tree"]
+
+def shipped_ids():
+    """Every shipped plant PNG in this dir -- NOT a hand-maintained list.
+
+    A hardcoded id list silently stops enrolling new plants the moment
+    author #10 lands: the 10th plant would never be diversity-checked
+    against the other 9, and nobody would notice because the gate still
+    prints PASS. Glob instead, excluding `_`-prefixed helper files
+    (`_kit.png`, `_compare/*`, etc.) which are not plants.
+    """
+    names = []
+    for fn in os.listdir(HERE):
+        if fn.endswith(".png") and not fn.startswith("_"):
+            names.append(fn[:-4])
+    return sorted(names)
+
+
+IDS = shipped_ids()
 
 IOU_MAX = 0.70          # G1
 SAT_CEIL = 0.60         # G2 -- the saturation a fill may not exceed
@@ -164,11 +179,31 @@ def iou(ma, mb):
     return inter / float(union or 1)
 
 
-def gate_diversity(ids):
-    """G1: every pair of shipped plants must be < IOU_MAX apart."""
-    masks = {i: sil_mask(os.path.join(HERE, i + ".png")) for i in ids}
+def gate_diversity(target_ids, universe_ids):
+    """G1: every NAMED plant must be < IOU_MAX from every OTHER shipped plant.
+
+    `target_ids` is what was asked for on the command line (may be a single
+    plant); `universe_ids` is the FULL shipped set (from `shipped_ids()`).
+    G1 always compares each target against the whole universe, even when
+    only one plant was named -- `python3 _verify.py <one-id>` is exactly the
+    command a fan-out author runs, and it must never be able to print PASS
+    having run zero comparisons (that hollow pass previously happened
+    whenever a single id was requested: the gate was skipped outright).
+
+    Returns (ok, n_comparisons). Raises if there is nothing to compare
+    against, so a PASS can never be reported for zero comparisons.
+    """
+    universe = sorted(set(universe_ids) | set(target_ids))
+    masks = {i: sil_mask(os.path.join(HERE, i + ".png")) for i in universe}
+    pairs = [(a, b) for a, b in itertools.combinations(universe, 2)
+             if a in target_ids or b in target_ids]
+    if not pairs:
+        raise RuntimeError(
+            "G1 has nothing to compare %r against -- the shipped set is "
+            "empty or contains only the named plant(s). A PASS must never "
+            "be reported for zero comparisons." % (sorted(target_ids),))
     rows, worst, fails = [], 0.0, []
-    for a, b in itertools.combinations(ids, 2):
+    for a, b in pairs:
         v = iou(masks[a], masks[b])
         rows.append((v, a, b))
         worst = max(worst, v)
@@ -178,19 +213,17 @@ def gate_diversity(ids):
     print("=" * 78)
     print("G1  SILHOUETTE DIVERSITY -- IoU at %dpx, every pair must be < %.2f"
           % (SIL_PX, IOU_MAX))
-    w = max(len(i) for i in ids)
-    print("      " + "".join(("%-*s" % (7, i.split("-")[0][:6])) for i in ids))
-    for a in ids:
-        line = "  %-*s" % (w, a)
-        for b in ids:
-            line += ("   --  " if a == b
-                     else "%-7.3f" % iou(masks[a], masks[b]))
-        print(line)
+    print("  %d shipped plant(s) in universe, %d target(s), %d pair(s) "
+          "compared" % (len(universe), len(target_ids), len(pairs)))
+    w = max(len(a) for _, a, b in rows) if rows else 0
+    for v, a, b in rows:
+        flag = "  *** FAIL -- these are the same asset ***" if v >= IOU_MAX else ""
+        print("  %-*s vs %-*s  IoU=%.3f%s" % (w, a, w, b, v, flag))
     print("  worst pair: %.3f  (%s / %s)" % rows[0])
     for v, a, b in fails:
         print("  *** FAIL %.3f  %s / %s -- these are the same asset ***"
               % (v, a, b))
-    return not fails
+    return not fails, len(pairs)
 
 
 def gate_saturation(ids, st):
@@ -270,11 +303,19 @@ def main():
         sheet(pid)
 
     g2 = gate_saturation(ids, allstats)
-    g1 = gate_diversity(ids) if len(ids) > 1 else True
+    # G1 ALWAYS compares the requested plant(s) against the FULL shipped set
+    # (IDS, from shipped_ids()), never just against the other args on the
+    # command line. `_verify.py <one-id>` used to skip G1 entirely (it only
+    # ran when len(ids) > 1) and still print "G1 diversity PASS" -- a PASS
+    # for zero comparisons. gate_diversity() now raises rather than allowing
+    # that, but the len(ids) > 1 shortcut is also gone: it is precisely the
+    # single-id invocation that must be checked.
+    g1, n_pairs = gate_diversity(ids, IDS)
     print("=" * 78)
     print("sheets -> %s" % CMP)
-    print("GATES: G1 diversity %s   G2 saturation %s"
-          % ("PASS" if g1 else "FAIL", "PASS" if g2 else "FAIL"))
+    print("GATES: G1 diversity %s (%d comparison%s)   G2 saturation %s"
+          % ("PASS" if g1 else "FAIL", n_pairs, "" if n_pairs == 1 else "s",
+             "PASS" if g2 else "FAIL"))
     if not report_only and not (g1 and g2):
         sys.exit(1)
 

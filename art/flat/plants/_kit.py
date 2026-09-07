@@ -647,9 +647,17 @@ def root_pts(cx, wb, y_base, seed, lobes=3, spread_k=1.06, depth=(16, 30)):
 _root_pts = root_pts          # legacy alias; new code should use root_pts
 
 
-def stem_slim(cx, y_top, y_base, w, root_seed, lean=18.0, w_base=None,
+def stem_slim(cx, y_top, y_base, w, *, root_seed, lean=18.0, w_base=None,
               root_lobes=3, root_depth=(16, 30)):
-    """Treatment 1 -- slim stem. Flowers, small plants. w >= 40px (3.9%)."""
+    """Treatment 1 -- slim stem. Flowers, small plants. w >= 40px (3.9%).
+
+    `root_seed` is KEYWORD-ONLY on purpose. It used to be the 5th positional
+    argument, one slot after `lean` -- an author writing `stem_slim(cx, top,
+    base, w, 0)` meaning "lean=0" was silently setting the foot seed instead,
+    and `lean` fell back to its 18.0 default unnoticed. Two plants written
+    that way emit a byte-identical foot path. Passing it positionally now
+    raises TypeError instead of shipping a shared-ground-foot regression.
+    """
     wb = (w_base or w * 1.9) * 0.5
     hw = w * 0.5
     hgt = y_base - y_top
@@ -667,12 +675,18 @@ def stem_slim(cx, y_top, y_base, w, root_seed, lean=18.0, w_base=None,
                          + right)
 
 
-def trunk_chunky(cx, y_top, y_base, w_top, w_base, root_seed, lean=0.0,
+def trunk_chunky(cx, y_top, y_base, w_top, w_base, *, root_seed, lean=0.0,
                  root_lobes=3, root_depth=(16, 30), flare=1.0):
     """Treatment 2 -- chunky flared trunk. Trees. Buttressed, not a cylinder.
 
     `flare` scales how hard the shaft splays into the foot: 0.8 = a slim
     upright pole, 1.4 = a broad buttressed base.
+
+    `root_seed` is KEYWORD-ONLY -- see `stem_slim`'s docstring for why. It
+    used to be the 6th positional argument, the slot right after `lean`;
+    a positional `lean=0.0` silently became the foot seed instead. Two
+    plants both written `trunk_chunky(..., 0)` produced a byte-identical
+    root path before this guard existed.
     """
     ht, hb = w_top * 0.5, w_base * 0.5
     hgt = y_base - y_top
@@ -909,15 +923,16 @@ def blush(G):
             % (lx * 1.87, ly + 44, ACCENT, rx * 1.83, ry + 44, ACCENT))
 
 
-def face(cx, cy, width_px, mass_w, default="happy", tilt=0.0,
+def face(cx, cy, width_px, *, mass_w, default="happy", tilt=0.0,
          with_blush=True, eyes=None, eye_r=None, mouth=None, mouth_k=1.0,
          brow_lift=0):
     """Emit the whole swappable face rig at (cx, cy).
 
-    `mass_w` is the width of the mass the face sits on, and is REQUIRED: the
-    kit asserts the TOCA/KIT rule that a face is 45-60% of its mass.  Pass
-    the full mass width by mistake and the blush used to slide off the
-    silhouette; now it raises instead.
+    `mass_w` is the width of the mass the face sits on, and is REQUIRED and
+    KEYWORD-ONLY: the kit asserts the TOCA/KIT rule that a face is 45-60% of
+    its mass. Pass the full mass width by mistake and the blush used to
+    slide off the silhouette; now a positional 4th argument raises TypeError
+    instead of being silently accepted as `mass_w`.
 
     Parameterise `eyes` / `eye_r` / `mouth` per plant.  Same six states on
     thirty plants is Instant Tell #19; the rig will not stop you, but the

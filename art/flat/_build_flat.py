@@ -30,6 +30,14 @@ Batch 3.  Batch 2 failed review (C1 5, C2 6, C4 6, C5 5, C7 4, C8 4).  What chan
  10. SUN FACE: eyes widened to w/h 1.15 and dropped below the disc midline,
      brows moved to the `brow` token, six swappable <g id="face-*"> expressions.
 
+Batch 5 (dirt plot only).  The plot failed review three times running -- dome
+("a rock or a loaf"), rim+lens ("a bread roll", mixed projection), toothed crest
+("a mountain range or a molar").  All three chased the SILHOUETTE.  It is
+rebuilt here on the opposite premise: the silhouette is deliberately calm and
+low, ONE projection throughout, and the identity lives in a granular crumb
+scatter across the surface.  The soil family also carries the frame's
+saturation peak so the interactive object announces itself.  See section 5.
+
 Render path: SVG -> HTML wrapper -> headless Chrome screenshot at 2x -> LANCZOS
 downsample to 1x.  Never use <use> inside <clipPath> (Chrome renders nothing).
 """
@@ -48,10 +56,18 @@ os.makedirs(TMP, exist_ok=True)
 # Layer 1 - foreground / interactive (full black outlines)
 GRASS      = "#9ddb76"   # grass          S .461 V .859
 GRASS_DEEP = "#79b85c"   # grass-deep     S .500 V .722   dV .137
-SOIL       = "#c2946b"   # soil           S .448 V .761
-SOIL_DEEP  = "#a37855"   # soil-deep      S .478 V .639   dV .122
-SOIL_LITE  = "#dbad7f"   # soil-lite      S .420 V .859
-SOIL_DARK  = "#8a6345"   # soil-dark      S .500 V .541   dV .098 from soil-deep
+# SOIL family, batch 4: pulled UP in saturation so the dirt plot is the frame's
+# saturation peak.  Batch 5 raised it again: at S .544 it led bush (.473) and
+# grass (.461) by only .07, which is not a legible hierarchy.  Now S .568, and
+# a value step lower too: at V .800 against a V .859 grass field the plot had
+# almost no value contrast with the ground it sits on, so the saturation lead
+# was doing all the work on its own.  V .780 gives dV .079 as well.
+# Hue held at 25-31 deg, value spacing preserved (dV .086 / .134 / .117), all
+# four still under the S .60 ceiling.  Added back into FLAT_ART_BRIEF Sec 3.
+SOIL       = "#c78956"   # soil           S .568 V .780
+SOIL_DEEP  = "#a57144"   # soil-deep      S .588 V .647   dV .133
+SOIL_LITE  = "#dd9b68"   # soil-lite      S .529 V .867   dV .087
+SOIL_DARK  = "#885f37"   # soil-dark      S .596 V .533   dV .114 from soil-deep
 SUN        = "#ffe07a"   # sun            S .522 V 1.00
 SUN_DEEP   = "#f0c665"   # sun-deep       S .579 V .941
 SUN_SHADE  = "#eebf5c"   # sun-shade      S .613 V .933
@@ -76,12 +92,15 @@ WORM_DEEP  = "#d98f88"   # worm-deep       dV .090
 
 # variant bands (recolour WITHIN the S .35-.55 / V .70-.90 band, C7)
 GRASS_V = [("#9ddb76", "#79b85c"), ("#a8de88", "#86bd6b"), ("#8fd472", "#6faf55")]
-SOIL_V = [("#c2946b", "#a37855", "#dbad7f", "#8a6345"),
-          ("#cb9d74", "#ab8060", "#e2b689", "#916b4d"),
-          ("#b98a63", "#9a704e", "#d3a577", "#82603f")]
-# Bushes sit a depth step BELOW the interactive layer (TOCA 3.8 layer 4 vs 5),
-# so they read against a #9ddb76 grass field instead of dissolving into it.
-BUSH_V = [("#8ac96e", "#6ba851"), ("#96cf7e", "#76b160"), ("#7fc164", "#61a04a")]
+# soil band, batch 4 (raised saturation -- see SOIL above)
+SOIL_V = [("#c78956", "#a57144", "#dd9b68", "#885f37"),
+          ("#ca8e57", "#a87745", "#e0a16a", "#8b6339"),
+          ("#c38254", "#a26c42", "#d99467", "#855936")]
+# Bushes sit a depth step BELOW the interactive layer (TOCA 3.8 layer 4 vs 5).
+# Batch 4: dropped a further value step and rotated ~6 deg cooler.  At #8ac96e
+# the bush sat only dV .07 from the #9ddb76 meadow and separated by outline
+# alone; #7ab861 is dV .137 from grass and reads as its own depth layer.
+BUSH_V = [("#7ab861", "#5e9847"), ("#86bf72", "#6aa356"), ("#70b057", "#548f3f")]
 CLOUD_V = ["#c6d8e6", "#cbdae4", "#c0d5e8"]
 HILL_V = [("#d0edbe", "#badea9"), ("#c9ecc6", "#b4ddb1"), ("#d6ecb8", "#c1dda8")]
 
@@ -100,6 +119,74 @@ def smooth_closed(pts):
         d += " C%.1f,%.1f %.1f,%.1f %.1f,%.1f" % (
             c1 + c2 + (p2[0], p2[1]))
     return d + " Z"
+
+
+def smooth_open(pts):
+    """Catmull-Rom through an OPEN polyline (endpoints are real endpoints)."""
+    n = len(pts)
+    if n < 3:
+        return "M%.1f,%.1f L%.1f,%.1f" % (tuple(pts[0]) + tuple(pts[-1]))
+    d = "M%.1f,%.1f" % tuple(pts[0])
+    for i in range(n - 1):
+        p0 = pts[max(i - 1, 0)]
+        p1, p2 = pts[i], pts[i + 1]
+        p3 = pts[min(i + 2, n - 1)]
+        c1 = (p1[0] + (p2[0] - p0[0]) / 6.0, p1[1] + (p2[1] - p0[1]) / 6.0)
+        c2 = (p2[0] - (p3[0] - p1[0]) / 6.0, p2[1] - (p3[1] - p1[1]) / 6.0)
+        d += " C%.1f,%.1f %.1f,%.1f %.1f,%.1f" % (c1 + c2 + (p2[0], p2[1]))
+    return d
+
+
+# ---- hand-made wobble (TOCA 3.9) ----------------------------------------
+# "Hand-drawn irregularity in the linework itself ... is the *only* texture in
+# the style and it is what stops the art reading as clip-art."  Every contour in
+# batch 3 was a mathematically perfect Bezier through mathematically placed
+# control points.  jitter() nudges the control points themselves, so the wobble
+# lives in the SHAPE, not in a stroke effect: round joins, stroke weights and
+# the flat fills are all untouched.  Deterministic, so builds are reproducible.
+def _rnd(i):
+    x = (i * 1103515245 + 12345) & 0x7FFFFFFF
+    x ^= x >> 13
+    x = (x * 1274126177) & 0x7FFFFFFF
+    x ^= x >> 11
+    return (x % 20011) / 20011.0 - 0.5          # in [-0.5, 0.5)
+
+
+def jitter(pts, amp, seed=0, ampy=None):
+    """Nudge every vertex off the mathematical curve by up to +-amp px."""
+    ay = amp if ampy is None else ampy
+    return [(p[0] + 2 * amp * _rnd(seed * 7919 + i * 37 + 11),
+             p[1] + 2 * ay * _rnd(seed * 7919 + i * 37 + 5003))
+            for i, p in enumerate(pts)]
+
+
+def blob(cx, cy, r, n=9, squash=1.0, seed=0, wob=0.11, rot=0.0):
+    """A round-ish lump that is NOT a circle.  Radii vary +-wob and every vertex
+    then takes a further hand wobble, so no two lobes in a cloud are congruent."""
+    pts = []
+    for k in range(n):
+        a = rot + 2 * math.pi * k / n
+        rr = r * (1.0 + wob * 2 * _rnd(seed * 131 + k * 17 + 3))
+        pts.append((cx + rr * math.cos(a), cy + rr * squash * math.sin(a)))
+    return jitter(pts, r * 0.035, seed + 41)
+
+
+def band(pts, widths):
+    """A closed band hugging an OPEN polyline: the line, then back along it
+    offset by widths[i] on the local normal.  The width varies per vertex, so
+    the band's thickness breathes along its run -- this is the replacement for
+    the offset-union shading FLAT_ART_BRIEF Sec 4 warns about, which produces a
+    strip of mathematically constant width."""
+    n = len(pts)
+    off = []
+    for i, p in enumerate(pts):
+        a, b = pts[max(i - 1, 0)], pts[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(dx, dy) or 1.0
+        nx, ny = dy / L, -dx / L                 # left-hand normal
+        w = widths[i]
+        off.append((p[0] - nx * w, p[1] - ny * w))
+    return smooth_closed(pts + off[::-1])
 
 
 def twotone(cid, d, base, shade, dx, dy, rot=0.0, rcx=0, rcy=0):
@@ -518,50 +605,83 @@ def build_grass(i):
 
 
 # =========================================================================
-# 5. DIRT_PLOT   1024x1024   object height ~420px -> outline 6px = 1.43%
-#    An EXCAVATED HOLE the child plants into -- not a mound, not a loaf.
-#      * dug rim whose back bank dips into a saddle in the middle, so the
-#        silhouette carries a visible depression at 25% black
-#      * slightly elliptical top opening
-#      * interior a full step darker than the outer lip
-#      * lit far wall as a crescent concentric with the opening
-#      * flat ground line across the base
-#      * round-capped scrape marks (the old tapered furrow strokes are gone)
-#      * NO cream pebble -- an every-plot constant is instancing (C7)
+# 5. DIRT_PLOT   1024x1024   object 372-404px tall -> outline 5px = 1.24-1.34%
+#
+#    BATCH 5 REDRAW.  Rounds 2/3/4 all chased the SILHOUETTE and all failed:
+#    a smooth dome read as a rock/loaf; a rim+lens read as a bread roll and
+#    mixed its projection; a toothed crest read as a mountain range or a molar.
+#    The axis was wrong.  What says "soil" is TEXTURE -- crumb, speck, tilth --
+#    not outline.  Real garden soil has an unremarkable silhouette and an
+#    unmistakable surface.
+#
+#    So the silhouette is now deliberately CALM and the identity lives in the
+#    surface:
+#      * ONE projection, committed to: a shallow bed seen slightly from above.
+#        Both the far edge and the near edge are arcs of the same footprint
+#        oval -- there is no side-on wall anywhere, so there is nothing for a
+#        top-down opening to contradict.  ~2.5:1, low, softly scalloped.
+#      * a GRANULAR CRUMB SCATTER of 15-32 flat clods and specks in four soil
+#        values, irregular in size, spacing, squash and rotation, DENSER and
+#        SMALLER toward the back, sparser and larger toward the front.  This is
+#        the thing that says soil, and it also does the form blocking: lit
+#        crumbs cluster upper-left, dark crumbs lower-right.
+#      * a shallow PLANTING DEPRESSION slightly above centre, one value step
+#        darker with a soil-dark far-wall crescent, deliberately NOT inked and
+#        deliberately crossed by crumbs so it reads "a seed goes here" rather
+#        than "hole / bowl / mouth".
+#      * a PACKED BASE BAND where the bed meets the ground, plus a hue-matched
+#        contact shadow that follows the near edge instead of an ellipse that
+#        floats away from it under the flanks.
+#      * loose clods scattered clear of the bed.  These matter at 130px: a mass
+#        that sheds crumbs onto the ground reads as loose material, which is
+#        the one thing a loaf, a rock and a tooth never do.
+#      * the soil family carries the frame's saturation peak (S .570 base vs
+#        bush .473 / grass .461) so a child is told where to tap.
+#    Variants differ in bed ASPECT, scallop COUNT, crumb COUNT and depression
+#    PROPORTION + POSITION -- all readable at 130px, unlike a recolour.
 # =========================================================================
-DIRT_OL = 7
-DIRT_RIMS = [
-    [(76, 640), (96, 556), (150, 486), (218, 424), (290, 394), (362, 424),
-     (430, 456), (512, 468), (592, 456), (664, 424), (736, 396), (802, 402),
-     (866, 452), (918, 522), (948, 606), (944, 686), (908, 748), (836, 786),
-     (740, 804), (620, 812), (500, 812), (380, 806), (272, 792), (180, 764),
-     (114, 712)],
-    [(88, 664), (104, 578), (156, 508), (226, 448), (300, 424), (368, 456),
-     (436, 484), (512, 496), (594, 482), (664, 452), (730, 424), (798, 432),
-     (860, 480), (912, 548), (936, 628), (930, 700), (896, 756), (824, 790),
-     (730, 806), (614, 812), (498, 812), (382, 806), (278, 792), (188, 766),
-     (124, 720)],
-    [(92, 620), (110, 540), (162, 474), (232, 418), (308, 392), (376, 428),
-     (444, 458), (516, 470), (594, 454), (662, 420), (726, 392), (794, 400),
-     (856, 448), (906, 516), (930, 598), (926, 678), (892, 740), (822, 780),
-     (728, 798), (614, 806), (500, 806), (386, 800), (282, 786), (192, 758),
-     (128, 706)],
+# 5px reads 1.44-1.59% against the bed body (314-348px) and 1.24-1.34% against
+# the whole asset's bounding box (372-404px, loose clods included), so it sits
+# inside the 1.2-1.7% band whichever denominator a critic reaches for.  6px
+# passed on the bbox and failed on the body; that ambiguity is not worth it.
+DIRT_OL = 5
+DIRT_GROUND = 856
+DIRT_CX = 512
+
+#   half  = half the bed width
+#   h     = bed height (crest to the lowest point of the near edge)
+#   ff    = fraction of h that lies below the footprint mid-line (near edge)
+#   lobes = scallop count on the far edge
+#   depf  = depression half-width as a fraction of `half`
+#   depx  = depression centre offset, in units of `half`
+#   ncr   = crumb count
+DIRT_SPEC = [
+    dict(half=422, h=330, ff=0.30, lobes=9.0, depf=0.33, depx=-0.13,
+         ncr=80, sq=0.39, skew=+0.06, seed=11),
+    dict(half=412, h=302, ff=0.31, lobes=6.5, depf=0.46, depx=+0.07,
+         ncr=56, sq=0.36, skew=-0.21, seed=37),
+    dict(half=456, h=304, ff=0.29, lobes=12.5, depf=0.24, depx=+0.25,
+         ncr=104, sq=0.42, skew=+0.14, seed=63),
 ]
-# opening: slightly elliptical, sitting low in the rim so the back bank is
-# thicker than the near lip -- you are looking over the near edge into a hole.
-DIRT_OPEN = [(512, 636, 336, 108), (512, 656, 322, 102), (512, 638, 316, 100)]
-DIRT_OPEN_JIT = [1.00, 0.97, 1.03, 0.98, 1.02, 0.96, 1.04, 0.99,
-                 1.01, 0.95, 1.03, 0.98]
+
+# loose clods knocked out of the bed, sitting on the grass with a real
+# negative-space gap (>= 2x the outline weight) of clear ground around them.
+# (x, y, size, rotation, colour index into [soil, deep, lite])
+DIRT_LOOSE = [
+    [(66, 812, 25, -14, 0), (972, 828, 21, 22, 1), (940, 874, 17, 40, 0),
+     (300, 892, 19, -8, 1)],
+    [(80, 826, 27, 18, 0), (958, 812, 20, -26, 1), (690, 898, 17, 6, 0)],
+    [(48, 828, 23, 32, 0), (984, 842, 25, -18, 1), (64, 874, 16, 10, 2),
+     (232, 898, 19, -30, 1), (770, 896, 17, 24, 0), (884, 902, 15, 44, 0)],
+]
+DIRT_WOB = [[1.00, .88, 1.10, .92, 1.06, .86, .96],
+            [.90, 1.12, .96, 1.04, .86, 1.08, .94],
+            [1.10, .92, 1.02, .86, 1.12, .94, 1.00]]
 
 
-def ellipse_pts(cx, cy, rx, ry, jit, phase=0.0):
-    n = len(jit)
-    return [(cx + rx * jit[i] * math.cos(phase + 2 * math.pi * i / n),
-             cy + ry * jit[i] * math.sin(phase + 2 * math.pi * i / n))
-            for i in range(n)]
-
-
-def clod(cx, cy, s, rot, col, wob, ol=5, squash=0.86):
+def clod(cx, cy, s, rot, col, wob, ol=DIRT_OL, squash=0.86):
+    """A small outlined lump of turned earth: seven unequal radii, squashed on
+    the ground plane, then a further hand wobble so no two are congruent."""
     pts = []
     for k in range(7):
         a = math.radians(k * (360.0 / 7) + 14)
@@ -569,87 +689,246 @@ def clod(cx, cy, s, rot, col, wob, ol=5, squash=0.86):
         pts.append((cx + r * math.cos(a), cy + r * squash * math.sin(a)))
     tr = ' transform="rotate(%d %d %d)"' % (rot, cx, cy) if rot else ""
     return ('<path d="%s" fill="%s" stroke="%s" stroke-width="%d" %s%s/>'
-            % (smooth_closed(pts), col, INK, ol, RJ, tr))
+            % (smooth_closed(jitter(pts, s * 0.05, 300 + int(cx))),
+               col, INK, ol, RJ, tr))
 
 
-DIRT_CLODS = [
-    # (cx, cy, size, rot, which colour index, wobble)  index 2 = crooked one
-    [(258, 404, 40, -14, 2, [1.00, .88, 1.10, .92, 1.06, .86, .96]),
-     (352, 436, 30, 20, 0, [.90, 1.12, .96, 1.04, .86, 1.08, .94]),
-     (512, 474, 26, -8, 0, [1.10, .92, 1.02, .86, 1.12, .94, 1.00]),
-     (676, 428, 34, 38, 2, [.94, 1.06, .88, 1.12, .92, 1.00, 1.08]),
-     (778, 400, 44, -36, 2, [1.12, .90, 1.02, .94, .86, 1.10, .96]),
-     (884, 496, 30, 12, 0, [.90, 1.02, 1.12, .88, .98, 1.06, .92]),
-     (118, 596, 28, -22, 0, [1.06, .90, .96, 1.12, .88, 1.00, .94]),
-     (152, 692, 22, 30, 2, [.94, 1.10, .88, 1.02, 1.12, .90, 1.00]),
-     (904, 656, 25, 8, 0, [1.12, .90, 1.00, .88, 1.08, .94, 1.02])],
-    [(292, 430, 36, -10, 2, [1.02, .90, 1.08, .94, 1.04, .88, .98]),
-     (400, 464, 26, 24, 0, [.92, 1.10, .94, 1.06, .88, 1.06, .96]),
-     (516, 500, 24, -6, 0, [1.08, .94, 1.00, .88, 1.10, .92, 1.02]),
-     (652, 456, 30, 34, 2, [.96, 1.04, .90, 1.10, .94, 1.02, 1.06]),
-     (760, 428, 40, -30, 2, [1.10, .92, 1.04, .92, .88, 1.08, .98]),
-     (872, 520, 27, 14, 0, [.92, 1.00, 1.10, .90, 1.00, 1.04, .94]),
-     (132, 624, 25, -18, 0, [1.04, .92, .98, 1.10, .90, 1.02, .92]),
-     (160, 714, 20, 26, 2, [.96, 1.08, .90, 1.00, 1.10, .92, 1.02]),
-     (892, 686, 23, 6, 0, [1.10, .92, 1.02, .90, 1.06, .96, 1.00])],
-    [(300, 400, 42, -16, 2, [1.04, .86, 1.12, .90, 1.08, .88, .94]),
-     (388, 438, 28, 18, 0, [.88, 1.14, .94, 1.02, .90, 1.10, .92]),
-     (516, 478, 22, -10, 0, [1.12, .90, 1.04, .88, 1.10, .96, .98]),
-     (664, 424, 32, 42, 2, [.92, 1.08, .86, 1.14, .94, .98, 1.10]),
-     (752, 398, 38, -40, 2, [1.14, .88, 1.00, .96, .88, 1.12, .94]),
-     (874, 486, 28, 10, 0, [.94, 1.04, 1.08, .90, .96, 1.08, .90]),
-     (126, 578, 30, -24, 0, [1.08, .88, .94, 1.10, .92, 1.00, .96]),
-     (148, 676, 24, 32, 2, [.92, 1.12, .90, 1.04, 1.08, .88, 1.02]),
-     (898, 640, 27, 4, 0, [1.10, .92, .98, .90, 1.10, .92, 1.04])],
-]
+def dirt_edges(i):
+    """Far edge (left->right) and near edge (left->right) of the footprint.
+
+    Both are arcs of the SAME low oval seen slightly from above -- the far one
+    lifted by the mound height, the near one dropping toward the viewer.  One
+    projection; no side-on wall to argue with the top-down depression.
+    """
+    sp = DIRT_SPEC[i]
+    half, h, sd = sp['half'], sp['h'], sp['seed']
+    rf = h * sp['ff']
+    rb = h - rf
+    yc = DIRT_GROUND - rf
+    far, near = [], []
+    NB, NF = 30, 20
+    sk = sp['skew']                 # crown pushed off centre: a heap is never
+    for k in range(NB + 1):     # symmetrical, and a symmetrical low dome is
+        u = -1.0 + 2.0 * k / NB  # exactly what reads as a bun
+        w = max(-1.0, min(1.0, u - sk * (1.0 - u * u)))
+        p = (1.0 - abs(w) ** 2.8) ** 0.62       # broad flat crown, blunt ends
+        taper = (1.0 - u * u) ** 0.55
+        s = math.sin(sp['lobes'] * math.pi * (u * 0.5 + 0.5) + 0.6)
+        scal = s * (12.0 + 9.0 * _rnd(sd * 31 + k)) * taper
+        far.append((DIRT_CX + half * u, yc - rb * p - scal))
+    for k in range(NF + 1):
+        u = -1.0 + 2.0 * k / NF
+        w = max(-1.0, min(1.0, u - sk * (1.0 - u * u)))
+        p = (1.0 - abs(w) ** 2.2) ** 0.70
+        taper = (1.0 - u * u) ** 0.55
+        s = math.sin(sp['lobes'] * 0.55 * math.pi * (u * 0.5 + 0.5) + 2.2)
+        scal = s * (7.0 + 5.0 * _rnd(sd * 57 + k + 400)) * taper
+        near.append((DIRT_CX + half * u, yc + rf * p + scal))
+    # deliberate oddities: a half-buried clod bulging the right shoulder, and a
+    # shallow scoop out of the left crown where somebody lifted a clod away.
+    # Both are LOW -- the whole point of this round is that the outline stays
+    # calm and the surface does the talking.
+    j = int(NB * 0.80)
+    far[j] = (far[j][0] + 16, far[j][1] - 21)
+    far[j + 1] = (far[j + 1][0] + 9, far[j + 1][1] - 12)
+    k = int(NB * (0.26 + 0.05 * i))
+    far[k] = (far[k][0] - 4, far[k][1] + 20)
+    far[k + 1] = (far[k + 1][0] + 3, far[k + 1][1] + 13)
+    return far, near, yc
+
+
+def dirt_body(i):
+    far, near, _ = dirt_edges(i)
+    pts = far + near[::-1][1:-1]     # drop the duplicated left/right tips
+    return jitter(pts, 6.0, seed=140 + i * 9), far, near
+
+
+def dirt_depression(i):
+    sp = DIRT_SPEC[i]
+    drx = sp['depf'] * sp['half']
+    dry = drx * sp['sq']
+    dcx = DIRT_CX + sp['depx'] * sp['half']
+    dcy = DIRT_GROUND - 0.62 * sp['h']
+    return dcx, dcy, drx, dry
+
+
+def dirt_scatter(i):
+    """Deterministic granular crumb scatter over the bed's top surface.
+
+    Denser and finer toward the back, sparser and coarser toward the front
+    (which is what a receding plane does), thinned out of the depression
+    interior, and value-weighted so lit crumbs cluster upper-left and dark
+    crumbs lower-right.  That weighting is the form blocking -- done in the
+    texture itself rather than as a band laid over it, which is what made
+    round 3's crust read as a rim.
+    """
+    sp = DIRT_SPEC[i]
+    far, near, _ = dirt_edges(i)
+    dcx, dcy, drx, dry = dirt_depression(i)
+    half, sd = sp['half'], sp['seed']
+
+    def edge_y(row, u):
+        t = (u + 1.0) * 0.5 * (len(row) - 1)
+        k = min(int(t), len(row) - 2)
+        f = t - k
+        return row[k][1] * (1 - f) + row[k + 1][1] * f
+
+    out, tries = [], 0
+    while len(out) < sp['ncr'] and tries < 16000:
+        tries += 1
+        q = tries * 3 + sd
+        # ~40% of crumbs are placed as satellites touching an existing one, so
+        # the scatter CLUMPS the way tilth does instead of spacing itself out
+        # into polka dots.
+        sat = out and (0.5 + _rnd(q * 41 + 6)) < 0.30
+        if sat:
+            b = out[int((0.5 + _rnd(q * 43 + 8)) * len(out)) % len(out)]
+            r = 10.0 + 15.0 * (0.5 + _rnd(q * 17 + 3)) ** 1.9
+            a = 2 * math.pi * (0.5 + _rnd(q * 47 + 4))
+            x = b[0] + math.cos(a) * (b[2] + r) * 0.94
+            y = b[1] + math.sin(a) * (b[2] + r) * 0.62
+            u = (x - DIRT_CX) / half
+            if abs(u) > 0.95:
+                continue
+        else:
+            u = 1.90 * _rnd(q * 5 + 1)                   # -0.95 .. 0.95
+            v = (0.5 + _rnd(q * 11 + 7)) ** 1.22         # 0 = back, 1 = front
+            x = DIRT_CX + half * u
+            ytop, ybot = edge_y(far, u) + 20, edge_y(near, u) - 16
+            if ybot - ytop < 40:
+                continue
+            y = ytop + v * (ybot - ytop)
+            r = 10.0 + 10.0 * v + 14.0 * (0.5 + _rnd(q * 17 + 3)) ** 2.3
+        ytop, ybot = edge_y(far, u) + 17, edge_y(near, u) - 14
+        if not (ytop < y < ybot):
+            continue
+        v = (y - ytop) / max(ybot - ytop, 1.0)
+        d = ((x - dcx) / drx) ** 2 + ((y - dcy) / dry) ** 2
+        if d < 0.80:                                     # keep the hollow clear
+            continue
+        ok = True
+        for (px, py, pr, _c, _s, _rot) in out:
+            if math.hypot(px - x, (py - y) * 1.6) < (pr + r) * 0.66:
+                ok = False
+                break
+        if not ok:
+            continue
+        lit = 0.55 * (1.0 - (u + 1.0) * 0.5) + 0.45 * (1.0 - v)
+        g = 0.5 + _rnd(q * 23 + 5)
+        col = 2 if g < 0.09 + 0.20 * lit else (1 if g < 0.80 else 3)
+        # a soil-deep crumb sitting ON the soil-deep packed foot is invisible,
+        # which is what left the front of the bed reading as one dead flat
+        # field.  Down there the crumb catches the light instead.
+        if col == 1 and y > edge_y(near, u) - 62:
+            col = 0
+        if col == 2:
+            r *= 0.80          # lit crumbs stay small; they are the loudest
+        out.append((x, y, r, col, 0.42 + 0.30 * (0.5 + _rnd(q * 29 + 9)),
+                    360.0 * (0.5 + _rnd(q * 37 + 2))))
+    return out
 
 
 def build_dirt(i):
     soil, deep, lite, dark = SOIL_V[i]
-    rim = smooth_closed(DIRT_RIMS[i])
-    cx, cy, rx, ry = DIRT_OPEN[i]
-    hole = smooth_closed(ellipse_pts(cx, cy, rx, ry, DIRT_OPEN_JIT, 0.22))
-    # scrape marks: short round-capped arcs concentric with the opening, sitting
-    # on the hole floor.  Round caps only -- tapered strokes are banned.
-    scrapes = ""
-    for j, (sr, sy, w) in enumerate([(0.80, -10, 14), (0.60, 22, 12),
-                                     (0.38, 50, 10)]):
-        a0, a1 = math.radians(28 + j * 9), math.radians(152 - j * 11)
-        p = []
-        for k in range(9):
-            a = a0 + (a1 - a0) * k / 8.0
-            p.append((cx + rx * sr * math.cos(a),
-                      cy + sy + ry * sr * 0.7 * math.sin(a)))
-        dd = "M%.1f,%.1f " % p[0] + " ".join("L%.1f,%.1f" % q for q in p[1:])
-        scrapes += ('<path d="%s" fill="none" stroke="%s" stroke-width="%d" '
-                    '%s/>' % (dd, dark, w, RJ))
-    cols = [soil, deep, lite]
-    clods = "".join(clod(a, b, c, d, cols[e], f, ol=6) for a, b, c, d, e, f
-                    in DIRT_CLODS[i])
+    sp = DIRT_SPEC[i]
+    pts, far, near = dirt_body(i)
+    body = smooth_closed(pts)
+    dcx, dcy, drx, dry = dirt_depression(i)
+
+    # --- packed base band: the compacted, shaded foot of the bed -----------
+    lo = jitter(near, 3.0, seed=210 + i)
+    hi = [(p[0] + 6 * math.sin(1.7 * k + i),
+           p[1] - (48 + 21 * math.sin(0.49 * k + 0.9 + i)
+                   + 9 * math.sin(1.27 * k + 2.1)
+                   + 13 * _rnd(300 + i * 7 + k)))
+          for k, p in enumerate(lo)]
+    baseband = smooth_closed(lo + hi[::-1])
+
+    # --- shallow planting depression --------------------------------------
+    dep = smooth_closed(blob(dcx, dcy, drx, n=16, squash=sp['sq'],
+                             seed=440 + i * 5, wob=0.10))
+    # into a hollow the light shift reverses: the shaded face is the FAR wall,
+    # so the same-path overlay is pushed DOWN-right and what stays uncovered is
+    # an asymmetric crescent hugging the upper-left rim.  Asymmetric on purpose
+    # -- a concentric ring would read as an iris.
+    depfill = ('<path d="%s" fill="%s"/>'
+               '<g clip-path="url(#depClip%d)">'
+               '<path d="%s" fill="%s" transform="translate(%.1f,%.1f) '
+               'rotate(-3 %d %d)"/></g>'
+               % (dep, dark, i, dep, deep, drx * 0.10, dry * 0.42, dcx, dcy))
+    # crumbs on the floor of the hollow: it is soil at a lower level, not an
+    # empty void, and an empty void is exactly what reads as a bowl.  Count
+    # scales with the hollow, so the big one in variant B is not left bare.
+    fl, t = [], 0
+    while len(fl) < 4 + int(9 * sp['depf']) and t < 400:
+        t += 1
+        fx = 1.7 * _rnd(t * 13 + i * 7 + 1)
+        fy = 1.5 * _rnd(t * 19 + i * 5 + 3)
+        if fx * fx + fy * fy > 0.62:
+            continue
+        rr = 0.055 + 0.075 * (0.5 + _rnd(t * 23 + 9)) ** 1.6
+        if any(math.hypot((fx - gx) * drx, (fy - gy) * dry)
+               < (rr + gr) * drx * 0.95 for gx, gy, gr, _c in fl):
+            continue
+        g = 0.5 + _rnd(t * 29 + 4)
+        fl.append((fx, fy, rr, dark if g < 0.45 else (soil if g < 0.8 else deep)))
+    floor = "".join(
+        '<path d="%s" fill="%s"/>'
+        % (smooth_closed(blob(dcx + drx * fx, dcy + dry * fy, drx * r,
+                              n=7, squash=0.55, seed=560 + i * 7 + j,
+                              wob=0.26)), c)
+        for j, (fx, fy, r, c) in enumerate(fl))
+
+    # --- granular crumb scatter -------------------------------------------
+    cols = [soil, deep, lite, dark]
+    speck = "".join(
+        '<path d="%s" fill="%s"/>'
+        % (smooth_closed(blob(x, y, r, n=7, squash=sq, seed=i * 71 + j * 13,
+                              wob=0.27, rot=math.radians(rot))), cols[c])
+        for j, (x, y, r, c, sq, rot) in enumerate(dirt_scatter(i)))
+    # a few crumbs that straddle the rim of the hollow, so its contour is
+    # broken and can never close into an eye or a mouth
+    spill = "".join(
+        '<path d="%s" fill="%s"/>'
+        % (smooth_closed(blob(dcx + drx * fx, dcy + dry * fy, drx * s,
+                              n=7, squash=0.52, seed=680 + i * 9 + j,
+                              wob=0.28)), c)
+        for j, (fx, fy, s, c) in enumerate(
+            [(-0.86, -0.62, 0.13, lite), (0.34, -1.02, 0.10, soil),
+             (0.98, 0.36, 0.12, deep), (-0.52, 1.06, 0.09, lite),
+             (1.12, -0.44, 0.08, soil), (-1.06, 0.44, 0.10, soil),
+             (0.10, 1.08, 0.11, lite), (0.72, -0.86, 0.07, deep),
+             (-0.30, -1.10, 0.09, dark)]))
+
+    # --- contact shadow: follows the near edge, hue-matched, hard edge ------
+    cl = [(p[0], p[1] + 3) for p in near]
+    ch = [(p[0] + 11, p[1] + 38 + 11 * math.sin(0.9 * k + 1.4))
+          for k, p in enumerate(near)]
+    shadow = smooth_closed(cl + ch[::-1])
+
+    loose = "".join(clod(a, b, c, d, [soil, deep, lite][e],
+                         DIRT_WOB[(i + j) % 3])
+                    for j, (a, b, c, d, e) in enumerate(DIRT_LOOSE[i]))
+
     return f'''
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs>{clip("rimClip", rim)}{clip("holeClip", hole)}</defs>
-  <!-- contact shadow: hue-matched to the ground green, hard edge, ~2% dV -->
-  {contact(516, 792, 434, 40)}
-  <!-- dug rim.  Lit face up-left, shade crescent down-right, concentric with
-       the rim itself.  The back bank dips into a saddle at the centre so the
-       silhouette reads as a depression, not a loaf. -->
-  {twotone("rimClip", rim, lite, soil, -46, -58, 1.2, 512, 620)}
-  <path d="{rim}" fill="none" stroke="{INK}" stroke-width="{DIRT_OL}" {RJ}/>
-  <!-- interior: a full step darker than the lip.  The lit far wall is a
-       crescent concentric with the opening, made by dropping the opening back
-       down over itself -- it follows the hole, it is not a wavy band. -->
-  <path d="{hole}" fill="{soil}"/>
-  <g clip-path="url(#holeClip)">
-    <path d="{hole}" fill="{deep}" transform="translate(0,66)"/>
-    {scrapes}
+  <defs>{clip("bedClip%d" % i, body)}{clip("depClip%d" % i, dep)}</defs>
+  <!-- contact shadow, hue-matched to the ground green, hard edge, dV ~.024 -->
+  <path d="{shadow}" fill="{CONTACT}"/>
+  <!-- SHALLOW BED SEEN SLIGHTLY FROM ABOVE.  Base earth, packed shaded foot,
+       planting hollow, then the granular tilth that does the actual talking. -->
+  <path d="{body}" fill="{soil}"/>
+  <g clip-path="url(#bedClip{i})">
+    <path d="{baseband}" fill="{deep}"/>
+    {depfill}
+    {floor}
+    {speck}
+    {spill}
   </g>
-  <path d="{hole}" fill="none" stroke="{INK}" stroke-width="{DIRT_OL}" {RJ}/>
-  <!-- clods straddling the rim: ragged edge, one deliberately crooked -->
-  {clods}
+  <path d="{body}" fill="none" stroke="{INK}" stroke-width="{DIRT_OL}" {RJ}/>
+  <!-- clods shed onto the grass: loose material, which is what a loaf isn't -->
+  {loose}
 </svg>'''
-
-
 # =========================================================================
 # 6. BUSH_SHRUB   1024x1024   object height ~584px -> outline 9px = 1.54%
 #    Deliberately NOT cloud language: many small unequal leaf scallops.

@@ -95,18 +95,34 @@ on-palette, and still would have failed review. Every new asset must fix all fou
 > ceiling** — the batch read as "loud clip-art" where the reference reads "sunlit and washed."
 > These values are the corrected set. **Use these hexes. The old saturated ones are retired.**
 
+> **Drift check.** `_kit.py` is the executable source of truth for every plant-kit hex below;
+> this file is kept in sync **by hand**, which is exactly how `sun-shade`, `fruit-deep` and
+> `accent-deep` drifted from `_kit.py` and how `steel-dark` went undocumented entirely. Run
+> `python3 art/flat/plants/_check_palette.py` after touching a hex on either side — it reads
+> `_kit.py` live and diffs every token it finds against this file's tables, and exits non-zero
+> on any mismatch, duplicate, or omission.
+
 ### Layer 1 — foreground / interactive (full black outlines)
+
+> **BATCH 5 (soil only).** The dirt plot is the game's primary interactive object and must
+> carry the frame's focal weight. At `#c2946b` it measured S .448 — indistinguishable from the
+> bush (.453) and the grass (.461) — so nothing told a child where to tap. The whole soil
+> family was pulled to **S .568 / V .780** (hue held at 25–31°, ΔV spacing preserved), which
+> also buys ΔV .079 against the V .859 grass field it sits on. All four tones stay under the
+> S 0.60 ceiling; measured on the shipped PNGs, ≤0.11% of pixels sit above S 0.60. **These are
+> the current soil hexes; the `#c2946b` family is retired.**
+
 
 | token | hex | use |
 |---|---|---|
 | `grass` | `#9ddb76` | meadow base |
 | `grass-deep` | `#79b85c` | grass shadow tone |
-| `soil` | `#c2946b` | dirt base |
-| `soil-deep` | `#a37855` | dirt shadow / dug interior |
-| `soil-lite` | `#dbad7f` | lit crest of a tilled row |
+| `soil` | `#c78956` | dirt base — S .568 / V .780 (batch 5) |
+| `soil-deep` | `#a57144` | dirt shadow / packed base band / hollow interior |
+| `soil-lite` | `#dd9b68` | lit crumbs on tilled soil |
 | `sun` | `#ffe07a` | sun body |
 | `sun-deep` | `#f0c665` | sun rays |
-| `sun-shade` | `#eebf5c` | sun body shadow |
+| `sun-shade` | `#eebf62` | sun body shadow |
 | `ray-shade` | `#dbab58` | ray shadow face |
 | `cream` | `#fff7e6` | panels, near-white (never pure `#FFFFFF`) |
 | `cloud-shade` | `#c6d8e6` | cloud shadow — hue-rotated cool to 206° |
@@ -129,11 +145,14 @@ Accents are the **only** fills permitted above S 0.55, and must stay under ~10% 
 | token | hex | use |
 |---|---|---|
 | `accent` | `#ffb77e` | warm accent, buttons |
-| `accent-deep` | `#e08e52` | shadow for `accent` (ΔV 0.122) |
 | `berry` | `#c65fd1` | rare high-sat accent — sparingly, never on a background prop |
 | `ink` | `#000000` | outlines |
 | `ink-soft` | `#3f3026` | eyes |
 | `brow` | `#6b5342` | brows — must NOT share the eye hex, or the distinction collapses |
+
+`accent`'s shadow, `accent-deep`, is defined once, in the "Extended tokens" table below (§3,
+generated from `_kit.py`) — it used to be duplicated here with a second, drifted value
+(`#e08e52`); that row is gone, not just fixed, so it cannot drift again on its own.
 
 ### Layer 4 — fixed set dressing (bushes, shrubs)
 
@@ -156,7 +175,7 @@ Instanced props are an instant tell (#22). Ship **three** of every prop: recolou
 | prop | A | B | C |
 |---|---|---|---|
 | grass | `#9ddb76` / `#79b85c` | `#a8de88` / `#86bd6b` | `#8fd472` / `#6faf55` |
-| soil | `#c2946b` / `#a37855` / `#dbad7f` / `#8a6345` | `#cb9d74` / `#ab8060` / `#e2b689` / `#916b4d` | `#b98a63` / `#9a704e` / `#d3a577` / `#82603f` |
+| soil | `#c78956` / `#a57144` / `#dd9b68` / `#885f37` | `#ca8e57` / `#a87745` / `#e0a16a` / `#8b6339` | `#c38254` / `#a26c42` / `#d99467` / `#855936` |
 | cloud-shade | `#c6d8e6` | `#cbdae4` | `#c0d5e8` |
 | hill / hill-deep | `#d0edbe` / `#badea9` | `#c9ecc6` / `#b4ddb1` | `#d6ecb8` / `#c1dda8` |
 
@@ -164,7 +183,7 @@ Instanced props are an instant tell (#22). Ship **three** of every prop: recolou
 
 | token | hex | use |
 |---|---|---|
-| `soil-dark` | `#8a6345` | scrape marks on a dug hole floor — ΔV 0.098 from `soil-deep` |
+| `soil-dark` | `#885f37` | deepest crumbs / the shaded far wall of a planting hollow — ΔV 0.114 from `soil-deep` |
 | `ground-contact` | `#93d56c` | contact shadow on a `grass` field — ΔV 0.024, hard edge |
 | `stone` | `#b8c2cc` | trowel blade, pebbles — tinted neutral, never `#808080` grey |
 | `stone-deep` | `#9aa6b3` | shadow for `stone` (ΔV 0.098) |
@@ -185,9 +204,9 @@ the same shadows.
 |---|---|---|---|
 | `grass-deep` | `#79b85c` | `grass` | 0.137 |
 | `grass-dark` | `#6c9959` | `grass-deep` — a further/back-layer green, small pattern marks only | 0.122 |
-| `soil-deep` | `#a37855` | `soil` | 0.122 |
-| `soil-lite` | `#dbad7f` | lit crest of tilled soil / raised clods (its own shadow is `soil`) | 0.098 |
-| `sun-shade` | `#eebf5c` | `sun` (body) | 0.067 |
+| `soil-deep` | `#a57144` | `soil` | 0.133 |
+| `soil-lite` | `#dd9b68` | lit crumbs of tilled soil (its own shadow is `soil`) | 0.087 |
+| `sun-shade` | `#eebf62` | `sun` (body) | 0.067 |
 | `ray-shade` | `#dbab58` | `sun-deep` (rays) | 0.082 |
 | `cloud-shade` | `#c6d8e6` | `cream` — hue-rotated to 206°, because a cloud's shadow must go cool | 0.098 |
 
@@ -212,11 +231,12 @@ these — do not re-derive your own near-miss for "a green," "a red," "a metal g
 | `leaf` | `#c3f598` | lit green canopy face (shadow: `grass`) | 0.101 |
 | `accent-deep` | `#e09863` | shadow for `accent` | 0.122 |
 | `fruit` | `#d96a62` | red accent — apples, pepperoni (kept punchier: S 0.55, the top of the accent band) | — |
-| `fruit-deep` | `#b85149` | shadow for `fruit` | 0.129 |
+| `fruit-deep` | `#b8544e` | shadow for `fruit` | 0.129 |
 | `ember` | `#d9876c` | autumn orange-red (maple canopy) | — |
 | `ember-deep` | `#b86a53` | shadow for `ember` | 0.129 |
 | `steel` | `#b8bcc8` | tinted metal — saucers, wings (already in band pre-revision, unchanged) | — |
 | `steel-deep` | `#969cae` | shadow for `steel` (unchanged) | 0.102 |
+| `steel-dark` | `#7f8697` | shadow for `steel-deep` — bolts, grille slots, deep metal | 0.090 |
 | `sky-deep` | `#6cacd9` | shadow for `sky-hi` (UFO dome) | 0.150 |
 | `cream-deep` | `#e8dcc4` | shadow for `cream` (already in band pre-revision, unchanged) | 0.090 |
 | `beam` | `#ffeaa8` | flat light/glow shapes — tractor beams, halos (already in band, unchanged) | — |
