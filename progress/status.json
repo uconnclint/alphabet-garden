@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T22:33:03.852Z",
+  "updated": "2026-09-07T23:02:52.636Z",
   "project": "Alphabet Garden — Toca-grade graphics overhaul",
   "branch": "toca-polish",
   "wave": 3,
@@ -162,9 +162,9 @@
       "name": "HUD & icon system",
       "status": "building",
       "rounds": 0,
-      "score": null,
-      "gap": "",
-      "note": "LAST claymation surface: 4 HUD icons + logo badge + title wordmark are DOM images, invisible to the scene-texture inventory. Being authored flat."
+      "score": 5,
+      "gap": "On a 375px phone only 2 of 4 HUD buttons fit — the shovel and sound toggle are off-screen and unreachable.",
+      "note": "Flat icons + wordmark authored and wired; the last claymation surface is gone. But mobile clipping is a real accessibility failure on the target devices."
     },
     {
       "id": "letter-picker",
@@ -210,11 +210,11 @@
       "id": "title",
       "group": "UI",
       "name": "Title screen",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 7,
       "gap": "",
-      "note": "Title wordmark being reauthored; the agent may keep the existing one if the lettering cannot be made genuinely good."
+      "note": "Wordmark rebuilt in flat vector after the first cut filled both letter-e counters solid; metrics re-cut so the counter survives the outline at the real 560px render."
     },
     {
       "id": "touch-feel",
@@ -260,11 +260,11 @@
       "id": "coherence",
       "group": "Feel",
       "name": "Whole-game coherence pass",
-      "status": "critiquing",
+      "status": "failed",
       "rounds": 0,
       "score": null,
-      "gap": "",
-      "note": "Fresh agent playing the ENTIRE game — the first review to judge the finished thing rather than assets in isolation. Also deciding the open full-garden composition question."
+      "gap": "Verdict unreliable — the browser pane could not create a WebGL context, so the agent judged an empty sky rather than the game.",
+      "note": "Superseded by headless-Chrome software-GL rendering, which is now the reliable way to see the finished game."
     },
     {
       "id": "flat-batch-1",
@@ -298,30 +298,6 @@
     }
   ],
   "log": [
-    {
-      "t": "10:53",
-      "msg": "Critic RETRACTED four of its own suspicions after checking source, and flagged them so we would not fix what is not broken. That is the behaviour I want."
-    },
-    {
-      "t": "10:53",
-      "msg": "New findings: prop_seed silhouette merges with its mound (0px gap where 8px required), worm segment ticks render at 0.4px, and all 3 cloud variants share one recipe including the identical drip lobe."
-    },
-    {
-      "t": "10:53",
-      "msg": "Sharpest structural note: the dirt plot mixes projections — side-on rim with a top-down hole — which is WHY it reads as food rather than ground."
-    },
-    {
-      "t": "10:53",
-      "msg": "Round 4 building."
-    },
-    {
-      "t": "11:06",
-      "msg": "Motion fixes COMPLETE and committed. Motion fraction 0.35 -> 0.96; settle 383 -> 300ms; every tap now answers."
-    },
-    {
-      "t": "11:06",
-      "msg": "Builder used git stash to re-measure the ORIGINAL under identical conditions rather than trusting remembered numbers."
-    },
     {
       "t": "11:06",
       "msg": "Two real bugs found: spawnCritter bailed on document.hidden (so any player returning from another tab had an empty sky forever), and paintDayNight overwrote plant colour every frame, erasing the reduced-motion acknowledgement."
@@ -537,6 +513,30 @@
     {
       "t": "18:33",
       "msg": "COHERENCE PASS RUNNING: first agent to play the whole game end to end, and to settle whether a full 12-plant garden reads as lush or cluttered."
+    },
+    {
+      "t": "19:02",
+      "msg": "Every claymation surface is now gone — including the HUD icons and wordmark, which no scene-texture audit could see because they are DOM images."
+    },
+    {
+      "t": "19:02",
+      "msg": "The coherence pass is INVALID: WebGL was unavailable in the browser pane, so it judged an empty sky. Discarding its verdict rather than acting on it."
+    },
+    {
+      "t": "19:02",
+      "msg": "Built a headless-Chrome + SwiftShader screenshot path — now the only reliable way to see the finished game."
+    },
+    {
+      "t": "19:02",
+      "msg": "Investigated magenta/olive artifacts in the day render: they are the SAME colour with green/blue swapped, i.e. a software-GL channel-order artifact, NOT a real defect. Checked before dispatching anyone to chase it."
+    },
+    {
+      "t": "19:02",
+      "msg": "The art agent caught MY error: I wired 18 world assets using metrics measured before its final registration pass. Rainbow, bee and sparkle boxes were meaningfully wrong; all 18 corrected."
+    },
+    {
+      "t": "19:02",
+      "msg": "REAL BUGS FOUND at 375x812: the plot grid is clipped off the right edge, and only 2 of 4 HUD buttons fit — a child cannot reach the shovel or mute the game on a phone. Fix in progress."
     }
   ]
 }
