@@ -367,10 +367,10 @@ def inchworm_ivy():
     d = Doc()
     # ---- the vine: one long S, base to y=300 ----
     sp, ws = [], []
-    for i in range(13):
-        t = i / 12.0
+    for i in range(23):
+        t = i / 22.0
         y = 924 - 624 * t
-        x = 500 + 96 * math.sin(t * math.pi * 1.80)
+        x = 500 + 88 * math.sin(t * math.pi * 1.72)
         sp.append((x, y))
         ws.append(96 - 34 * t)
     d.form(ribbon(sp, ws, cap0="round", cap1="round"), GRASS_DEEP,
@@ -393,8 +393,9 @@ def inchworm_ivy():
         p = leaf_round(lx, ly, L, Wd, dg, curl=.14)
         if nib:                      # ODDITY: the worm has eaten one leaf
             a = math.radians(dg)
-            p += " " + bite(lx - L * .60 * math.sin(a),
-                            ly - L * .60 * math.cos(a), 40)
+            p += " " + bite(lx + L * .50 * math.sin(a) + Wd * .22 * math.cos(a),
+                            ly - L * .50 * math.cos(a) + Wd * .22 * math.sin(a),
+                            32)
         d.form(p, col, sweep(lx - L * .3 * math.sin(math.radians(dg)),
                              ly - L * .5, Wd * .7, L * .34, lo=.26, hi=-.40,
                              seed=sd), SHADE[col], ol=OL_PROP, evenodd=nib)
@@ -411,16 +412,16 @@ def inchworm_ivy():
     d.form(canopy_blob(356, 356, 62, 58, 8, J0, B0), GRASS,
            sweep(356, 356, 62, 58, lo=.28, hi=-.44), GRASS_DEEP, ol=OL_PROP)
     J, B = lobe_profile(seed=64.3, n=10, jit=0.05, bul=(8, 16))
-    d.form(canopy_blob(664, 292, 118, 112, 10, J, B), LEAF,
-           sweep(664, 292, 118, 112, lo=.30, hi=-.44), GRASS, ol=OL_MAIN)
-    for (ax, ay, bx, by) in ((644, 188, 610, 128), (698, 188, 740, 130)):
+    d.form(canopy_blob(668, 288, 150, 142, 10, J, B), LEAF,
+           sweep(668, 288, 150, 142, lo=.30, hi=-.44), GRASS, ol=OL_MAIN)
+    for (ax, ay, bx, by) in ((640, 156, 604, 94), (704, 156, 748, 98)):
         d.add('<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
               'stroke-width="14" %s/><circle cx="%d" cy="%d" r="19" '
               'fill="%s"/>' % (ax, ay + 6, (ax + bx) // 2 - 12, ay - 34,
                                bx, by, INK_SOFT, RJ, bx, by, INK_SOFT))
     # face: 120 wide on the 236-wide head = 50.8%
-    d.add(face(666, 300, 120, mass_w=236, default="mischief", tilt=6.0,
-               eyes=((-44, -22), (50, -18)), eye_r=(20, 22),
+    d.add(face(670, 296, 176, mass_w=300, default="mischief", tilt=6.0,
+               eyes=((-44, -22), (50, -18)), eye_r=(22, 26),
                mouth=(4, 40), mouth_k=0.92, brow_lift=4))
     return d.svg()
 
@@ -437,49 +438,49 @@ def icecream_iris():
                      w_base=250, root_lobes=3, root_depth=(16, 26)),
            GRASS, sweep(518, 922, 116, 96, lo=.10, hi=-.16), GRASS_DEEP)
     for (lx, ly, L, Wd, dg, sd) in ((424, 918, 232, 132, -74, 3.0),
-                                    (598, 902, 218, 124, 70, 6.0)):
+                                    (556, 906, 218, 124, 70, 6.0)):
         d.form(leaf_pointed(lx, ly, L, Wd, dg, curl=.14), GRASS,
                sweep(lx + (60 if dg > 0 else -60), ly - L * .4, Wd * .8,
                      L * .3, lo=.24, hi=-.38, seed=sd), GRASS_DEEP,
                ol=OL_PROP)
 
     # ---- the waffle cone ----
-    cone = hard_poly([(344, 596), (676, 588), (532, 892), (480, 894)], 36)
+    cone = hard_poly([(392, 594), (718, 604), (540, 892), (490, 890)], 36)
     waffle = []
     for i in range(5):
-        waffle.append("M%d,%d L%d,%d" % (392 + i * 52, 610 + i * 6,
-                                         474 + i * 22, 866))
-        waffle.append("M%d,%d L%d,%d" % (378 + i * 8, 640 + i * 50,
-                                         648 - i * 30, 626 + i * 50))
-    d.form(cone, SUN_DEEP, sweep_hard(510, 706, 168, 160, lo=.26, hi=-.34),
+        waffle.append("M%d,%d L%d,%d" % (420 + i * 60, 614 + i * 6,
+                                         482 + i * 22, 864))
+        waffle.append("M%d,%d L%d,%d" % (410 + i * 10, 644 + i * 48,
+                                         700 - i * 34, 636 + i * 48))
+    d.form(cone, SUN_DEEP, sweep_hard(548, 712, 168, 160, lo=.26, hi=-.34),
            RAY_SHADE, ol=OL_MAIN, inner=stroked(waffle, RAY_SHADE, OL_FINE))
 
     # ---- three scoops, bottom first ----
     for (cx, cy, rx, ry, col, n, sd, notch) in (
-            (508, 566, 214, 176, FRUIT, 12, 12.4, None),
-            (498, 384, 194, 160, LEAF, 12, 26.8, 4),
-            (516, 228, 172, 142, SUN, 11, 41.2, None)):
+            (546, 574, 210, 174, FRUIT, 12, 12.4, None),
+            (488, 396, 192, 158, LEAF, 12, 26.8, 4),
+            (426, 244, 168, 140, SUN, 11, 41.2, None)):
         J, B = lobe_profile(sd, n, jit=0.05, bul=(16, 34))
         d.form(canopy_blob(cx, cy, rx, ry, n, J, B, start=-98, notch=notch),
                col, sweep(cx, cy, rx, ry, lo=.30, hi=-.44, wob=.07,
                           seed=sd * .1), SHADE[col], ol=OL_MAIN)
     # mint chips + sprinkles, flat marks
-    d.add(dots([(432, 356, 21), (516, 330, 18), (566, 402, 20),
-                (462, 428, 17), (556, 460, 16)], GRASS_DARK))
-    for (sx, sy, dg, col) in ((452, 190, 24, FRUIT), (556, 176, -32, SKY_HI),
-                              (596, 244, 14, BERRY), (444, 262, -18, FRUIT)):
+    d.add(dots([(424, 368, 21), (506, 342, 18), (556, 414, 20),
+                (452, 440, 17), (546, 472, 16)], GRASS_DARK))
+    for (sx, sy, dg, col) in ((362, 206, 24, FRUIT), (466, 192, -32, SKY_HI),
+                              (506, 260, 14, BERRY), (354, 278, -18, FRUIT)):
         d.fill(slab(sx, sy, 46, 20, r=0.48, deg=dg), col)
 
     # ---- ODDITY: the cherry has slid off centre and is about to fall ----
-    d.add('<path d="M628,168 C628,120 612,96 588,84" fill="none" '
+    d.add('<path d="M356,166 C352,118 336,94 312,82" fill="none" '
           'stroke="%s" stroke-width="%d" %s/>' % (BARK_DEEP, OL_PROP, RJ))
-    d.form(fruit_blob(632, 196, 62), FRUIT,
-           sweep(632, 196, 62, 62, lo=.28, hi=-.46), FRUIT_DEEP, ol=OL_PROP,
+    d.form(fruit_blob(352, 194, 62), FRUIT,
+           sweep(352, 194, 62, 62, lo=.28, hi=-.46), FRUIT_DEEP, ol=OL_PROP,
            inner='<path d="%s" fill="%s" opacity="0.8"/>'
-                 % (chip(608, 172, 22), CREAM))
+                 % (chip(328, 170, 22), CREAM))
 
     # ---- face on the bottom scoop: 212 on 416 = 51.0% ----
-    d.add(face(494, 590, 212, mass_w=416, default="happy", tilt=-3.0,
+    d.add(face(532, 598, 208, mass_w=412, default="happy", tilt=-6.0,
                eyes=((-48, -8), (50, -14)), eye_r=(17, 24),
                mouth=(-2, 52), mouth_k=1.05))
     return d.svg()
@@ -564,8 +565,8 @@ def jaguar_jade():
                          INK, OL_MAIN))
 
     # ---- five paddles.  index 4 is the ODDITY: stubby and rotated out ----
-    PAD = [(-68, 442, 178, 6.0), (-34, 548, 192, 13.0), (-2, 612, 202, 20.0),
-           (30, 540, 188, 27.0), (63, 392, 172, 34.0)]
+    PAD = [(-84, 384, 168, 6.0), (-44, 520, 196, 13.0), (-2, 606, 262, 20.0),
+           (38, 512, 190, 27.0), (78, 370, 162, 34.0)]
     for i, (dg, L, Wd, sd) in enumerate(PAD):
         a = math.radians(dg)
         bx = PX + 66 * math.sin(a)
@@ -590,8 +591,8 @@ def jaguar_jade():
                ACCENT_DEEP, ol=OL_MAIN, inner=spots)
 
     # ---- face on the centre paddle: 138 wide on the 268-wide pad = 51.5% ---
-    d.add(face(490, 438, 112, mass_w=202, default="happy", tilt=-2.0,
-               eyes=((-44, -4), (48, -12)), eye_r=(24, 22),
+    d.add(face(490, 438, 154, mass_w=262, default="happy", tilt=-2.0,
+               eyes=((-44, -4), (48, -12)), eye_r=(24, 26),
                mouth=(2, 48), mouth_k=1.06))
     return d.svg()
 
@@ -604,7 +605,7 @@ def jaguar_jade():
 def jellybean_jungle():
     d = Doc()
     # ---- the squat stump: wide foot, no trunk to speak of ----
-    d.form(stem_slim(504, 700, BASE_Y, 288, root_seed=166.4, lean=-10,
+    d.form(stem_slim(504, 636, BASE_Y, 288, root_seed=166.4, lean=-10,
                      w_base=470, root_lobes=4, root_depth=(30, 54)),
            STEEL, sweep(524, 858, 220, 168, lo=.22, hi=-.24, wob=.05),
            STEEL_DEEP,
@@ -670,7 +671,7 @@ def kale():
            CREAM, sweep(516, 960, 146, 66, lo=.16, hi=-.22), CREAM_DEEP)
 
     # ---- the curl: eight ruffled clumps, back rank darkest ----
-    CL = [(252, 380, 202, 190, GRASS_DEEP, 18, -104, None, 5.1),
+    CL = [(252, 386, 202, 188, GRASS_DEEP, 18, -104, None, 5.1),
           (760, 364, 200, 188, GRASS_DEEP, 18, -78, None, 11.3),
           (250, 700, 200, 184, GRASS_DEEP, 17, -96, 6, 17.6),
           (764, 686, 198, 182, GRASS_DEEP, 17, -88, None, 23.8),
@@ -678,7 +679,7 @@ def kale():
           (320, 540, 194, 186, GRASS, 17, -102, None, 36.5),
           (694, 526, 192, 184, GRASS, 17, -82, None, 42.9),
           (508, 500, 262, 250, GRASS, 20, -92, None, 49.4),
-          (500, 742, 248, 184, LEAF, 19, -96, 9, 55.8)]
+          (500, 722, 248, 172, LEAF, 19, -96, 9, 55.8)]
     for (cx, cy, rx, ry, col, n, st, notch, sd) in CL:
         J, B = lobe_profile(sd, n, jit=0.16, bul=(30, 70))
         d.form(canopy_blob(cx, cy, rx, ry, n, J, B, start=st, notch=notch),
@@ -699,16 +700,16 @@ def kale():
                                 (302, 724, 82, 48, 34), (710, 710, 80, 46, -24)):
         d.fill(leaf_round(mx, my, L, Wd, dg), GRASS_DARK)
     # outer leaves lolling out sideways onto the dirt
-    for (lx, ly, L, Wd, dg, col, sd) in ((300, 918, 226, 176, -104, GRASS, 2.0),
-                                         (716, 900, 218, 170, 102, GRASS, 6.0)):
+    for (lx, ly, L, Wd, dg, col, sd) in ((300, 896, 226, 172, -104, GRASS, 2.0),
+                                         (716, 880, 218, 166, 102, GRASS, 6.0)):
         d.form(leaf_round(lx, ly, L, Wd, dg, curl=.16), col,
-               sweep(lx + (70 if dg > 0 else -70), ly - 26, Wd * .7, 74,
+               sweep(lx + (70 if dg > 0 else -70), ly - 24, Wd * .7, 72,
                      lo=.26, hi=-.40, seed=sd), SHADE[col], ol=OL_MAIN)
         d.line(vein(lx, ly, L, dg, frac=.6), OL_FINE)
     # ---- ODDITY: one outer leaf has flopped right over onto the soil ----
-    d.form(leaf_round(804, 926, 160, 136, 100, curl=.2), GRASS,
-           sweep(738, 906, 78, 58, lo=.26, hi=-.40), GRASS_DEEP, ol=OL_PROP)
-    d.line(vein(804, 926, 160, 100, frac=.6), OL_FINE)
+    d.form(leaf_round(796, 880, 158, 132, 100, curl=.2), GRASS,
+           sweep(732, 862, 76, 56, lo=.26, hi=-.40), GRASS_DEEP, ol=OL_PROP)
+    d.line(vein(796, 880, 158, 100, frac=.6), OL_FINE)
     return d.svg()
 
 
@@ -770,7 +771,7 @@ def kangaroo_kelp():
            sweep(400, 730, 66, 54, lo=.26, hi=-.40), GRASS, ol=OL_PROP)
 
     # ---- face: 168 wide on a 336-wide head = 50.0% ----
-    d.add(face(536, 400, 168, mass_w=336, default="surprised", tilt=-5.0,
+    d.add(face(536, 400, 190, mass_w=336, default="surprised", tilt=-5.0,
                eyes=((-46, -20), (52, -14)), eye_r=(19, 26),
                mouth=(0, 50), mouth_k=0.82, brow_lift=8))
     return d.svg()
@@ -842,8 +843,8 @@ def ketchup_cactus():
            sweep(268, 936, 50, 50, lo=.28, hi=-.44), FRUIT_DEEP, ol=OL_FINE)
 
     # ---- face on the label: 174 wide on the 316-wide label = 55.1% ----
-    d.add(face(490, 620, 174, mass_w=316, default="mischief", tilt=1.5,
-               eyes=((-52, -34), (50, -28)), eye_r=(21, 18),
+    d.add(face(490, 620, 186, mass_w=316, default="mischief", tilt=1.5,
+               eyes=((-52, -34), (50, -28)), eye_r=(21, 25),
                mouth=(0, 46), mouth_k=1.0, brow_lift=-4))
     return d.svg()
 
@@ -962,20 +963,20 @@ def ladybug_lettuce():
 
     # ---- head + cream mask ----
     J, B = lobe_profile(seed=118.3, n=10, jit=0.05, bul=(8, 16))
-    d.form(canopy_blob(500, 240, 148, 118, 10, J, B, start=-96), INK_SOFT,
+    d.form(canopy_blob(500, 246, 172, 138, 10, J, B, start=-96), INK_SOFT,
            None, None, ol=OL_MAIN)
-    for (ax, ay, bx, by) in ((458, 152, 416, 82), (546, 150, 600, 86)):
+    for (ax, ay, bx, by) in ((456, 138, 410, 66), (548, 136, 606, 70)):
         d.add('<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
               'stroke-width="15" %s/><circle cx="%d" cy="%d" r="24" '
               'fill="%s"/>' % (ax, ay, (ax + bx) // 2, ay - 46, bx, by,
                                INK_SOFT, RJ, bx, by, INK_SOFT))
     J, B = lobe_profile(seed=137.9, n=10, jit=0.04, bul=(6, 12))
-    d.form(canopy_blob(500, 270, 114, 82, 10, J, B, start=-92), CREAM,
-           sweep(500, 270, 114, 82, lo=.34, hi=-.46), CREAM_DEEP, ol=OL_PROP)
-    # ---- face on the cream mask: 128 wide on the 228-wide mask = 56.1% ----
-    d.add(face(500, 276, 128, mass_w=228, default="happy", tilt=1.5,
-               eyes=((-54, -18), (56, -22)), eye_r=(23, 19),
-               mouth=(0, 46), mouth_k=0.86, brow_lift=0))
+    d.form(canopy_blob(500, 280, 150, 106, 10, J, B, start=-92), CREAM,
+           sweep(500, 280, 150, 106, lo=.34, hi=-.46), CREAM_DEEP, ol=OL_PROP)
+    # ---- face on the cream mask: 172 wide on the 300-wide mask = 57.3% ----
+    d.add(face(500, 286, 172, mass_w=300, default="happy", tilt=1.5,
+               eyes=((-54, -18), (56, -22)), eye_r=(23, 26),
+               mouth=(0, 46), mouth_k=1.0, brow_lift=0))
     return d.svg()
 
 
@@ -992,7 +993,7 @@ def lollipop_lily():
            GRASS_DEEP)
     # ODDITY: the right leaf is half the length of the left and folded over
     for (lx, ly, L, Wd, dg, sd, curl) in ((452, 812, 268, 152, -72, 3.0, .14),
-                                          (566, 760, 146, 126, 62, 6.0, -.34)):
+                                          (538, 768, 152, 130, 62, 6.0, -.34)):
         d.form(leaf_pointed(lx, ly, L, Wd, dg, curl=curl), GRASS,
                sweep(lx + (56 if dg > 0 else -56), ly - L * .42,
                      Wd * .8, L * .32, lo=.24, hi=-.38, seed=sd),
@@ -1022,8 +1023,8 @@ def lollipop_lily():
 # =====================================================================
 def monkey_marigold():
     d = Doc()
-    HX, HY = 476, 378
-    d.form(stem_slim(524, 570, BASE_Y, 74, root_seed=173.5, lean=-16,
+    HX, HY = 476, 366
+    d.form(stem_slim(524, 560, BASE_Y, 74, root_seed=173.5, lean=-16,
                      w_base=206, root_lobes=3, root_depth=(16, 28)),
            GRASS, sweep(526, 826, 92, 200, lo=.06, hi=-.10, wob=.03),
            GRASS_DEEP)
@@ -1032,7 +1033,7 @@ def monkey_marigold():
     d.line(vein(560, 830, 242, 76, frac=.62), OL_FINE)
 
     # ---- the ears ----
-    for (ex, ey, er, sd) in ((170, 390, 108, 3.0), (806, 356, 98, 8.0)):
+    for (ex, ey, er, sd) in ((186, 384, 102, 3.0), (798, 350, 94, 8.0)):
         J, B = lobe_profile(sd, 10, jit=0.05, bul=(6, 12))
         d.form(canopy_blob(ex, ey, er, er * .96, 10, J, B), BARK,
                sweep(ex, ey, er, er, lo=.30, hi=-.44), BARK_DEEP, ol=OL_MAIN)
@@ -1045,28 +1046,28 @@ def monkey_marigold():
     for i in range(19):
         a = -94 + 360.0 * i / 19 + (3.4 if i % 3 == 0 else -2.1)
         stub = 0.70 if i == 5 else 1.0
-        d.form(petal_fan(HX, HY, a, 184, 314, 15, seed=i * 3.1, ruffle=.07,
+        d.form(petal_fan(HX, HY, a, 172, 294, 15, seed=i * 3.1, ruffle=.07,
                          stub=stub), ACCENT,
-               sweep(HX, HY, 314, 298, lo=.34, hi=-.50, seed=i * .7),
+               sweep(HX, HY, 294, 280, lo=.34, hi=-.50, seed=i * .7),
                ACCENT_DEEP, ol=OL_PROP)
     for i in range(14):
         a = -80 + 360.0 * i / 14 + (2.6 if i % 2 else -3.2)
-        d.form(petal_fan(HX, HY, a, 146, 244, 17, seed=i * 5.3 + 1.0,
+        d.form(petal_fan(HX, HY, a, 136, 226, 17, seed=i * 5.3 + 1.0,
                          ruffle=.06), SUN,
-               sweep(HX, HY, 244, 232, lo=.34, hi=-.50, seed=i * .9),
+               sweep(HX, HY, 226, 214, lo=.34, hi=-.50, seed=i * .9),
                SUN_SHADE, ol=OL_FINE)
 
     # ---- the monkey face disc: 200 on 388 = 51.5% ----
     J, B = lobe_profile(seed=104.6, n=12, jit=0.04, bul=(8, 15))
-    d.form(canopy_blob(HX - 2, HY + 4, 180, 164, 12, J, B, start=-92),
-           BARK_LITE, sweep(HX, HY, 180, 164, lo=.32, hi=-.46), BARK,
+    d.form(canopy_blob(HX - 2, HY + 4, 168, 152, 12, J, B, start=-92),
+           BARK_LITE, sweep(HX, HY, 168, 152, lo=.32, hi=-.46), BARK,
            ol=OL_MAIN)
-    d.form(canopy_blob(HX, HY + 50, 118, 78, 10,
+    d.form(canopy_blob(HX, HY + 46, 110, 74, 10,
                        *lobe_profile(112.8, 10, jit=0.04, bul=(5, 10))),
-           CREAM, sweep(HX, HY + 50, 118, 78, lo=.32, hi=-.46), CREAM_DEEP,
+           CREAM, sweep(HX, HY + 46, 110, 74, lo=.32, hi=-.46), CREAM_DEEP,
            ol=OL_FINE)
-    d.add(dots([(450, 416, 12), (502, 414, 11)], INK_SOFT))
-    d.add(face(HX - 2, HY + 6, 190, mass_w=360, default="neutral", tilt=2.0,
+    d.add(dots([(452, 400, 12), (502, 398, 11)], INK_SOFT))
+    d.add(face(HX - 2, HY + 6, 178, mass_w=336, default="neutral", tilt=2.0,
                eyes=((-52, -32), (50, -36)), eye_r=(20, 23),
                mouth=(0, 60), mouth_k=0.94))
     return d.svg()
@@ -1079,32 +1080,32 @@ def monkey_marigold():
 # =====================================================================
 def marshmallow_tree():
     d = Doc()
-    for (x0, y0, x1, y1, w0, w1, k) in ((478, 686, 350, 526, 92, 66, 0.18),
-                                        (534, 676, 672, 508, 88, 64, -0.20)):
+    for (x0, y0, x1, y1, w0, w1, k) in ((470, 566, 336, 402, 86, 62, 0.18),
+                                        (536, 556, 690, 384, 82, 60, -0.20)):
         d.form(branch(x0, y0, x1, y1, w0, w1, k), BARK,
                sweep((x0 + x1) / 2, (y0 + y1) / 2, 100, 90, lo=.22, hi=-.30,
                      seed=x1 * .02), BARK_DEEP, ol=OL_MAIN)
-    d.form(trunk_chunky(504, 560, BASE_Y, 152, 300, root_seed=182.9, lean=8,
-                        root_lobes=3, root_depth=(18, 32), flare=1.12),
-           BARK, sweep(520, 800, 168, 210, lo=.18, hi=-.16, wob=.06),
+    d.form(trunk_chunky(504, 430, BASE_Y, 128, 262, root_seed=182.9, lean=8,
+                        root_lobes=3, root_depth=(18, 32), flare=1.06),
+           BARK, sweep(520, 740, 150, 250, lo=.18, hi=-.16, wob=.06),
            BARK_DEEP,
-           inner=stroked(["M418,660 C434,750 424,850 442,946",
-                          "M596,684 C586,766 600,858 590,950"],
+           inner=stroked(["M428,600 C444,700 434,810 452,930",
+                          "M584,626 C574,720 588,824 578,942"],
                          INK, OL_MAIN))
 
     # ---- five marshmallows, back rank first ----
-    cylinder(d, 288, 440, 238, 190, CREAM, 1.0, deg=-11)
-    cylinder(d, 722, 392, 220, 200, CREAM, 2.0, deg=13)
-    cylinder(d, 490, 236, 254, 190, CREAM, 3.0, deg=-4)
-    cylinder(d, 348, 630, 206, 184, CREAM, 4.0, deg=7)
-    cylinder(d, 694, 594, 212, 172, CREAM, 5.0, deg=-15)
-    cylinder(d, 500, 464, 284, 240, CREAM, 6.0, deg=3)
+    cylinder(d, 302, 292, 226, 180, CREAM, 1.0, deg=-11)
+    cylinder(d, 710, 254, 214, 188, CREAM, 2.0, deg=13)
+    cylinder(d, 494, 166, 240, 180, CREAM, 3.0, deg=-4)
+    cylinder(d, 332, 468, 200, 172, CREAM, 4.0, deg=7)
+    cylinder(d, 684, 442, 206, 164, CREAM, 5.0, deg=-15)
+    cylinder(d, 500, 348, 320, 262, CREAM, 6.0, deg=3)
     # ---- ODDITY: one has fallen off and is sitting in the dirt, squashed ---
-    cylinder(d, 852, 936, 176, 116, CREAM, 7.0, deg=-11, ol=OL_PROP)
+    cylinder(d, 812, 940, 168, 112, CREAM, 7.0, deg=-11, ol=OL_PROP)
 
     # ---- face on the front marshmallow: 168 on 320 = 52.5% ----
-    d.add(face(498, 478, 150, mass_w=284, default="sleepy", tilt=-2.0,
-               eyes=((-58, -8), (54, -14)), eye_r=(22, 18),
+    d.add(face(498, 364, 190, mass_w=320, default="sleepy", tilt=-2.0,
+               eyes=((-58, -8), (54, -14)), eye_r=(22, 25),
                mouth=(-2, 48), mouth_k=0.94, brow_lift=12))
     return d.svg()
 
@@ -1176,25 +1177,25 @@ def narwhal_nettle():
            GRASS, sweep(518, 810, 100, 210, lo=.06, hi=-.10, wob=.03),
            GRASS_DEEP)
     # nettle leaves: serrated, so it is a nettle and not a daisy stem
-    for (lx, ly, L, dg, sd) in ((432, 872, 138, -62, 3.0),
-                                (588, 812, 130, 66, 6.0),
-                                (446, 706, 118, -74, 9.0),
-                                (604, 902, 112, 84, 12.0)):
-        d.form(leaf_lobed(lx - L * .5 * math.sin(math.radians(dg)) * -1, ly,
-                          L, dg, jit=jitter(sd, 5, 0.10, 1.0)), GRASS,
+    for (lx, ly, L, dg, sd) in ((442, 870, 144, -62, 3.0),
+                                (566, 806, 138, 66, 6.0),
+                                (460, 696, 126, -74, 9.0),
+                                (572, 912, 128, 84, 12.0)):
+        d.form(leaf_lobed(lx, ly, L, dg,
+                          jit=jitter(sd, 5, 0.10, 1.0)), GRASS,
                sweep(lx, ly, L, L, lo=.28, hi=-.42, seed=sd), GRASS_DEEP,
                ol=OL_PROP)
 
     # ---- the tusk, drawn behind the head ----
-    d.form(horn(500, 300, 244, 96, deg=5, k=0.05), CREAM,
-           sweep(524, 176, 60, 118, lo=.24, hi=-.36), CREAM_DEEP, ol=OL_MAIN,
-           inner=stroked(["M448,%d C494,%d 540,%d 574,%d"
-                          % (y, y - 30, y - 8, y - 44)
-                          for y in (268, 216, 164, 116)], INK, OL_FINE))
+    d.form(horn(500, 306, 250, 124, deg=5, k=0.05), CREAM,
+           sweep(526, 176, 66, 122, lo=.24, hi=-.36), CREAM_DEEP, ol=OL_MAIN,
+           inner=stroked(["M436,%d C486,%d 540,%d 580,%d"
+                          % (y, y - 32, y - 8, y - 46)
+                          for y in (262, 190, 122)], INK, OL_FINE))
 
     # ---- flippers ----
-    for (fx, fy, L, Wd, dg, sd) in ((288, 512, 172, 118, -104, 3.0),
-                                    (740, 486, 158, 108, 108, 7.0)):
+    for (fx, fy, L, Wd, dg, sd) in ((330, 520, 236, 132, -102, 3.0),
+                                    (700, 494, 222, 122, 106, 7.0)):
         d.form(leaf_round(fx, fy, L, Wd, dg, curl=.14), SKY_HI,
                sweep(fx, fy, Wd, L * .4, lo=.26, hi=-.40, seed=sd), SKY_DEEP,
                ol=OL_PROP)
@@ -1353,22 +1354,22 @@ def orange_tree():
 def owl_orchid():
     d = Doc()
     # ---- the grey stem ----
-    d.form(stem_slim(510, 620, BASE_Y, 68, root_seed=205.9, lean=14,
+    d.form(stem_slim(510, 668, BASE_Y, 68, root_seed=205.9, lean=14,
                      w_base=196, root_lobes=3, root_depth=(16, 28)),
            STEEL, sweep(522, 800, 88, 226, lo=.08, hi=-.12, wob=.03),
            STEEL_DEEP)
-    d.form(leaf_pointed(566, 826, 262, 138, 78, curl=-.14), STEEL,
-           sweep(676, 778, 100, 82, lo=.24, hi=-.36), STEEL_DEEP, ol=OL_PROP)
-    d.line(vein(566, 826, 262, 78, frac=.64), OL_FINE, STEEL_DARK)
+    d.form(leaf_pointed(534, 832, 264, 140, 78, curl=-.14), STEEL,
+           sweep(646, 784, 100, 82, lo=.24, hi=-.36), STEEL_DEEP, ol=OL_PROP)
+    d.line(vein(534, 832, 264, 78, frac=.64), OL_FINE, STEEL_DARK)
 
     # ---- petals: two ear tufts up, two wings out, two lobes down ----
-    PET = [(-32, 336, 166, 2.0, 1.00), (26, 348, 172, 7.0, 0.78),
-           (-78, 292, 186, 12.0, 1.00), (74, 286, 182, 17.0, 1.00),
-           (-132, 246, 172, 22.0, 1.00), (128, 240, 166, 27.0, 1.00)]
+    PET = [(-32, 392, 166, 2.0, 1.00), (26, 404, 172, 7.0, 0.78),
+           (-88, 322, 186, 12.0, 1.00), (84, 316, 182, 17.0, 1.00),
+           (-136, 258, 172, 22.0, 1.00), (132, 252, 166, 27.0, 1.00)]
     for (dg, L, Wd, sd, k) in PET:      # k<1 on tuft 2 == the ODDITY
         a = math.radians(dg)
         bx = 502 + 60 * math.sin(a)
-        by = 448 - 46 * math.cos(a)
+        by = 496 - 46 * math.cos(a)
         d.form(leaf_pointed(bx, by, L * k, Wd, dg, curl=.10), BERRY,
                sweep(bx + L * .3 * math.sin(a), by - L * .42 * math.cos(a),
                      Wd * .8, L * .34, lo=.30, hi=-.44, seed=sd),
@@ -1376,19 +1377,19 @@ def owl_orchid():
 
     # ---- the face disc ----
     J, B = lobe_profile(seed=99.3, n=12, jit=0.05, bul=(10, 20))
-    d.form(canopy_blob(500, 446, 188, 172, 12, J, B, start=-92), BERRY,
-           sweep(500, 446, 188, 172, lo=.32, hi=-.46), BERRY_DEEP, ol=OL_MAIN)
+    d.form(canopy_blob(500, 494, 188, 172, 12, J, B, start=-92), BERRY,
+           sweep(500, 494, 188, 172, lo=.32, hi=-.46), BERRY_DEEP, ol=OL_MAIN)
     # the two big owl eye discs the rig's pupils sit inside
-    for (ex, ey, er, sd) in ((436, 420, 82, 4.0), (566, 412, 79, 9.0)):
+    for (ex, ey, er, sd) in ((436, 468, 82, 4.0), (566, 460, 79, 9.0)):
         d.form(canopy_blob(ex, ey, er, er * .98, 10,
                            *lobe_profile(sd, 10, jit=0.03, bul=(4, 8))),
                CREAM, sweep(ex, ey, er, er, lo=.34, hi=-.48), CREAM_DEEP,
                ol=OL_PROP)
     # the beak
-    d.form(horn(502, 494, 86, 70, deg=178, k=0.04), ACCENT,
-           sweep(508, 538, 30, 36, lo=.26, hi=-.42), ACCENT_DEEP, ol=OL_PROP)
+    d.form(horn(502, 542, 86, 70, deg=178, k=0.04), ACCENT,
+           sweep(508, 586, 30, 36, lo=.26, hi=-.42), ACCENT_DEEP, ol=OL_PROP)
     # ---- face: 322 wide on the 664-wide bloom = 48.5% ----
-    d.add(face(502, 434, 322, mass_w=664, default="surprised", tilt=-1.0,
+    d.add(face(502, 482, 322, mass_w=664, default="surprised", tilt=-1.0,
                eyes=((-40, -9), (40, -14)), eye_r=(21, 22),
                mouth=(2, 78), mouth_k=0.62, brow_lift=14, with_blush=False))
     return d.svg()
@@ -1417,21 +1418,22 @@ def octopus_oakleaf():
                GRASS_DEEP, ol=OL_PROP)
 
     # ---- eight tentacles, all different ----
-    TENT = [(-94, 268, 92, 0.34, 2.0), (-118, 306, 96, -0.36, 7.0),
-            (-144, 322, 92, 0.42, 12.0), (-168, 300, 88, -0.34, 17.0),
-            (168, 292, 86, 0.36, 22.0), (146, 316, 94, -0.44, 27.0),
-            (98, 262, 90, 0.38, 32.0)]
+    TENT = [(-94, 274, 84, 0.42, 2.0), (-118, 352, 88, -0.46, 7.0),
+            (-144, 382, 84, 0.54, 12.0), (-168, 358, 80, -0.44, 17.0),
+            (168, 350, 78, 0.46, 22.0), (146, 366, 86, -0.56, 27.0),
+            (98, 276, 82, 0.48, 32.0)]
     for (dg, L, w, arc, sd) in TENT:
         a = math.radians(dg - 90.0)
         bx = 506 + 178 * math.sin(math.radians(dg))
         by = 404 - 148 * math.cos(math.radians(dg))
-        pth = crescent(bx, by, L, w, dg, arc=arc, waist=.36)
+        pth = crescent(bx, by, L, w, dg, arc=arc, waist=.44)
         d.form(pth, EMBER, sweep(bx + L * .4 * math.cos(a),
                                  by + L * .4 * math.sin(a), L * .4, w,
                                  lo=.28, hi=-.42, seed=sd), EMBER_DEEP,
                ol=OL_MAIN)
         sp = bow(bx, by, bx + L * math.cos(a), by + L * math.sin(a), arc, 6)
-        d.add(dots([(p[0], p[1], 16) for p in sp[1:5]], ACCENT))
+        d.add(dots([(p[0], p[1], 16 - i * 1.6) for i, p in enumerate(sp[1:5])],
+                   ACCENT))
     # ---- ODDITY: the eighth tentacle is tied in a knot ----
     d.form(coil(838, 656, 26, 100, 1.55, 70, start=150, n=48), EMBER,
            sweep(838, 656, 100, 100, lo=.28, hi=-.42, seed=41.0), EMBER_DEEP,
