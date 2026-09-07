@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!-- threejs-harness.html — standalone proof that the Three.js foundation (stage/tween/particles/textures/input) works. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Alphabet Garden — Three.js foundation harness</title>
+<style>
+  :root { color-scheme: light; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #cdeffd;
+    font: 600 14px/1.4 "Baloo 2", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #2f4a22;
+    /* iPad rubber-band + pinch-zoom lock, per house style. */
+    position: fixed; inset: 0;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: absolute; inset: 0; }
+
+  #hud {
+    position: absolute; top: 10px; left: 10px; z-index: 10;
+    background: rgba(255,255,255,.82); border: 2px solid #a8d98a; border-radius: 14px;
+    padding: 9px 13px; box-shadow: 0 3px 10px rgba(0,0,0,.12);
+    font-variant-numeric: tabular-nums; pointer-events: none; min-width: 172px;
+  }
+  #hud b { color: #17610f; }
+  #hud .row { display: flex; justify-content: space-between; gap: 14px; }
+  #hud .ok { color: #17610f; } #hud .warn { color: #b26a00; }
+
+  #controls {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 94vw;
+  }
+  #controls button {
+    font: inherit; font-weight: 700; cursor: pointer;
+    background: #fff; color: #2f4a22; border: 2px solid #6fb246; border-radius: 999px;
+    padding: 11px 16px; min-height: 44px; min-width: 44px; /* ≥44px targets */
+    box-shadow: 0 3px 0 #6fb246; touch-action: manipulation;
+  }
+  #controls button:active { transform: translateY(2px); box-shadow: 0 1px 0 #6fb246; }
+  #controls button[aria-pressed="true"] { background: #ffe680; border-color: #d79a00; box-shadow: 0 3px 0 #d79a00; }
+
+  #hint {
+    position: absolute; top: 12px; right: 12px; z-index: 10; pointer-events: none;
+    background: rgba(255,255,255,.82); border: 2px solid #a8d98a; border-radius: 14px;
+    padding: 8px 12px; max-width: 42vw; text-align: right;
+  }
+
+  /* Phone/portrait: the harness chrome must not bury the scene it is meant to prove. */
+  @media (max-width: 560px) {
+    #hint { display: none; }
+    #hud { font-size: 12px; padding: 6px 9px; min-width: 148px; border-radius: 11px; }
+    #controls { gap: 6px; bottom: 8px; }
+    #controls button { padding: 10px 11px; font-size: 12px; box-shadow: 0 2px 0 #6fb246; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage"></div>
+
+<div id="hud">
+  <div class="row"><span>FPS</span><b id="fps">–</b></div>
+  <div class="row"><span>Particles</span><b id="parts">0</b></div>
+  <div class="row"><span>Tweens</span><b id="tw">0</b></div>
+  <div class="row"><span>World</span><b id="world">–</b></div>
+  <div class="row"><span>DPR</span><b id="dpr">–</b></div>
+  <div class="row"><span>Textures</span><b id="tex">–</b></div>
+  <div class="row"><span>Reduced motion</span><b id="rm">off</b></div>
+</div>
+
+<div id="hint">Tap anywhere for sparkles.<br>Tap the bush, sun or plot.</div>
+
+<div id="controls">
+  <button id="b-confetti">🎉 Confetti</button>
+  <button id="b-water">💧 Water</button>
+  <button id="b-poof">💨 Poof</button>
+  <button id="b-pollen" aria-pressed="true">🌾 Pollen</button>
+  <button id="b-rm" aria-pressed="false">♿ Reduced motion</button>
+  <button id="b-timeline">🎬 Timeline</button>
+  <button id="b-404">🧪 Missing asset</button>
+</div>
+
+<script type="module">
+import { createStage, createSprite, THREE } from './js/systems/stage.js';
+import { tweens, attachTweensTo, setReducedMotion, isReducedMotion,
+         pop, squashStretch, wobble, shake, breathe, swayLoop } from './js/systems/tween.js';
+import { createParticles } from './js/systems/particles.js';
+import * as Textures from './js/systems/textures.js';
+import { createInput } from './js/systems/input.js';
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+const stage = createStage({
+  container: document.getElementById('stage'),
+  background: '#cdeffd'
+});
+
+Textures.setRenderer(stage.renderer);
+Textures.setBasePath('art/assets/');
+
+attachTweensTo(stage);
+const fx = createParticles(stage, { max: 900 });
+const input = createInput(stage);
+
+/* ── assets ───────────────────────────────────────────────────────────── */
+const ASSETS = [
+  'sky/sun.png',
+  'sky/cloud_puffy.png',
+  'garden/hills_backdrop.png',
+  'garden/dirt_plot_empty.png',
+  'plants/b-butterfly-bush.png',
+  'critters/bee.png'
+];
+
+const tex = await Textures.loadAll(ASSETS);
+
+/* ── scene ────────────────────────────────────────────────────────────── */
+const B = stage.bounds;
+
+// sky: sun (breathing) + a drifting cloud
+const sun = createSprite(tex['sky/sun.png'], { height: 210, x: 0, y: 0 });
+stage.layers.sky.add(sun);
+
+const cloud = createSprite(tex['sky/cloud_puffy.png'], { height: 120 });
+stage.layers.farParallax.add(cloud);
+
+// far parallax: hills
+const hills = createSprite(tex['garden/hills_backdrop.png'], { height: 420 });
+stage.layers.farParallax.add(hills);
+
+// plots: three dirt plots in a row
+const plots = [];
+for (let i = 0; i < 3; i++) {
+  const p = createSprite(tex['garden/dirt_plot_empty.png'], { width: 240, y: -300 });
+  stage.layers.plots.add(p);
+  plots.push(p);
+}
+
+// plants: the hero bush (breathe + sway), plus the fallback swatch
+const bush = createSprite(tex['plants/b-butterfly-bush.png'], { height: 380, y: -110 });
+stage.layers.plants.add(bush);
+
+// critters: a bee that loops across the sky
+const bee = createSprite(tex['critters/bee.png'], { height: 90 });
+stage.layers.critters.add(bee);
+
+/* ── responsive layout: everything keys off world bounds, never pixels ── */
+stage.onResize(s => {
+  const b = s.bounds;
+  sun.position.set(b.right - 170, b.top - 150, 0);
+  cloud.position.set(b.left + s.worldWidth * 0.28, b.top - 210, 0);
+
+  // Widening a sprite means updating userData.baseScale too — that is the value every tween
+  // helper springs back to, so forgetting it makes the next pop() snap the hills narrow again.
+  hills.position.set(0, b.bottom + 250, 0);
+  hills.scale.x = Math.max(s.worldWidth * 1.08, hills.userData.baseScale.x);
+  hills.userData.baseScale.x = hills.scale.x;
+
+  const gap = Math.min(300, s.worldWidth / 3.6);
+  plots.forEach((p, i) => p.position.set((i - 1) * gap, b.bottom + 250, 0));
+  bush.position.set(0, b.bottom + 380, 0);
+});
+
+/* ── idle life ────────────────────────────────────────────────────────── */
+// Started AFTER the entrance pops below, so the pops do not have to fight them. Once running,
+// a one-off animation (squash, wobble, shake) suspends these loops and they resume by themselves.
+function startIdleLoops() {
+  breathe(sun, { amount: 0.045, ms: 3200 });
+  swayLoop(bush, { angle: 0.055, ms: 3600 });
+  breathe(bush, { amount: 0.03, ms: 2900 });
+  plots.forEach((p, i) => breathe(p, { amount: 0.022, ms: 3000, phase: i / 3 }));
+}
+
+// The bee flies a lazy figure-of-eight; a plain driver is the right tool for a permanent loop.
+tweens.driver(elapsed => {
+  const t = elapsed / 1000;
+  bee.position.x = Math.sin(t * 0.55) * (stage.worldWidth * 0.36);
+  bee.position.y = stage.bounds.top - 330 + Math.sin(t * 1.1) * 70;
+  bee.material.rotation = Math.cos(t * 0.55) * 0.25;
+  return false;
+});
+
+// Cloud drift, wrapping across the world.
+tweens.driver((elapsed, dtms) => {
+  if (isReducedMotion()) return false;
+  cloud.position.x += (dtms / 1000) * 22;
+  if (cloud.position.x > stage.bounds.right + 200) cloud.position.x = stage.bounds.left - 200;
+  return false;
+});
+
+/* ── interaction ──────────────────────────────────────────────────────── */
+input.register(bush, {
+  hitPadding: 20,
+  onPressStart: () => squashStretch(bush, 0.14, 260),
+  onTap: info => {
+    squashStretch(bush, 0.26, 620);
+    fx.emit('sparkle', info.x, info.y + 40, { count: 18 });
+    fx.emit('confetti', info.x, info.y + 60);
+  }
+});
+
+input.register(sun, {
+  hitPadding: 24,
+  onTap: info => {
+    wobble(sun, { angle: 0.4, ms: 700, cycles: 3 });
+    fx.emit('sparkle', info.x, info.y, { count: 26, size: [30, 60] });
+  }
+});
+
+plots.forEach(p => input.register(p, {
+  hitPadding: 16,
+  onPressStart: () => { p.material.color.setHex(0xffe9b0); },
+  onPressEnd: () => { p.material.color.setHex(0xffffff); },
+  onTap: info => {
+    shake(p, { amount: 10, ms: 320 });
+    fx.emit('poof', info.x, info.y + 10);
+    fx.emit('waterDroplets', info.x, info.y + 30);
+  }
+}));
+
+// Background taps sparkle wherever the finger landed.
+input.onTapAnywhere(p => { if (!p.hit) fx.emit('sparkle', p.x, p.y); });
+
+/* ── ambient pollen ───────────────────────────────────────────────────── */
+let pollen = fx.ambient('pollen', { rate: 6 });
+
+/* ── control buttons ──────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+$('b-confetti').onclick = () => fx.emit('confetti', 0, stage.bounds.top - 260, { count: 70 });
+$('b-water').onclick = () => plots.forEach(p =>
+  fx.emit('waterDroplets', p.position.x, p.position.y + 60, { count: 16 }));
+$('b-poof').onclick = () => fx.emit('poof', 0, 0, { count: 14 });
+
+$('b-pollen').onclick = e => {
+  const on = e.currentTarget.getAttribute('aria-pressed') === 'true';
+  e.currentTarget.setAttribute('aria-pressed', String(!on));
+  if (on) { pollen.cancel(); pollen = null; }
+  else { pollen = fx.ambient('pollen', { rate: 6 }); }
+};
+
+$('b-rm').onclick = e => {
+  const on = e.currentTarget.getAttribute('aria-pressed') === 'true';
+  e.currentTarget.setAttribute('aria-pressed', String(!on));
+  setReducedMotion(!on);
+  $('rm').textContent = isReducedMotion() ? 'ON' : 'off';
+};
+
+$('b-timeline').onclick = () => {
+  tweens.timeline()
+    .call(() => pop(bush, { from: 0.55, ms: 380 }))
+    .wait(220)
+    .parallel([
+      t => t.to(sun, { 'position.y': stage.bounds.top - 300 }, { duration: 420, ease: 'backOut' }),
+      t => t.to(bush, { 'material.opacity': 0.35 }, { duration: 300 })
+    ])
+    .call(() => fx.emit('confetti', 0, 120, { count: 50 }))
+    .parallel([
+      t => t.to(sun, { 'position.y': stage.bounds.top - 150 }, { duration: 520, ease: 'bounceOut' }),
+      t => t.to(bush, { 'material.opacity': 1 }, { duration: 320 })
+    ])
+    .call(() => squashStretch(bush, 0.3, 700))
+    .start();
+};
+
+// Proves the "game must always boot" rule: this URL 404s, and textures.js hands back a
+// procedural swatch (plus one console warning) instead of throwing.
+let missing = null;
+$('b-404').onclick = async () => {
+  if (missing) { stage.layers.ui.remove(missing); missing = null; }
+  const t = await Textures.load('this/file/does-not-exist.png');
+  missing = createSprite(t, { height: 110 });
+  missing.position.set(stage.bounds.left + 100, stage.bounds.bottom + 110, 0);
+  stage.layers.ui.add(missing);
+  pop(missing, { from: 0.2, ms: 520 });
+  updateTextureReadout();
+};
+
+/* ── readouts ─────────────────────────────────────────────────────────── */
+let fpsAcc = 0, fpsFrames = 0;
+stage.onDraw((alpha, dt) => {
+  fpsAcc += dt; fpsFrames++;
+  if (fpsAcc >= 0.4) {
+    $('fps').textContent = Math.round(fpsFrames / fpsAcc);
+    fpsAcc = 0; fpsFrames = 0;
+  }
+  $('parts').textContent = fx.count + ' / ' + fx.max;
+  $('tw').textContent = tweens.count;
+});
+
+stage.onResize(s => {
+  $('world').textContent = Math.round(s.worldWidth) + '×' + Math.round(s.worldHeight);
+  $('dpr').textContent = s.dpr.toFixed(2);
+});
+
+function updateTextureReadout() {
+  const fails = Textures.failures();
+  $('tex').innerHTML = '<span class="ok">' + ASSETS.length + '/' + ASSETS.length + '</span>' +
+    (fails.length ? ' <span class="warn">+' + fails.length + ' fallback</span>' : '');
+}
+updateTextureReadout();
+$('rm').textContent = isReducedMotion() ? 'ON' : 'off';
+
+// Entrance: everything pops in, staggered — then the idle loops take over.
+const entrance = [sun, hills, ...plots, bush, bee];
+entrance.forEach((o, i) => tweens.delay(i * 70, () => pop(o, { from: 0.6, ms: 480 })));
+tweens.delay(entrance.length * 70 + 520, startIdleLoops);
+
+// Expose for console poking during development.
+window.__harness = { stage, tweens, fx, input, Textures, THREE };
+// Log AFTER the first real layout: before that, stage.worldWidth is still a placeholder
+// (a container that is hidden or not yet laid out measures 0, so the stage waits for a real box).
+// NOTE: onResize fires its callback synchronously when layout is already known, so the
+// unsubscribe handle does not exist yet inside the first call — use a flag, not the handle.
+let logged = false;
+stage.onResize(s => {
+  if (logged) return;
+  logged = true;
+  console.log('[harness] booted — world',
+    Math.round(s.worldWidth) + '×' + Math.round(s.worldHeight),
+    '| css', s.cssWidth + '×' + s.cssHeight, '| dpr', s.dpr, '| assets', ASSETS.length);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+{
+  "updated": "2026-09-07T13:30:43.557Z",
+  "project": "Alphabet Garden — Toca-grade graphics overhaul",
+  "branch": "toca-polish",
+  "wave": 1,
+  "waveName": "Wave 1 · Scene port + art language",
+  "artDirection": "HYBRID + AUTHORED VECTOR. Image generation is BLOCKED on this workspace (403 insufficient_permissions: image_video_generation), so all new art is hand-authored SVG rasterised to PNG — which is actually superior for flat vector: exact hex, zero gradient, precise outline weights, no derivative-work risk. Plants: flatten-pipeline experiment in progress. Original art only; Toca is the bar, never a source.",
+  "pieces": [
+    {
+      "id": "toca-standard",
+      "group": "Foundation",
+      "name": "Toca standard + critic rubric",
+      "status": "passed",
+      "rounds": 1,
+      "score": null,
+      "gap": "",
+      "note": "Rubric grounded in measured pixels from real Toca frames: pure #000000 outlines at ~1.4% of object height, absolutely flat fills (zero gradient/grain), pure white only 1% of pixels, 3-4 hue families, flat two-tone shading at dV 0.08-0.18. 10 scored categories; any category <=6 fails outright."
+    },
+    {
+      "id": "three-foundation",
+      "group": "Foundation",
+      "name": "Three.js foundation (stage/tween/particles/textures/input)",
+      "status": "passed",
+      "rounds": 1,
+      "score": null,
+      "gap": "",
+      "note": "Verified by screenshot: sprites on correct layers, DPR 1.75, 6/6 textures, live tweens, pooled particles, reduced-motion path, 44px hit enforcement, context-loss overlay. Agent found+fixed idle-loop suppression and degenerate-world bugs during its own verification."
+    },
+    {
+      "id": "progress-page",
+      "group": "Foundation",
+      "name": "Live progress page",
+      "status": "passed",
+      "rounds": 1,
+      "score": null,
+      "gap": "",
+      "note": "This page."
+    },
+    {
+      "id": "sky",
+      "group": "World",
+      "name": "Sky & atmosphere (day/night, gradient, light)",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "clouds",
+      "group": "World",
+      "name": "Clouds & parallax depth",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "hills",
+      "group": "World",
+      "name": "Hills / far backdrop",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "ground",
+      "group": "World",
+      "name": "Meadow & grass foreground",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "plots",
+      "group": "World",
+      "name": "Dirt plots (empty / hover / seeded)",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "weather",
+      "group": "World",
+      "name": "Rain, rainbow & weather FX",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "sun-moon",
+      "group": "Characters",
+      "name": "Sun & moon characters (blink, mood)",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "critters",
+      "group": "Characters",
+      "name": "Critters — flight paths & wing anim",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "plant-faces",
+      "group": "Characters",
+      "name": "Plant expressions & personality",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "growth",
+      "group": "Plants",
+      "name": "Growth animation (seed→sprout→bloom)",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "plant-idle",
+      "group": "Plants",
+      "name": "Plant idle motion & secondary sway",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "plant-art",
+      "group": "Plants",
+      "name": "Plant art quality pass (78 plants)",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "hud",
+      "group": "UI",
+      "name": "HUD & icon system",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "letter-picker",
+      "group": "UI",
+      "name": "Letter picker",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "bloom-choice",
+      "group": "UI",
+      "name": "Bloom choice cards",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "sticker-book",
+      "group": "UI",
+      "name": "Sticker book",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "celebration",
+      "group": "UI",
+      "name": "Bloom celebration moment",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "title",
+      "group": "UI",
+      "name": "Title screen",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "touch-feel",
+      "group": "Feel",
+      "name": "Tap/press feedback & juice",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "transitions",
+      "group": "Feel",
+      "name": "Screen transitions",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "palette",
+      "group": "Feel",
+      "name": "Global colour harmony & grading",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "typography",
+      "group": "Feel",
+      "name": "Typography",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": ""
+    },
+    {
+      "id": "coherence",
+      "group": "Feel",
+      "name": "Whole-game coherence pass",
+      "status": "queued",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": "Fresh agent plays the entire game between waves."
+    },
+    {
+      "id": "flat-batch-1",
+      "group": "World",
+      "name": "Flat-vector world batch 1 (sun, cloud, hill, grass, dirt, shrub)",
+      "status": "failed",
+      "rounds": 1,
+      "score": 5,
+      "gap": "No outlines at all — TOCA_STANDARD C3 scores that a 3, an automatic fail. Also single-tone (no two-tone form blocking) and perfectly symmetric, so it reads as stock clipart rather than authored character art.",
+      "note": "Flatness, palette and alpha are all correct. Medium validated; execution must add outlines, form blocking and deliberate irregularity."
+    },
+    {
+      "id": "scene-port",
+      "group": "Foundation",
+      "name": "Game scene port to Three.js",
+      "status": "building",
+      "rounds": 0,
+      "score": null,
+      "gap": "",
+      "note": "Porting the live game world (plots, growth, critters, sky, day/night) onto the stage while preserving all save/voice/logic."
+    }
+  ],
+  "log": [
+    {
+      "t": "09:00",
+      "msg": "Branch toca-polish created; working game on main is untouched."
+    },
+    {
+      "t": "09:00",
+      "msg": "Vendored three.module.js r166 locally (house style: never load from CDN)."
+    },
+    {
+      "t": "09:01",
+      "msg": "Spawned: Toca standard + critic rubric research."
+    },
+    {
+      "t": "09:01",
+      "msg": "Spawned: Three.js foundation build (stage, tween, particles, textures, input)."
+    },
+    {
+      "t": "09:06",
+      "msg": "Clint approved HYBRID art direction + autonomous running."
+    },
+    {
+      "t": "09:06",
+      "msg": "Model policy set: Opus for art direction & critics, Sonnet for mechanical work."
+    },
+    {
+      "t": "09:07",
+      "msg": "Spawned: flat-vector world-art validation batch (cloud, hill, grass, dirt plot, sun, shrub)."
+    },
+    {
+      "t": "09:07",
+      "msg": "Waves are driven by agent completions rather than a polling timer — each finished agent wakes the next stage."
+    },
+    {
+      "t": "09:23",
+      "msg": "Toca standard + critic rubric COMPLETE — docs/TOCA_STANDARD.md, 10 scored categories with hard fail gates."
+    },
+    {
+      "t": "09:23",
+      "msg": "Key measured finding: Toca uses PURE BLACK outlines and absolutely flat fills — art prompts corrected accordingly."
+    },
+    {
+      "t": "09:26",
+      "msg": "BLOCKER: creative_generate_image returns 403 insufficient_permissions (needs image_video_generation + flows). Zero credits spent."
+    },
+    {
+      "t": "09:26",
+      "msg": "Pivot: all new art is hand-authored SVG -> PNG. Better fidelity for flat vector than diffusion anyway."
+    },
+    {
+      "t": "09:26",
+      "msg": "Reviewed batch 1 renders directly (not the builder summary): flat + on-palette, but NO OUTLINES = C3 hard fail."
+    },
+    {
+      "t": "09:26",
+      "msg": "Wrote docs/FLAT_ART_BRIEF.md — mandates black outlines at 1.2-1.7% of object height, two-tone form blocking, deliberate irregularity, palette tokens, and the Chrome clipPath gotcha."
+    },
+    {
+      "t": "09:30",
+      "msg": "Three.js foundation PASSED — verified by my own screenshot, not the builder summary."
+    },
+    {
+      "t": "09:30",
+      "msg": "Foundation API: stage.js / tween.js / particles.js / textures.js / input.js + threejs-harness.html."
+    },
+    {
+      "t": "09:30",
+      "msg": "Wave 1 begins: porting the game world onto the Three.js stage."
+    }
+  ]
+}
