@@ -76,6 +76,7 @@ function loadState() {
     if (!s || s.v !== 1 || !Array.isArray(s.plots)) return freshState();
     while (s.plots.length < TOTAL_PLOTS) s.plots.push(null);
     s.stickers = s.stickers || {};
+    s.muted = false;   // always start unmuted; mute is per-session, never remembered
     return s;
   } catch (e) { return freshState(); }
 }

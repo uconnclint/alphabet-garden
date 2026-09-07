@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Clint McLeod. All rights reserved.
 window.PLANT_DB = window.PLANT_DB || {};
 Object.assign(window.PLANT_DB, {
   A: [

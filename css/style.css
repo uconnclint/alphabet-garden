@@ -339,6 +339,11 @@ body.night #stars { opacity: 1; }
 }
 #grownups-link:hover { background: rgba(79,139,58,.8); color: #fff; }
 
+#title-copyright {
+  position: absolute; bottom: 6px; right: 12px;
+  font-size: 11px; color: rgba(255,255,255,.55);
+}
+
 /* confetti */
 #confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 90; overflow: hidden; }
 .confetto { position: absolute; top: -20px; font-size: 22px; animation: confetti-fall linear forwards; }

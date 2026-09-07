@@ -1,5 +1,7 @@
 # 🌱 Alphabet Garden
 
+Copyright (c) 2026 Clint McLeod. All rights reserved.
+
 A wacky, joyful planting game for kindergarteners. Plant **seed letters** and choose
 what they grow into — from the totally real to the gloriously impossible. Plant a **B**
 and pick whether it blooms into a **Banana Tree**, a **Butterfly Bush**, or a **Burger Bush**.
