@@ -20,9 +20,14 @@ html, body { height: 100%; overflow: hidden; }
 body {
   font-family: var(--font);
   color: var(--ink);
+  /* Only ever seen for the instant before the WebGL sky plate paints, and behind a lost
+     GPU context. Kept so the page is never white. */
   background: linear-gradient(var(--sky-top), var(--sky-bottom) 40%, var(--grass) 40%);
   user-select: none;
   transition: background 3s;
+  /* iPad rubber-band + pinch-zoom lock, per house style. */
+  position: fixed; inset: 0;
+  touch-action: none;
 }
 body.night {
   --sky-top: #1a2456;
@@ -30,42 +35,12 @@ body.night {
   --grass: #3d6b35;
 }
 
-/* ══════════ SKY ══════════ */
-#sky { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+/* ══════════ WEBGL WORLD ══════════ */
+/* Beneath every piece of DOM UI, above nothing. Its own canvas handles all world taps. */
+#stage3d { position: fixed; inset: 0; z-index: 1; touch-action: none; }
 
 /* every art image shares this base */
 .asset { display: block; width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; user-select: none; }
-
-.celestial { position: absolute; width: 110px; height: 110px; transition: opacity 2s, transform 2s; }
-#sun { top: 4vh; right: 7vw; filter: drop-shadow(0 0 45px rgba(255, 210, 70, .6)); animation: sunbob 6s ease-in-out infinite; }
-@keyframes sunbob { 50% { transform: translateY(10px) rotate(4deg); } }
-#moon { top: 4vh; right: 7vw; width: 92px; height: 92px; opacity: 0; filter: drop-shadow(0 0 28px rgba(255,255,220,.7)); animation: sunbob 7s ease-in-out infinite; }
-body.night #sun { opacity: 0; }
-body.night #moon { opacity: 1; }
-
-#hills { position: absolute; bottom: 32vh; left: 0; width: 100%; opacity: .55; z-index: 0; transition: opacity 3s; }
-body.night #hills { opacity: .3; }
-
-#stars { position: absolute; inset: 0; opacity: 0; transition: opacity 3s; }
-body.night #stars { opacity: 1; }
-.star { position: absolute; animation: twinkle 2.5s ease-in-out infinite; }
-@keyframes twinkle { 50% { opacity: .25; transform: scale(.7); } }
-
-.cloud { position: absolute; opacity: .96; animation: drift linear infinite; }
-@keyframes drift { from { transform: translateX(-180px); } to { transform: translateX(112vw); } }
-
-.critter { position: absolute; width: 46px; height: 46px; animation: flutter ease-in-out infinite alternate, fly linear forwards; z-index: 4; }
-@keyframes fly { from { left: -70px; } to { left: 106vw; } }
-@keyframes flutter { from { transform: translateY(-16px) rotate(-7deg); } to { transform: translateY(16px) rotate(7deg); } }
-
-/* rain */
-#rain-layer { position: absolute; inset: 0; z-index: 3; }
-.raindrop { position: absolute; top: -34px; width: 16px; height: 26px; animation: fall .9s linear forwards; }
-@keyframes fall { to { transform: translateY(106vh); } }
-.rain-cloud { position: absolute; top: 3vh; width: 150px; height: 150px; animation: rumble .5s ease-in-out infinite alternate; }
-@keyframes rumble { from { transform: translateY(0); } to { transform: translateY(6px); } }
-#rainbow { position: absolute; bottom: 22vh; left: 4vw; width: 46vw; max-width: 620px; opacity: 0; transition: opacity 1.5s; z-index: 1; }
-#rainbow.show { opacity: .9; }
 
 /* ══════════ HUD ══════════ */
 #hud {
@@ -116,109 +91,6 @@ body.night #stars { opacity: 1; }
   content: ""; position: absolute; top: 50%; left: 12%; width: 76%; height: 5px;
   background: #e53935; border-radius: 3px; transform: rotate(-45deg); box-shadow: 0 0 0 2px #fff;
 }
-
-/* ══════════ GARDEN ══════════ */
-#garden-wrap {
-  position: fixed; inset: 0; z-index: 5;
-  display: flex; align-items: flex-start; justify-content: center;
-  overflow-y: auto; overflow-x: hidden;
-  padding: 84px 0 32px;
-  -webkit-overflow-scrolling: touch;
-}
-#ground {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 60vh; z-index: -1;
-  background: linear-gradient(var(--grass), #5da23c);
-  transition: background 3s;
-}
-#ground::before {
-  content: ""; position: absolute; left: 0; right: 0; top: -34px; height: 70px;
-  background: url("../art/assets/garden/grass_foreground.png") repeat-x center bottom / auto 100%;
-  opacity: .95;
-}
-#garden {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 165px));
-  gap: 6px 20px;
-  padding: 0 16px;
-  align-content: start;
-  z-index: 6;
-}
-@media (max-width: 760px) {
-  #garden { grid-template-columns: repeat(3, minmax(96px, 130px)); gap: 4px 10px; }
-}
-@media (max-width: 380px) {
-  #garden { grid-template-columns: repeat(2, minmax(120px, 150px)); }
-}
-
-.plot {
-  position: relative; height: 136px; cursor: pointer;
-  display: flex; align-items: flex-end; justify-content: center;
-  transition: transform .15s;
-}
-.plot:hover { transform: translateY(-3px); }
-.plot .dirt {
-  position: absolute; bottom: 0; left: 3%; width: 94%; height: 46px;
-  background: url("../art/assets/garden/dirt_plot_empty.png") center bottom / contain no-repeat;
-  filter: drop-shadow(0 4px 5px rgba(0,0,0,.22));
-}
-.plot.seeded .dirt, .plot.sprouted .dirt {
-  background-image: url("../art/assets/garden/dirt_plot_seeded.png");
-}
-.plot.empty .dirt::after {
-  content: "＋"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,.85); font-size: 24px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,.3);
-}
-.plot.locked { cursor: default; }
-.plot.locked .dirt { opacity: .4; filter: saturate(.5); }
-.plot .lock-sign {
-  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-  background: #f6d98a; border: 3px solid #c99b4c;
-  border-radius: 10px; padding: 5px 9px; font-size: 12px; text-align: center;
-  color: #7a5b1e; box-shadow: 0 3px 0 rgba(0,0,0,.15); line-height: 1.25; white-space: nowrap;
-}
-
-.plot .sprout-art { position: absolute; bottom: 20px; left: 50%; width: 60px; height: 74px; transform: translateX(-50%); transform-origin: 50% 100%; z-index: 1; }
-.plot .plant-art {
-  position: absolute; bottom: 14px; left: 50%; width: 128px; height: 150px;
-  transform: translateX(-50%); transform-origin: 50% 100%; z-index: 1;
-}
-.plot .plant-art img, .plot .sprout-art img { width: 100%; height: 100%; object-fit: contain; }
-.plot.stage-2 .plant-art { transform: translateX(-50%) scale(.6); }
-.plot.stage-3 .plant-art { animation: sway 4s ease-in-out infinite; }
-@keyframes sway {
-  0%, 100% { transform: translateX(-50%) rotate(-1.6deg); }
-  50% { transform: translateX(-50%) rotate(1.6deg); }
-}
-.plot .grow-pop { animation: growpop .6s cubic-bezier(.2, 1.6, .4, 1) !important; }
-@keyframes growpop { 0% { scale: .2; } 70% { scale: 1.15; } 100% { scale: 1; } }
-
-.plot .letter-tag {
-  position: absolute; bottom: 18px; left: 0; width: 32px; height: 32px; z-index: 3;
-  background: #fff; border: 3px solid var(--accent); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: bold; color: var(--accent);
-  box-shadow: 0 2px 0 rgba(0,0,0,.15);
-}
-.plot .water-meter {
-  position: absolute; bottom: 2px; left: 18%; width: 64%; height: 9px; z-index: 3;
-  background: rgba(255,255,255,.7); border-radius: 6px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.15);
-}
-.plot .water-meter i { display: block; height: 100%; background: linear-gradient(90deg, #56b8ff, #2f8fe8); border-radius: 6px; transition: width .4s; }
-.plot.stage-3 .water-meter { display: none; }
-
-.plot .droplets span {
-  position: absolute; width: 20px; height: 20px; animation: droplet .8s ease-in forwards; z-index: 4;
-}
-.plot .droplets span img { width: 100%; height: 100%; }
-@keyframes droplet { 0% { opacity: 0; transform: translateY(-52px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
-.plot .sparkle { position: absolute; width: 22px; height: 22px; animation: sparkleup 1s ease-out forwards; z-index: 4; }
-.plot .sparkle img { width: 100%; height: 100%; }
-@keyframes sparkleup { 0% { opacity: 1; transform: translateY(0) scale(.6);} 100% { opacity: 0; transform: translateY(-56px) scale(1.3);} }
-.plot.shovel-warn { animation: shake .35s ease-in-out 2; }
-@keyframes shake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-6px);} 75% { transform: translateX(6px);} }
-.plot .poof { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; animation: poof .7s ease-out forwards; z-index: 5; }
-.plot .poof img { width: 100%; height: 100%; }
-@keyframes poof { 0% { opacity: 1; transform: translateX(-50%) scale(.4);} 100% { opacity: 0; transform: translateX(-50%) scale(1.8) translateY(-20px);} }
 
 /* ══════════ MODALS ══════════ */
 .modal {

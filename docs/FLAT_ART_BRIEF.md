@@ -90,22 +90,70 @@ on-palette, and still would have failed review. Every new asset must fix all fou
 
 ## 3. Palette tokens (use these ids, don't invent hexes)
 
+> **REVISED after review.** The original table was measurably too hot: a critic sampling 1.95M
+> pixels found median fill **S 0.63 against the standard's 0.27**, with **86.4% above the S 0.55
+> ceiling** — the batch read as "loud clip-art" where the reference reads "sunlit and washed."
+> These values are the corrected set. **Use these hexes. The old saturated ones are retired.**
+
+### Layer 1 — foreground / interactive (full black outlines)
+
 | token | hex | use |
 |---|---|---|
-| `grass` | `#7ec850` | meadow base |
-| `grass-deep` | `#5da23c` | grass shadow tone |
-| `grass-dark` | `#4a8531` | far grass / deep shadow |
+| `grass` | `#9ddb76` | meadow base |
+| `grass-deep` | `#79b85c` | grass shadow tone |
+| `soil` | `#c2946b` | dirt base |
+| `soil-deep` | `#a37855` | dirt shadow / dug interior |
+| `soil-lite` | `#dbad7f` | lit crest of a tilled row |
+| `sun` | `#ffe07a` | sun body |
+| `sun-deep` | `#f0c665` | sun rays |
+| `sun-shade` | `#eebf5c` | sun body shadow |
+| `ray-shade` | `#dbab58` | ray shadow face |
+| `cream` | `#fff7e6` | panels, near-white (never pure `#FFFFFF`) |
+| `cloud-shade` | `#c6d8e6` | cloud shadow — hue-rotated cool to 206° |
+
+### Layer 2 — far background (NO black outline; must sit back)
+
+Never share a hex with Layer 1. Target **S ≤ 0.24, V 0.87–0.93**.
+
+| token | hex | use |
+|---|---|---|
+| `hill-far` | `#d0edbe` | far hill fill |
+| `hill-far-deep` | `#badea9` | far hill shadow |
 | `sky-hi` | `#8fd3ff` | sky top |
 | `sky-lo` | `#cdefff` | sky horizon |
-| `soil` | `#a9713f` | dirt base |
-| `soil-deep` | `#8a5a33` | dirt shadow |
-| `cream` | `#fff7e6` | panels, near-white |
-| `sun` | `#ffd23f` | sun, highlights |
-| `sun-deep` | `#f0b429` | sun shadow tone |
-| `accent` | `#ff9d52` | warm accent, buttons |
-| `berry` | `#c65fd1` | rare high-sat accent |
+
+### Accents & ink
+
+Accents are the **only** fills permitted above S 0.55, and must stay under ~10% of frame pixels.
+
+| token | hex | use |
+|---|---|---|
+| `accent` | `#ffb77e` | warm accent, buttons |
+| `berry` | `#c65fd1` | rare high-sat accent — sparingly, never on a background prop |
 | `ink` | `#000000` | outlines |
-| `ink-soft` | `#3f3026` | eyes, text |
+| `ink-soft` | `#3f3026` | eyes |
+| `brow` | `#6b5342` | brows — must NOT share the eye hex, or the distinction collapses |
+
+**Contact shadows:** every object that sits on the ground gets one — hue-matched to the ground
+green, ~2% value delta, hard edge. Without it everything floats.
+
+**Shadow tones — use these, do not invent your own.** Several base tokens cannot reach the C4
+ΔV 0.08–0.18 window on their own (`sun`→`sun-deep` is only ΔV 0.059; `cream` had no shadow at
+all), so these were derived by the §3.4 rule — same hue family, slightly more saturated, value
+dropped into the band. Coherence across 78 plants by ~10 authors depends on everyone using
+the same shadows.
+
+| token | hex | shadow for | ΔV |
+|---|---|---|---|
+| `grass-deep` | `#5da23c` | `grass` | 0.149 |
+| `soil-deep` | `#8a5a33` | `soil` | 0.122 |
+| `soil-lite` | `#c2884e` | lit crest of tilled soil / raised clods | 0.098 |
+| `sun-shade` | `#e8a52a` | `sun` (body) | 0.090 |
+| `ray-shade` | `#d69526` | `sun-deep` (rays) | 0.102 |
+| `cloud-shade` | `#c6d8e6` | `cream` — hue-rotated to 206°, because a cloud's shadow must go cool | 0.098 |
+
+When a fill has no shadow token here, derive one the same way and **add it to this table** so the
+next author reuses it rather than inventing a near-miss.
 
 ---
 

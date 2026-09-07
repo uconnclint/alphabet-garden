@@ -1,7 +1,15 @@
 /* ═══════════════════════════════════════════════════════════
-   ALPHABET GARDEN — game engine
+   game.js — ALPHABET GARDEN game logic (the authoritative model).
    Plant seed letters → choose what they bloom into →
    water them, watch them grow — even while you are away.
+
+   THIS FILE OWNS STATE, NOT PIXELS. The living world (sky, plots,
+   plants, critters, weather) is drawn by the Three.js view in
+   js/scenes/GardenScene.js, which subscribes to the events fired
+   below via `window.GardenGame.on(...)`. Text UI — modals, HUD,
+   toasts, the title screen — deliberately stays DOM, because a
+   pre-reader's screen reader and a teacher's zoom both work there
+   and neither works inside a canvas.
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
@@ -24,16 +32,10 @@ const TOTAL_PLANTS = LETTERS.length * 3;
 /* ---------- generic art ---------- */
 const ART = 'art/assets/';
 // Custom AAA art assets; the inline SVG in each plant record is kept only as a fallback.
-function assetImg(src, cls) {
-  return '<img class="asset ' + (cls || '') + '" src="' + ART + src + '" draggable="false" alt="">';
-}
 function plantArt(info, cls) {
   return '<img class="asset plant-img ' + (cls || '') + '" src="' + ART + 'plants/' + info.id + '.png" ' +
          'draggable="false" alt="' + info.name + '">';
 }
-const SEED_SVG = assetImg('garden/seed.png', 'seed-img');
-const SPROUT_SVG = assetImg('garden/sprout.png', 'sprout-img');
-
 function fallbackPlant(letter) {
   const hue = (LETTERS.indexOf(letter) * 137) % 360;
   return {
@@ -230,65 +232,33 @@ function toast(msg, ms) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2600);
 }
 
-/* ---------- garden rendering ---------- */
-const gardenEl = $('#garden');
-const plotEls = [];
-function buildGarden() {
-  gardenEl.innerHTML = '';
-  plotEls.length = 0;
-  for (let i = 0; i < TOTAL_PLOTS; i++) {
-    const p = el('div', 'plot');
-    p.dataset.i = i;
-    p.addEventListener('pointerdown', () => onPlotTap(i));
-    gardenEl.appendChild(p);
-    plotEls.push(p);
-    renderPlot(i);
+/* ---------- view events ----------
+   A tiny emitter is all the coupling the view needs: game.js never learns what a
+   sprite is, and GardenScene never learns what a save file is. */
+const listeners = Object.create(null);
+function on(evt, fn) {
+  (listeners[evt] || (listeners[evt] = [])).push(fn);
+  return function () { off(evt, fn); };
+}
+function off(evt, fn) {
+  const a = listeners[evt]; if (!a) return;
+  const i = a.indexOf(fn); if (i >= 0) a.splice(i, 1);
+}
+function emit(evt, data) {
+  const a = listeners[evt]; if (!a || !a.length) return;
+  // Copy first: a handler that unsubscribes mid-dispatch must not shift the array we walk.
+  const copy = a.slice();
+  for (let i = 0; i < copy.length; i++) {
+    // One broken listener must never take the game logic down with it — a kid whose
+    // GPU dropped the canvas still needs planting and saving to work.
+    try { copy[i](data); } catch (e) { console.error('[garden] "' + evt + '" listener failed', e); }
   }
 }
-function renderPlot(i, fx) {
-  const elP = plotEls[i]; if (!elP) return;
-  const open = plotsOpen();
-  const plant = state.plots[i];
-  elP.className = 'plot';
-  elP.innerHTML = '<div class="dirt"></div>';
 
-  if (i >= open) {
-    elP.classList.add('locked');
-    const nu = nextUnlock();
-    const left = nu ? Math.max(1, nu.need - state.grownTotal) : 0;
-    elP.appendChild(el('div', 'lock-sign', '🔒<br>Grow ' + left + ' more!'));
-    return;
-  }
-  if (!plant) { elP.classList.add('empty'); return; }
-
-  elP.classList.add('stage-' + plant.stage);
-  const info = getPlant(plant.letter, plant.plantId);
-  elP.appendChild(el('div', 'letter-tag', plant.letter));
-
-  if (plant.stage === 0) {
-    elP.classList.add('seeded');
-    elP.appendChild(el('div', 'sprout-art', SEED_SVG));
-  } else if (plant.stage === 1) {
-    elP.classList.add('sprouted');
-    elP.appendChild(el('div', 'sprout-art', SPROUT_SVG));
-  } else {
-    const art = el('div', 'plant-art', plantArt(info));
-    if (fx && fx.pop) art.classList.add('grow-pop');
-    elP.appendChild(art);
-  }
-  if (plant.stage < STAGE_MAX) {
-    const pct = Math.min(100, (plant.water / WATERS_PER_STAGE) * 100);
-    elP.appendChild(el('div', 'water-meter', '<i style="width:' + pct + '%"></i>'));
-  }
-  if (plant.stage === STAGE_MAX && !plant.seen) {
-    const s = el('div', 'sparkle', assetImg('fx/sparkle.png'));
-    s.style.left = '30%'; s.style.bottom = '90px';
-    s.style.animationIterationCount = 'infinite';
-    elP.appendChild(s);
-  }
-}
+/* ---------- garden rendering (delegated to the view) ---------- */
+function renderPlot(i, fx) { emit('plot', { i: i, pop: !!(fx && fx.pop) }); }
 function renderAll() {
-  for (let i = 0; i < TOTAL_PLOTS; i++) renderPlot(i);
+  emit('plots', { open: plotsOpen() });
   updateHud();
 }
 function updateHud() {
@@ -297,31 +267,11 @@ function updateHud() {
   $('#btn-sound').classList.toggle('muted', state.muted);
 }
 
-/* ---------- particles ---------- */
-function dropletFX(i) {
-  const elP = plotEls[i];
-  const wrap = el('div', 'droplets');
-  for (let k = 0; k < 5; k++) {
-    const d = el('span', '', assetImg('sky/raindrop.png'));
-    d.style.left = (18 + Math.random() * 60) + '%';
-    d.style.bottom = (40 + Math.random() * 40) + 'px';
-    d.style.animationDelay = (Math.random() * 0.25) + 's';
-    wrap.appendChild(d);
-  }
-  elP.appendChild(wrap);
-  setTimeout(() => wrap.remove(), 1200);
-}
-function sparkleFX(i, n) {
-  const elP = plotEls[i];
-  for (let k = 0; k < (n || 6); k++) {
-    const s = el('div', 'sparkle', assetImg(Math.random() < 0.5 ? 'fx/sparkle.png' : 'fx/celebration_star.png'));
-    s.style.left = (10 + Math.random() * 75) + '%';
-    s.style.bottom = (20 + Math.random() * 60) + 'px';
-    s.style.animationDelay = (Math.random() * 0.4) + 's';
-    elP.appendChild(s);
-    setTimeout(() => s.remove(), 1600);
-  }
-}
+/* ---------- particles ----------
+   Plot-local effects live in WebGL now; the confetti layer stays DOM because it has to
+   rain down OVER the celebration modal, which is DOM. */
+function dropletFX(i) { emit('water', { i: i }); }
+function sparkleFX(i, n) { emit('sparkle', { i: i, n: n || 6 }); }
 function confetti(n) {
   const layer = $('#confetti-layer');
   const emo = ['🎉', '⭐', '🌸', '🌼', '💛', '🦋'];
@@ -350,8 +300,7 @@ function onPlotTap(i) {
     sfx.buzz();
     const nu = nextUnlock();
     if (nu) toast('🔒 Grow ' + (nu.need - state.grownTotal) + ' more plants to open this plot!');
-    plotEls[i].classList.add('shovel-warn');
-    setTimeout(() => plotEls[i].classList.remove('shovel-warn'), 800);
+    emit('nope', { i: i });
     return;
   }
   const plant = state.plots[i];
@@ -363,8 +312,7 @@ function onPlotTap(i) {
       digUp(i);
     } else {
       shovelArm = { i, until: now + 2500 };
-      plotEls[i].classList.add('shovel-warn');
-      setTimeout(() => plotEls[i].classList.remove('shovel-warn'), 800);
+      emit('nope', { i: i });
       sfx.click();
       toast('Tap again to dig it up! 🪏');
     }
@@ -389,10 +337,8 @@ function digUp(i) {
   state.plots[i] = null;
   save();
   sfx.poof();
+  emit('dug', { i: i });
   renderPlot(i);
-  const poof = el('div', 'poof', assetImg('fx/poof_cloud.png'));
-  plotEls[i].appendChild(poof);
-  setTimeout(() => poof.remove(), 800);
   toast('Bye-bye, ' + info.name + '! 👋');
   setShovel(false);
 }
@@ -417,8 +363,13 @@ function waterPlot(i) {
 
 function advanceStage(i, interactive) {
   const plant = state.plots[i]; if (!plant || plant.stage >= STAGE_MAX) return;
+  const from = plant.stage;
   plant.stage++;
   plant.ts = Date.now();
+  // Fired BEFORE the save/render bookkeeping so the view can start its anticipation dip on the
+  // same frame the stage flips — a late animation reads as a snap, which is the whole thing
+  // we are trying to avoid.
+  emit('stage', { i: i, from: from, to: plant.stage, full: plant.stage === STAGE_MAX, interactive: !!interactive });
   if (plant.stage === STAGE_MAX) {
     state.grownTotal++;
     const info = getPlant(plant.letter, plant.plantId);
@@ -431,7 +382,10 @@ function advanceStage(i, interactive) {
       renderAll();                       // may unlock plots
       sfx.fanfare();
       confetti(60);
-      celebrate(i, false);
+      // Let the bloom actually play before the modal covers it. The bloom is the payoff for
+      // every tap the child has spent on this plot; opening the card on the same frame threw
+      // it away. Everything else about the flow is unchanged.
+      setTimeout(function () { celebrate(i, false); }, 900);
     } else {
       plant.seen = false;
       save();
@@ -512,7 +466,7 @@ function plantSeed(L, p) {
   };
   save();
   sfx.plop();
-  renderPlot(pendingPlot);
+  emit('planted', { i: pendingPlot, letter: L, plantId: p.id });
   sparkleFX(pendingPlot, 4);
   voice('ui-plant');
   toast('🌱 ' + p.name + ' seed planted! Tap it to water it! 💧');
@@ -562,23 +516,9 @@ function makeItRain() {
 
   sfx.rain();
   voice('ui-rain');
-  const layer = $('#rain-layer');
-  const clouds = [];
-  for (let c = 0; c < 3; c++) {
-    const cl = el('div', 'rain-cloud', assetImg('sky/rain_cloud.png'));
-    cl.style.left = (10 + c * 30 + Math.random() * 8) + 'vw';
-    layer.appendChild(cl); clouds.push(cl);
-  }
-  let drops = 0;
-  const dropTimer = setInterval(() => {
-    for (let k = 0; k < 6; k++) {
-      const d = el('div', 'raindrop', assetImg('sky/raindrop.png'));
-      d.style.left = (Math.random() * 100) + 'vw';
-      layer.appendChild(d);
-      setTimeout(() => d.remove(), 1000);
-    }
-    if (++drops > 22) clearInterval(dropTimer);
-  }, 120);
+  // The view owns the clouds, the drops and the rainbow; the timings below stay here because
+  // they are gameplay (when the watering lands), not decoration.
+  emit('rain', { cloudsMs: 3400, rainbowMs: 5000 });
 
   setTimeout(() => {
     state.plots.forEach((p, i) => {
@@ -594,11 +534,6 @@ function makeItRain() {
     });
     save();
   }, 1400);
-  setTimeout(() => {
-    clouds.forEach(c => c.remove());
-    $('#rainbow').classList.add('show');
-    setTimeout(() => $('#rainbow').classList.remove('show'), 5000);
-  }, 3400);
 }
 
 /* ---------- offline growth ---------- */
@@ -654,50 +589,22 @@ setInterval(() => {
   if (changed) save();
 }, SUNSHINE_MS);
 
-/* ---------- sky, weather, critters ---------- */
-function buildSky() {
-  const stars = $('#stars');
-  for (let i = 0; i < 34; i++) {
-    const s = el('div', 'star', assetImg('sky/star.png'));
-    s.style.left = Math.random() * 100 + 'vw';
-    s.style.top = Math.random() * 55 + 'vh';
-    s.style.width = (10 + Math.random() * 16) + 'px';
-    s.style.animationDelay = Math.random() * 3 + 's';
-    stars.appendChild(s);
-  }
-  const clouds = $('#clouds');
-  for (let i = 0; i < 4; i++) {
-    const c = el('div', 'cloud', assetImg(Math.random() < 0.5 ? 'sky/cloud_puffy.png' : 'sky/cloud_wisp.png'));
-    c.style.top = (3 + Math.random() * 22) + 'vh';
-    c.style.width = (90 + Math.random() * 80) + 'px';
-    c.style.animationDuration = (55 + Math.random() * 60) + 's';
-    c.style.animationDelay = (-Math.random() * 60) + 's';
-    clouds.appendChild(c);
-  }
-  applyDayNight();
-  setInterval(applyDayNight, 60 * 1000);
-  setInterval(spawnCritter, 9000);
-  setTimeout(spawnCritter, 2500);
-}
+/* ---------- sky clock ----------
+   Same rule as before (night from 7pm to 6am); the view cross-fades to it. Sky, stars,
+   clouds and critters are all drawn by GardenScene now. */
 function isNight() {
   const h = new Date().getHours();
   return h < 6 || h >= 19;
 }
 function applyDayNight() {
-  document.body.classList.toggle('night', isNight());
+  const night = isNight();
+  // body.night still drives the DOM chrome (title screen, toast tint) — the world reads the event.
+  document.body.classList.toggle('night', night);
+  emit('daynight', { night: night });
 }
-function spawnCritter() {
-  if (!started || document.hidden) return;
-  const day = ['critters/butterfly_pink.png', 'critters/bee.png', 'critters/ladybug.png',
-               'critters/butterfly_blue.png', 'critters/bluebird.png'];
-  const night = ['critters/owl.png', 'sky/firefly.png', 'critters/bat.png', 'sky/firefly.png'];
-  const pick = (isNight() ? night : day);
-  const c = el('div', 'critter', assetImg(pick[(Math.random() * pick.length) | 0]));
-  c.style.top = (12 + Math.random() * 45) + 'vh';
-  const dur = 12 + Math.random() * 14;
-  c.style.animationDuration = (0.8 + Math.random() * 0.8) + 's, ' + dur + 's';
-  $('#critters').appendChild(c);
-  setTimeout(() => c.remove(), dur * 1000 + 500);
+function startClock() {
+  applyDayNight();
+  setInterval(applyDayNight, 60 * 1000);
 }
 
 /* ---------- modals ---------- */
@@ -748,16 +655,38 @@ $('#btn-play').addEventListener('click', () => {
   $('#title-screen').classList.add('gone');
   const grew = applyOfflineGrowth();
   renderAll();
+  emit('start', { grew: grew });
   const hasSave = state.plots.some(Boolean);
   if (!grew) {
     voice(hasSave ? 'ui-welcome-back' : 'ui-welcome');
   }
 });
 
+/* ---------- public model, for the view ----------
+   Read-only by contract: the view asks questions and reports taps; every mutation still
+   happens in here. Exposed on `window` (not as an ES export) because game.js is a classic
+   script that has to keep running even if the module graph fails to load. */
+window.GardenGame = {
+  TOTAL_PLOTS: TOTAL_PLOTS,
+  STAGE_MAX: STAGE_MAX,
+  WATERS_PER_STAGE: WATERS_PER_STAGE,
+  on: on,
+  off: off,
+  plot: function (i) { return state.plots[i] || null; },
+  plotsOpen: plotsOpen,
+  nextUnlock: nextUnlock,
+  grownTotal: function () { return state.grownTotal; },
+  getPlant: getPlant,
+  isNight: isNight,
+  isStarted: function () { return started; },
+  isMuted: function () { return state.muted; },
+  isShovelMode: function () { return shovelMode; },
+  tapPlot: onPlotTap
+};
+
 /* ---------- boot ---------- */
-buildSky();
+startClock();
 buildTitle();
-buildGarden();
 updateHud();
 window.addEventListener('beforeunload', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T13:30:43.557Z",
+  "updated": "2026-09-07T14:04:46.070Z",
   "project": "Alphabet Garden — Toca-grade graphics overhaul",
   "branch": "toca-polish",
   "wave": 1,
@@ -120,11 +120,11 @@
       "id": "plant-faces",
       "group": "Characters",
       "name": "Plant expressions & personality",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Authored SVG gives plants a real swappable expression system (>=6 expressions as named groups) — impossible with static PNGs. Folded into the plant pilot."
     },
     {
       "id": "growth",
@@ -150,11 +150,11 @@
       "id": "plant-art",
       "group": "Plants",
       "name": "Plant art quality pass (78 plants)",
-      "status": "queued",
-      "rounds": 0,
-      "score": null,
-      "gap": "",
-      "note": ""
+      "status": "building",
+      "rounds": 1,
+      "score": 4,
+      "gap": "Image-processing the glossy 3D renders into flat art destroys character — the butterfly bush lost its face and its butterflies became blobs. Plants must be authored as native flat vector.",
+      "note": "NOT VIABLE verdict confirmed by my own inspection of the compare sheets. Flatness was solved (C4 3->7-9, bit-exact fills up to 514px) but C2/C3 fail non-tunably: in a 3D render a design edge and a lighting edge are pixel-identical. Now authoring all 78 as SVG; 6-plant pilot running to set the shared visual language."
     },
     {
       "id": "hud",
@@ -269,12 +269,12 @@
     {
       "id": "flat-batch-1",
       "group": "World",
-      "name": "Flat-vector world batch 1 (sun, cloud, hill, grass, dirt, shrub)",
-      "status": "failed",
-      "rounds": 1,
+      "name": "Flat-vector world batch (sun, cloud, hill, grass, dirt, shrub)",
+      "status": "building",
+      "rounds": 3,
       "score": 5,
-      "gap": "No outlines at all — TOCA_STANDARD C3 scores that a 3, an automatic fail. Also single-tone (no two-tone form blocking) and perfectly symmetric, so it reads as stock clipart rather than authored character art.",
-      "note": "Flatness, palette and alpha are all correct. Medium validated; execution must add outlines, form blocking and deliberate irregularity."
+      "gap": "Every object is a full saturation step hotter than the reference — median fill S 0.63 vs spec 0.27, 86% of pixels above the S 0.55 ceiling — so it reads as loud clip-art rather than sunlit and washed.",
+      "note": "Round 2 FAILED review: C1 5, C2 6, C4 6, C5 5, C7 4, C8 4. Critic verified the good parts too (flat fills to 2048px, outline weight 1.29-1.76%, zero gradients). Two hard bugs found: a 744px transparent hole inside a grass blade, and a clipped-stroke seam on 3 edges of the hill that would repeat when tiled. Round 3 fixing."
     },
     {
       "id": "scene-port",
@@ -355,6 +355,58 @@
     {
       "t": "09:30",
       "msg": "Wave 1 begins: porting the game world onto the Three.js stage."
+    },
+    {
+      "t": "09:44",
+      "msg": "Plant de-gloss verdict: NOT VIABLE. Verified myself — flattened butterfly bush lost its face; butterflies became blobs."
+    },
+    {
+      "t": "09:44",
+      "msg": "Root cause is fundamental, not tuning: in a 3D render, design edges and lighting edges have identical pixel signatures."
+    },
+    {
+      "t": "09:44",
+      "msg": "DECISION: author all 78 plants as native flat-vector SVG. Only route to the quality bar while image-gen is blocked."
+    },
+    {
+      "t": "09:44",
+      "msg": "Upside: authored SVG plants get a real swappable face system, so plants can blink, react and emote — static PNGs never could."
+    },
+    {
+      "t": "09:44",
+      "msg": "Spawned 6-plant pilot (sunflower, apple, maple, butterfly bush, pizza palm, UFO tree) to establish the shared plant kit."
+    },
+    {
+      "t": "09:54",
+      "msg": "World art round 2 delivered — my own look at the sun shows a dramatic leap: black outlines, form blocking, mismatched brows, real personality."
+    },
+    {
+      "t": "09:54",
+      "msg": "Builder found a genuine gap in MY brief: sun->sun-deep is only dV 0.059 and cream had no shadow token. Added 6 canonical shadow tones to FLAT_ART_BRIEF so 10 plant authors do not each invent their own."
+    },
+    {
+      "t": "09:54",
+      "msg": "Spawned independent critic for world art (fresh context, renders only, blind A/B vs a real reference frame)."
+    },
+    {
+      "t": "10:04",
+      "msg": "Independent critic FAILED world art round 2 and lost the blind A/B. Excellent, measured critique."
+    },
+    {
+      "t": "10:04",
+      "msg": "Systemic finding: MY palette table was too saturated. Revised FLAT_ART_BRIEF with a desaturated set + a separate back-layer palette, before 78 plants inherit it."
+    },
+    {
+      "t": "10:04",
+      "msg": "Critic caught 2 hard bugs: transparent hole in grass_tuft, and an off-palette hairline seam on hill_layer from a viewBox-clipped stroke."
+    },
+    {
+      "t": "10:04",
+      "msg": "Sharpest note: the dirt plot is drawn as a MOUND when the mechanic is a hole you plant INTO — a game-design read, not just an art one."
+    },
+    {
+      "t": "10:04",
+      "msg": "World art round 3 building against the revised palette + 10-item fix list."
     }
   ]
 }
