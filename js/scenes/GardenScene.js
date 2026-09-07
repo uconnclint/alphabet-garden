@@ -4,9 +4,10 @@
 // mutates a plot, writes a save, or decides when a plant grows. We are told, and we perform.
 //
 // ── LAYERS (from stage.js, back to front) ───────────────────────────────────────
-//   sky          gradient plate (day + night), stars, sun, moon
+//   sky          gradient plate (day + night), stars
 //   farParallax  hills, slow clouds
-//   midParallax  fast clouds, rain clouds, rainbow
+//   midParallax  fast clouds, rain clouds, rainbow, THE SUN AND MOON (in front of both
+//                cloud bands — see SUN_Z)
 //   ground       meadow plate, horizon shrubs, grass tufts
 //   plots        dirt patches, lock signs, invisible tap pads
 //   plants       the plants themselves
@@ -179,12 +180,86 @@ export function createGardenScene(o) {
   Textures.load('sky/star.png').then(t => stars.forEach(s => sizeTo(s, t, s.userData.baseScale.y)));
 
   const SUN_URL = 'sky/sun.png';
+
+  // The sun and moon live in midParallax, NOT in the sky layer, and they sit in front of
+  // everything else in it. They used to be sky-layer sprites, which put them behind BOTH
+  // parallax cloud bands: a drifting cloud slid straight over the sun's face. That was
+  // survivable when the sun was a featureless disc and is not now that it is a character with
+  // six authored expressions — a cloud parked on its eyes reads as a z-order bug, because it is.
+  //
+  // Note what this does NOT do: the clouds keep their own two-band split (far and mid,
+  // different speeds), so the parallax depth between them is untouched. Only the two sky
+  // characters moved. 6 is inside the layer's 10-unit z budget, so it cannot leak into `ground`.
+  const SUN_Z = 6;
   const sun = createSprite(Textures.get(SUN_URL), { height: 180 });
   const moon = createSprite(Textures.get('sky/moon.png'), { height: 150, opacity: 0 });
-  L.sky.add(sun); L.sky.add(moon);
-  sun.position.z = 0.3; moon.position.z = 0.3;
+  L.midParallax.add(sun); L.midParallax.add(moon);
+  sun.position.z = SUN_Z; moon.position.z = SUN_Z;
   Textures.load(SUN_URL).then(t => { applyFit(sun, t, SUN_URL, 180, DEF_CENTER); relayout(); });
   Textures.load('sky/moon.png').then(t => sizeTo(moon, t, 150));
+
+  /* ── the sun's face ───────────────────────────────────────────────────
+   * art/flat/ ships six authored expressions on one rig — identical rays, identical alpha box,
+   * only the face group differs — so a reaction is a MAP SWAP and never a re-fit. `relayout()`
+   * deliberately keeps measuring against SUN_URL for exactly that reason: whatever face is
+   * showing, the geometry is the neutral sun's.
+   *
+   * The logical names carry an '@' suffix, which means textures.js strips it and falls back to
+   * plain 'sky/sun.png' for any expression that is missing — a 404 here costs a reaction, never
+   * a green placeholder blob in the sky.
+   */
+  const SUN_FACES = {
+    neutral:     SUN_URL,
+    happy:       'sky/sun@happy.png',        // eyes closed — this is the blink
+    laughing:    'sky/sun@laughing.png',
+    surprised:   'sky/sun@surprised.png',
+    mischievous: 'sky/sun@mischievous.png',
+    sad:         'sky/sun@sad.png'
+  };
+  const sunTex = Object.create(null);        // name -> Texture, filled once the art lands
+  let sunHold = 0;                           // ms left on a non-neutral face
+  let sunBlinkIn = 2200 + Math.random() * 3600;
+
+  // Lazy, and deliberately NOT in main3d's CORE set: five more 150KB PNGs are not worth
+  // delaying the first frame for, and until they arrive the sun simply does not blink.
+  Object.keys(SUN_FACES).forEach(name => {
+    Textures.load(SUN_FACES[name]).then(t => { sunTex[name] = t; });
+  });
+
+  /**
+   * Show one expression. `holdMs` is how long before the face falls back to neutral; 0 holds
+   * until something else changes it.
+   */
+  function setSunFace(name, holdMs) {
+    const t = sunTex[name] || sunTex.neutral;
+    if (t && sun.material.map !== t) { sun.material.map = t; sun.material.needsUpdate = true; }
+    sunHold = holdMs || 0;
+    // A reaction resets the blink clock, so the sun never blinks on top of its own laugh.
+    if (holdMs) sunBlinkIn = holdMs + 1400 + Math.random() * 3000;
+  }
+
+  let wasNight = game.isNight();
+
+  /** Never a fixed cadence: a metronome blink is worse than no blink at all. */
+  function nextBlink() { return 3400 + Math.random() * 6400; }
+
+  tweens.driver((elapsed, dtms) => {
+    if (sunHold > 0) {
+      sunHold -= dtms;
+      if (sunHold <= 0) setSunFace('neutral', 0);
+      return false;
+    }
+    // Nothing to perform to while the sun is under the horizon, and blinking is ambience, so
+    // it is one of the things `prefers-reduced-motion` switches off. Tap and bloom REACTIONS
+    // still fire — those are feedback, not decoration.
+    if (isReducedMotion() || sun.material.opacity < 0.35) return false;
+    sunBlinkIn -= dtms;
+    if (sunBlinkIn <= 0) {
+      setSunFace('happy', 150);
+      sunBlinkIn = nextBlink();
+    }
+    return false;
+  });
 
   /* ── parallax: hills + clouds ───────────────────────────────────────── */
   // Two bands, not one. The flat hill is a low tileable ridge with no outline, so a single
@@ -876,8 +951,8 @@ export function createGardenScene(o) {
     const skyY = b.top - hudReserve * (landscape ? 0.35 : 1) - sunH * 0.55;
     // Inset by the VISIBLE half-width: the flat sun carries ~11% of transparent margin on
     // each side, and insetting by the raw sprite width would push it off toward the middle.
-    sun.position.set(b.right - sunH * 0.52, skyY, 0.3);
-    moon.position.set(b.right - moon.scale.x * 0.58, skyY, 0.3);
+    sun.position.set(b.right - sunH * 0.52, skyY, SUN_Z);
+    moon.position.set(b.right - moon.scale.x * 0.58, skyY, SUN_Z);
 
     stars.forEach(s2 => {
       s2.position.set(b.left + s2.userData.rx * W, b.top - s2.userData.ry * H * 0.5, 0.2);
@@ -887,8 +962,9 @@ export function createGardenScene(o) {
     // swallow a portrait phone's sky, because a portrait world is only ~380 units wide.
     // Retuned for content fitting: the old numbers were SPRITE heights, and the claymation
     // cloud only filled about two thirds of its canvas. Asking for the same figure as a
-    // CONTENT height made every cloud half again as big — on a phone they swallowed the sky
-    // and, because the sun sits in the layer behind them, hid the sun completely.
+    // CONTENT height made every cloud half again as big — on a phone they swallowed the sky.
+    // (They can no longer hide the sun whatever their size: it renders in front of both cloud
+    // bands now. This cap is still here because a cloud the size of the sky is its own bug.)
     const cloudH = Math.min(H * 0.085, W * 0.19);
     clouds.forEach(c => {
       if (c.material.map) applyFit(c, c.material.map, c.userData.url, cloudH * c.userData.sizeK, DEF_CENTER);
@@ -1230,6 +1306,7 @@ export function createGardenScene(o) {
     onTap: info => {
       tweens.wobble(sun, { angle: 0.35, ms: 720, cycles: 3 });
       fx.emit('sparkle', info.x, info.y, { count: 20, size: [28, 56] });
+      setSunFace('laughing', 1250);
     }
   });
 
@@ -1367,7 +1444,9 @@ export function createGardenScene(o) {
         cl.material.opacity = 1;
         const x = b.left + stage.worldWidth * (0.2 + c * 0.3 + Math.random() * 0.06);
         const y = b.top - cl.scale.y * 0.55;
-        cl.position.set(x, y + 200, 0.5);
+        // Above SUN_Z: ordinary drifting clouds must never cover the sun's face, but a
+        // rain cloud rolling across it is the whole point of a shower.
+        cl.position.set(x, y + 200, SUN_Z + 1);
         tweens.to(cl, { 'position.y': y }, { duration: 520, ease: 'backOut', delay: c * 90 });
         // Rumble: a low, per-cloud sway so the three never bob together.
         tweens.breathe(cl, { amount: 0.03, ms: 900 + c * 220 });
@@ -1427,7 +1506,16 @@ export function createGardenScene(o) {
         { count: d.n, spread: lay.dirtW * 0.3 });
     }),
 
-    game.on('stage', d => animateStage(d.i, d.full)),
+    game.on('stage', d => {
+      animateStage(d.i, d.full);
+      // A bloom is the biggest thing that happens in this game; the sun is allowed to notice.
+      // Surprised first, then a long laugh — long enough to still be running when a child
+      // closes the celebration card.
+      if (d.full) {
+        setSunFace('surprised', 620);
+        tweens.delay(620, () => setSunFace('laughing', 2400));
+      }
+    }),
 
     game.on('nope', d => {
       const cell = plots[d.i];
@@ -1445,9 +1533,20 @@ export function createGardenScene(o) {
       tweens.squashStretch(cell.dirt, 0.22, 520);
     }),
 
-    game.on('rain', doRain),
+    game.on('rain', d => {
+      doRain(d);
+      setSunFace('mischievous', 1500);   // it knows perfectly well what it just let in
+    }),
 
-    game.on('daynight', d => applyDayNight(d.night, false)),
+    game.on('daynight', d => {
+      applyDayNight(d.night, false);
+      // game.js re-emits this every 60s whether or not anything changed, so the face reacts to
+      // the TRANSITION only. Without the guard the sun pulls a face once a minute, forever.
+      if (d.night !== wasNight) {
+        wasNight = d.night;
+        setSunFace(d.night ? 'sad' : 'happy', 1800);   // sunset on the way out, sunrise on the way in
+      }
+    }),
 
     game.on('start', () => {
       syncAll();

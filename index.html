@@ -87,6 +87,10 @@
 <script src="js/plants/plants_m_r.js"></script>
 <script src="js/plants/plants_s_z.js"></script>
 <script src="js/game.js"></script>
+<!-- The flat-art alias layer, published for game.js's DOM previews. Must come before
+     main3d.js and must stay a module: it is the only bridge between the ES-module override
+     map and the classic-script UI. See js/data/flat-art-bridge.js. -->
+<script type="module" src="js/data/flat-art-bridge.js"></script>
 <script type="module" src="js/main3d.js"></script>
 </body>
 </html>

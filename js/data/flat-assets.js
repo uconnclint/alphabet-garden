@@ -52,8 +52,35 @@
  * @type {Object<string,string>}
  */
 export const FLAT_OVERRIDES = {
+  'critters/bat.png':                  'art/flat/critters/bat.png',
+  'critters/bee.png':                  'art/flat/critters/bee.png',
+  'critters/bluebird.png':             'art/flat/critters/bluebird.png',
+  'critters/butterfly_blue.png':       'art/flat/critters/butterfly_blue.png',
+  'critters/butterfly_pink.png':       'art/flat/critters/butterfly_pink.png',
+  'critters/ladybug.png':              'art/flat/critters/ladybug.png',
+  'critters/owl.png':                  'art/flat/critters/owl.png',
+  'fx/celebration_star.png':           'art/flat/fx/celebration_star.png',
+  'fx/poof_cloud.png':                 'art/flat/fx/poof_cloud.png',
+  'fx/sparkle.png':                    'art/flat/fx/sparkle.png',
+  'fx/water_splash.png':               'art/flat/fx/water_splash.png',
+  'garden/lock_sign.png':              'art/flat/garden/lock_sign.png',
+  'garden/sprout.png':                 'art/flat/garden/sprout.png',
+  'sky/firefly.png':                   'art/flat/sky/firefly.png',
+  'sky/moon.png':                      'art/flat/sky/moon.png',
+  'sky/rain_cloud.png':                'art/flat/sky/rain_cloud.png',
+  'sky/rainbow.png':                   'art/flat/sky/rainbow.png',
+  'sky/star.png':                      'art/flat/sky/star.png',
   /* ── sky ─────────────────────────────────────────────── */
   'sky/sun.png':                  'art/flat/sun_character.png',
+  // The sun's six authored face states. These are VIRTUAL logical names in exactly the same
+  // sense as '@b'/'@c': GardenScene swaps the map on the one sun sprite to blink and react.
+  // Every sheet is the same rig on the same 1024 canvas with the same alpha box (measured, not
+  // assumed), so a swap never needs a re-fit — hence one shared metrics line below.
+  'sky/sun@happy.png':            'art/flat/sun_character_happy.png',
+  'sky/sun@laughing.png':         'art/flat/sun_character_laughing.png',
+  'sky/sun@surprised.png':        'art/flat/sun_character_surprised.png',
+  'sky/sun@mischievous.png':      'art/flat/sun_character_mischievous.png',
+  'sky/sun@sad.png':              'art/flat/sun_character_sad.png',
   'sky/cloud_puffy.png':          'art/flat/cloud_puffy.png',
   'sky/cloud_puffy@b.png':        'art/flat/cloud_puffy_b.png',
   'sky/cloud_puffy@c.png':        'art/flat/cloud_puffy_c.png',
@@ -172,8 +199,32 @@ export const FLAT_OVERRIDES = {
  * @type {Object<string,{u:number[],v:number[],ax:number,ay:number,plant?:number}>}
  */
 export const FLAT_METRICS = {
+  'art/flat/critters/bat.png':                   { u: [0.021, 0.979], v: [0.155, 0.78], ax: 0.492, ay: 0.78 },
+  'art/flat/critters/bee.png':                   { u: [0.159, 1.0], v: [0.168, 0.854], ax: 0.548, ay: 0.854 },
+  'art/flat/critters/bluebird.png':              { u: [0.085, 0.984], v: [0.142, 0.811], ax: 0.393, ay: 0.811 },
+  'art/flat/critters/butterfly_blue.png':        { u: [0.029, 0.971], v: [0.109, 0.854], ax: 0.221, ay: 0.854 },
+  'art/flat/critters/butterfly_pink.png':        { u: [0.017, 0.983], v: [0.065, 0.887], ax: 0.475, ay: 0.887 },
+  'art/flat/critters/ladybug.png':               { u: [0.039, 0.96], v: [0.126, 0.906], ax: 0.514, ay: 0.906 },
+  'art/flat/critters/owl.png':                   { u: [0.117, 0.871], v: [0.091, 0.971], ax: 0.494, ay: 0.971 },
+  'art/flat/fx/celebration_star.png':            { u: [0.053, 0.864], v: [0.056, 0.847], ax: 0.335, ay: 0.847 },
+  'art/flat/fx/poof_cloud.png':                  { u: [0.01, 0.974], v: [0.107, 0.9], ax: 0.371, ay: 0.9 },
+  'art/flat/fx/sparkle.png':                     { u: [0.121, 0.908], v: [0.082, 0.924], ax: 0.737, ay: 0.924 },
+  'art/flat/fx/water_splash.png':                { u: [0.069, 0.934], v: [0.191, 0.857], ax: 0.485, ay: 0.857 },
+  'art/flat/garden/lock_sign.png':               { u: [0.156, 0.844], v: [0.14, 0.962], ax: 0.498, ay: 0.962 },
+  'art/flat/garden/sprout.png':                  { u: [0.223, 0.773], v: [0.042, 0.978], ax: 0.494, ay: 0.978 },
+  'art/flat/sky/firefly.png':                    { u: [0.133, 0.822], v: [0.086, 0.977], ax: 0.546, ay: 0.977 },
+  'art/flat/sky/moon.png':                       { u: [0.024, 0.885], v: [0.065, 0.948], ax: 0.478, ay: 0.948 },
+  'art/flat/sky/rain_cloud.png':                 { u: [0.099, 0.933], v: [0.107, 0.908], ax: 0.691, ay: 0.908 },
+  'art/flat/sky/rainbow.png':                    { u: [0.0, 1.0], v: [0.085, 0.974], ax: 0.926, ay: 0.974 },
+  'art/flat/sky/star.png':                       { u: [0.125, 0.885], v: [0.088, 0.881], ax: 0.702, ay: 0.881 },
   // Sun: a near-square disc-plus-rays, pivoting at its own centre.
   'art/flat/sun_character.png':   { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
+  // Identical for all six expressions: the rays never move, only the face group swaps.
+  'art/flat/sun_character_happy.png':       { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
+  'art/flat/sun_character_laughing.png':    { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
+  'art/flat/sun_character_surprised.png':   { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
+  'art/flat/sun_character_mischievous.png': { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
+  'art/flat/sun_character_sad.png':         { u: [0.116, 0.891], v: [0.094, 0.892], ax: 0.504, ay: 0.493 },
 
   // Clouds: lobes sitting high in the canvas, so the pivot is well above canvas centre.
   'art/flat/cloud_puffy.png':     { u: [0.130, 0.933], v: [0.196, 0.696], ax: 0.531, ay: 0.446 },

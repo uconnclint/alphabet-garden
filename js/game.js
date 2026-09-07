@@ -31,9 +31,26 @@ const TOTAL_PLANTS = LETTERS.length * 3;
 
 /* ---------- generic art ---------- */
 const ART = 'art/assets/';
-// Custom AAA art assets; the inline SVG in each plant record is kept only as a fallback.
+
+/* Every DOM preview of a plant — the three bloom-choice cards, the 78 sticker-book thumbnails,
+   the celebration portrait — resolves through the SAME flat-vector override map the WebGL world
+   uses, so the modals can never drift back to a different art style than the garden behind them.
+   That map is an ES module (js/data/flat-assets.js) and this file is a classic script, so
+   js/data/flat-art-bridge.js publishes it on `window.GardenFlatArt`; we read it lazily, at call
+   time, because a deferred module runs after this script body.
+
+   The `art/assets/` fallback below is deliberate and load-bearing twice over: it covers a plant
+   with no override line yet (all 78 are mapped today, but the map is edited by hand), and it
+   covers the bridge module failing to load at all — the modals are the whole game on a device
+   with no WebGL, so they must never render a broken-image icon. */
+function plantSrc(id) {
+  const bridge = window.GardenFlatArt;
+  const flat = bridge && bridge.plantSrc && bridge.plantSrc(id);
+  return flat || (ART + 'plants/' + id + '.png');
+}
+// The inline SVG in each plant record is kept only as a last-ditch fallback.
 function plantArt(info, cls) {
-  return '<img class="asset plant-img ' + (cls || '') + '" src="' + ART + 'plants/' + info.id + '.png" ' +
+  return '<img class="asset plant-img ' + (cls || '') + '" src="' + plantSrc(info.id) + '" ' +
          'draggable="false" alt="' + info.name + '">';
 }
 function fallbackPlant(letter) {

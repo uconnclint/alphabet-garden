@@ -880,32 +880,59 @@ def _mouth_marks(kind, G):
     raise ValueError(kind)
 
 
+def brow_w(nominal, G):
+    """Brow stroke-width, SVG-ready, that still lands ON the floor after scaling.
+
+    `face()` wraps the whole rig in `scale(width_px / 200)`, so a weight typed
+    into `_brow_marks` is a weight in RIG space, not in canvas space.  A brow
+    authored at 13 on a 142px face shipped at 9.2px -- under OL_FLOOR, which is
+    not a style preference but the width at which a line still survives the 8:1
+    downscale the game draws a plant at.  22 of the 52 faced plants were under
+    it, from x-xylophone-tree at 10.1 down to a-ant-arch at 6.0, counting both
+    the shipped pilots and the hidden `face-sleepy` / `face-mischief` groups.
+
+    So the nominal weight is a MINIMUM, not a constant: widen it by exactly the
+    scale shortfall.  A face at or above 200px is unchanged (OL_FLOOR / s <= 11
+    < 12), which is why the fix is invisible on the big faces and rescues the
+    small ones.
+    """
+    s = G.get("scale") or 1.0
+    w = max(float(nominal), OL_FLOOR / float(s))
+    # Print "13", not "13.00", when nothing had to move: a formatting-only churn
+    # would rewrite all 52 faced SVGs and hide which plants the fix actually hit.
+    return "%d" % w if abs(w - round(w)) < 1e-9 else "%.2f" % w
+
+
 def _brow_marks(kind, G):
     """Brows are hue-matched brown (BROW, never BARK_DEEP or the eye hex)."""
     (lx, ly), (rx, ry) = G["eyes"]
     lift = G["brow_lift"]
     if kind == "surprised":
+        bw = brow_w(13, G)
         return ('<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
-                'stroke-width="13" %s/>'
+                'stroke-width="%s" %s/>'
                 '<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
-                'stroke-width="13" %s/>'
+                'stroke-width="%s" %s/>'
                 % (lx - 22, ly - 56 - lift, lx, ly - 76 - lift,
-                   lx + 22, ly - 58 - lift, BROW, RJ,
+                   lx + 22, ly - 58 - lift, BROW, bw, RJ,
                    rx - 21, ry - 58 - lift, rx + 1, ry - 79 - lift,
-                   rx + 23, ry - 60 - lift, BROW, RJ))
+                   rx + 23, ry - 60 - lift, BROW, bw, RJ))
     if kind == "mischief":
+        bw = brow_w(13, G)
         return ('<path d="M%d,%d L%d,%d" fill="none" stroke="%s" '
-                'stroke-width="13" %s/>'
+                'stroke-width="%s" %s/>'
                 '<path d="M%d,%d L%d,%d" fill="none" stroke="%s" '
-                'stroke-width="13" %s/>'
-                % (lx - 24, ly - 52 - lift, lx + 22, ly - 36 - lift, BROW, RJ,
+                'stroke-width="%s" %s/>'
+                % (lx - 24, ly - 52 - lift, lx + 22, ly - 36 - lift,
+                   BROW, bw, RJ,
                    rx + 23, ry - 54 - lift, rx - 21, ry - 38 - lift,
-                   BROW, RJ))
+                   BROW, bw, RJ))
     if kind == "sleepy":
+        bw = brow_w(12, G)
         return ('<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
-                'stroke-width="12" %s/>'
+                'stroke-width="%s" %s/>'
                 % (lx - 22, ly - 48 - lift, lx, ly - 40 - lift,
-                   lx + 22, ly - 50 - lift, BROW, RJ))
+                   lx + 22, ly - 50 - lift, BROW, bw, RJ))
     return ""
 
 
@@ -944,12 +971,15 @@ def face(cx, cy, width_px, *, mass_w, default="happy", tilt=0.0,
             "face width %.0f is %.1f%% of its %.0f-wide mass; the rule is "
             "%.0f-%.0f%% (KIT.md Sec 7). Widen the mass or shrink the face."
             % (width_px, ratio * 100, mass_w, FACE_MIN * 100, FACE_MAX * 100))
+    # The rig is authored at 200px wide and then scaled, so anything inside it
+    # that has to respect a PIXEL floor (the brows) needs to know by how much.
+    s = width_px / 200.0
     G = {"eyes": eyes or EYES_DEFAULT,
          "eye_r": eye_r or EYE_R_DEFAULT,
          "mouth": mouth or MOUTH_DEFAULT,
          "mouth_k": mouth_k,
-         "brow_lift": brow_lift}
-    s = width_px / 200.0
+         "brow_lift": brow_lift,
+         "scale": s}
     parts = ['<g id="face" transform="translate(%.1f,%.1f) rotate(%.1f) '
              'scale(%.4f)">' % (cx, cy, tilt, s)]
     if with_blush:

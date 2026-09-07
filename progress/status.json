@@ -1,9 +1,9 @@
 {
-  "updated": "2026-09-07T18:50:02.105Z",
+  "updated": "2026-09-07T22:10:08.710Z",
   "project": "Alphabet Garden — Toca-grade graphics overhaul",
   "branch": "toca-polish",
-  "wave": 1,
-  "waveName": "Wave 1 · Scene port + art language",
+  "wave": 3,
+  "waveName": "Wave 3 · Coherence + remaining outliers",
   "artDirection": "HYBRID + AUTHORED VECTOR. Image generation is BLOCKED on this workspace (403 insufficient_permissions: image_video_generation), so all new art is hand-authored SVG rasterised to PNG — which is actually superior for flat vector: exact hex, zero gradient, precise outline weights, no derivative-work risk. Plants: flatten-pipeline experiment in progress. Original art only; Toca is the bar, never a source.",
   "pieces": [
     {
@@ -50,31 +50,31 @@
       "id": "clouds",
       "group": "World",
       "name": "Clouds & parallax depth",
-      "status": "queued",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 7,
       "gap": "",
-      "note": ""
+      "note": "Halved in size after content-fitting showed they were swallowing the sky on mobile and hiding the sun. Now dim at night — untinted cream clouds read as holes in a night sky."
     },
     {
       "id": "hills",
       "group": "World",
       "name": "Hills / far backdrop",
-      "status": "critiquing",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "Own pale back-layer palette, no black outline, tiles seamlessly (y(0)==y(2048))."
+      "note": "Two bottom-anchored bands under the horizon; outline-free and pale so they sit back."
     },
     {
       "id": "ground",
       "group": "World",
       "name": "Meadow & grass foreground",
-      "status": "queued",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": ""
+      "note": "Tiled strip replaced by up to 18 discrete grass tufts + 3 horizon shrubs with per-index variant, size and lean; they take the tap nudge as discrete props."
     },
     {
       "id": "plots",
@@ -90,31 +90,31 @@
       "id": "weather",
       "group": "World",
       "name": "Rain, rainbow & weather FX",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Rain cloud, rainbow, moon, star, firefly being authored flat."
     },
     {
       "id": "sun-moon",
       "group": "Characters",
       "name": "Sun & moon characters (blink, mood)",
-      "status": "passed",
-      "rounds": 3,
+      "status": "building",
+      "rounds": 4,
       "score": 8,
       "gap": "",
-      "note": "Best asset in the batch: six expression states all readable at 110px, each <=3 changed marks, brow angle carrying the emotion. Loses points only for a single character with no blink state."
+      "note": "Sun sits behind both cloud layers so its face gets covered; also its 6 authored expressions have no game hook. Both being fixed."
     },
     {
       "id": "critters",
       "group": "Characters",
       "name": "Critters — flight paths & wing anim",
-      "status": "critiquing",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": "3 desynced critters, topped up every 3s. Root cause of the empty layer was spawnCritter bailing on document.hidden."
+      "note": "Authoring 7 flat critters — the most conspicuous outliers, 3 on screen at all times."
     },
     {
       "id": "plant-faces",
@@ -151,10 +151,10 @@
       "group": "Plants",
       "name": "Plant art quality pass (78 plants)",
       "status": "passed",
-      "rounds": 7,
+      "rounds": 10,
       "score": 8,
       "gap": "",
-      "note": "FAN-OUT GATE CLEARED. Kit code proven scale-ready (critic authored escalator plant, narwhal nettle and airplane tree from kit calls alone). Primer rewritten to match code; root_seed/mass_w keyword-only so the silent lean->root_seed trap is now a TypeError; verifier holes closed (single-id runs no longer report a hollow PASS, and plants are auto-enrolled by glob). Bark separated from ground soil so trunks stop competing with the plot for focal weight. 31/31 palette tokens match, zero drift, zero plant art changed."
+      "note": "ALL 78 AUTHORED AND WIRED. Full-set gates: G1 diversity PASS (3003 comparisons, worst pair 0.693), G2 saturation PASS, zero palette drift. Verified live in-game."
     },
     {
       "id": "hud",
@@ -170,11 +170,11 @@
       "id": "letter-picker",
       "group": "UI",
       "name": "Letter picker",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Same DOM-preview fix."
     },
     {
       "id": "bloom-choice",
@@ -190,21 +190,21 @@
       "id": "sticker-book",
       "group": "UI",
       "name": "Sticker book",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Same DOM-preview fix."
     },
     {
       "id": "celebration",
       "group": "UI",
       "name": "Bloom celebration moment",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "DOM previews (choice cards, sticker thumbs, celebration card) still bypass the alias layer and show claymation — being routed through the override map."
     },
     {
       "id": "title",
@@ -290,106 +290,14 @@
       "id": "wiring",
       "group": "Foundation",
       "name": "Wire flat art into the running game",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "CRITICAL PATH: grep proved nothing in js/ referenced art/flat — all 25 world assets and 9 plants were unused and the game still rendered claymation. Building an alias-map override layer so each newly authored asset lights up with a one-line addition."
+      "note": "Alias layer live. World now reads as ONE coherent flat-vector scene — verified by my own screenshot. Content-based sizing + contact-point pivots; bed is now the biggest object in its cell. Fixed a real bug: plants never rescaled on layout change, so portrait rotation left a desktop-sized tree overflowing its cell."
     }
   ],
   "log": [
-    {
-      "t": "10:10",
-      "msg": "Spawned motion/feel critic (C9 idle life + C10 response & juice) — judgeable independently of the art restyle."
-    },
-    {
-      "t": "10:10",
-      "msg": "My own read of the running game: a cloud collides with the HUD, clouds muddle the hill depth, and 8 repeated Grow-3-more text signs are heavy for pre-readers (instant tell 27)."
-    },
-    {
-      "t": "10:22",
-      "msg": "Plant pilot COMPLETE: 6 plants + a shared kit expressed in code so 72 downstream plants inherit fixes automatically."
-    },
-    {
-      "t": "10:22",
-      "msg": "Caught before fan-out: the pilot used the OLD saturated palette (zero new tokens present). Recolouring at the kit source now — this is exactly why we piloted before scaling."
-    },
-    {
-      "t": "10:22",
-      "msg": "Pilot also caught 2 stale flatten-experiment PNGs with no SVG master (robot rosebush, zombie tree) — being removed so they cannot ship as authored work."
-    },
-    {
-      "t": "10:22",
-      "msg": "Kit documents 5 authoring traps found the hard way, incl. an evenodd fill-rule bug that put a floating orange disc on the pizza crust."
-    },
-    {
-      "t": "10:28",
-      "msg": "Motion critic FAILED the scene: C9 6/10, C10 4/10 (auto-capped by linear easing on DOM confetti)."
-    },
-    {
-      "t": "10:28",
-      "msg": "Critic caught a subtle Three.js bug in its OWN method: Sprites rotate via material.rotation, not object3D.rotation.z — it re-measured everything on the correct channel."
-    },
-    {
-      "t": "10:28",
-      "msg": "Regression found: the critters layer is empty. The pre-port DOM game had butterflies, bees and night fireflies."
-    },
-    {
-      "t": "10:28",
-      "msg": "Accessibility bug found: reduced-motion mode removes tap squash entirely, so presses give ZERO acknowledgement. Reduced motion must reduce motion, not remove feedback."
-    },
-    {
-      "t": "10:28",
-      "msg": "Critic was honest that the blind A/B was inconclusive (reference video stalled) rather than inventing a verdict."
-    },
-    {
-      "t": "10:28",
-      "msg": "Growth animation PASSED at 8/10 and is marked do-not-regress."
-    },
-    {
-      "t": "10:32",
-      "msg": "Plant recolour COMPLETE: combined median S 0.630 -> 0.479, %>S0.60 59.4% -> 9.2%. Target hit."
-    },
-    {
-      "t": "10:32",
-      "msg": "Recolour agent caught MY error: the shadow-tone table in FLAT_ART_BRIEF still held old pre-revision hexes, contradicting the Layer-1 table above it. Re-synced."
-    },
-    {
-      "t": "10:32",
-      "msg": "It also found 2 hardcoded hexes in _build_plants.py bypassing the kit — now named tokens, so all colour flows from one source."
-    },
-    {
-      "t": "10:32",
-      "msg": "FAN-OUT GATE: critic judging the 6 pilots AND the kit fitness. 72 plants stay queued until this passes."
-    },
-    {
-      "t": "10:42",
-      "msg": "World art round 3 delivered: median S 0.420, only 1.5% above S0.60."
-    },
-    {
-      "t": "10:42",
-      "msg": "I independently re-verified both hard bugs rather than trusting the report: seam colour = 0px in all 3 hill layers, hill/foreground shared colours = 0."
-    },
-    {
-      "t": "10:42",
-      "msg": "Coordination slip of mine: I committed while a builder was mid-flight and swept its in-flight files in. Re-committed the finished state, scoped to art+docs so the running motion agent is untouched."
-    },
-    {
-      "t": "10:42",
-      "msg": "Fresh critic now judging world art round 3. I am deliberately withholding my own reservation about the dirt plot so the review stays independent — then I will compare."
-    },
-    {
-      "t": "10:43",
-      "msg": "PLANT GATE: FAIL, KIT NOT READY. Held the gate — this saved 72 wrong plants."
-    },
-    {
-      "t": "10:43",
-      "msg": "Decisive measurement: apple vs maple silhouette IoU 0.930 at 128px. Same object in three colourways."
-    },
-    {
-      "t": "10:43",
-      "msg": "Critic caught a statistical trap I had accepted: aggregate saturation passed, but 4 of 6 plants individually breach the ceiling. In game a plant renders alone, not averaged."
-    },
     {
       "t": "10:43",
       "msg": "Also caught: OL_FINE=7px contradicts the kit own 1.5% rule (sub-pixel ghosting at 128px), sunflower emits 32 strokes at exactly 13.0px (mathematical-stroke tell), and _kit.png has overlapping labels on the very sheet 10 agents will read."
@@ -537,6 +445,98 @@
     {
       "t": "14:50",
       "msg": "Result: 31/31 tokens match, both gates pass (36 comparisons), and zero plant PNGs changed — the rename was purely nominal."
+    },
+    {
+      "t": "15:11",
+      "msg": "Flat art WIRED and committed — the world now reads as one coherent flat-vector scene."
+    },
+    {
+      "t": "15:11",
+      "msg": "Verified by my own screenshot: flat beds with real variants, grass tufts, hill bands, faced sun, and the flat butterfly bush / sunflower / apple tree."
+    },
+    {
+      "t": "15:11",
+      "msg": "Visible clash confirmed exactly as the builder honestly reported: the glossy caterpillar vine sits between two flat plants, and claymation critters fly over a flat world."
+    },
+    {
+      "t": "15:11",
+      "msg": "FAN-OUT BEGUN: 69 plants remain. Waves A-G and H-O building concurrently into separate build modules; P-Z queued to keep concurrency at 2."
+    },
+    {
+      "t": "15:11",
+      "msg": "Two follow-ups logged: DOM modal previews bypass the texture loader (choice cards still show claymation portraits), and the sun sits behind the cloud layers so its new face gets covered."
+    },
+    {
+      "t": "16:04",
+      "msg": "Wave A-G COMPLETE: 18 plants, gates PASS at 1225 comparisons, zero palette drift."
+    },
+    {
+      "t": "16:04",
+      "msg": "Verified at game size myself — these have real charm. Burger Bush, Donut Tree, Duck Bloom and Giraffe Grass all land instantly at 128px."
+    },
+    {
+      "t": "16:04",
+      "msg": "Builder self-assessment was well calibrated: it named the fern as weakest and the ant workers as collapsing, and both were exactly what I saw."
+    },
+    {
+      "t": "16:04",
+      "msg": "Wave P-Z spawned (28 plants) with an explicit warning about the 0.690 spruce/UFO near-collision, since several of its plants are conical."
+    },
+    {
+      "t": "16:04",
+      "msg": "27 of 78 plants now authored."
+    },
+    {
+      "t": "16:25",
+      "msg": "Wave H-O COMPLETE: 23 plants, gates PASS at 1334 comparisons, zero drift. 50 of 78 now authored."
+    },
+    {
+      "t": "16:25",
+      "msg": "Verified at game size myself — hotdog hedge, owl orchid, octopus oakleaf and ketchup cactus are genuinely funny at 128px."
+    },
+    {
+      "t": "16:25",
+      "msg": "Second builder in a row whose self-assessment matched my own eyes exactly (hibiscus generic, kale generic, marshmallow trunk bare)."
+    },
+    {
+      "t": "16:25",
+      "msg": "Kit defect found and correctly NOT fixed: hidden sleepy brows render under the 11px floor because _brow_marks hardcodes width while face() scales the rig. It respected the shared-file boundary and reported instead."
+    },
+    {
+      "t": "16:25",
+      "msg": "Watch item: worst pair in the set is now 0.699 (norway-spruce / quail-quillplant) — razor-thin against the 0.70 gate. quail is a P-Z plant, so that wave owns resolving it."
+    },
+    {
+      "t": "17:05",
+      "msg": "ALL 78 PLANTS AUTHORED AND LIVE. Full-set gates pass: 3003 comparisons, worst pair 0.693, zero drift."
+    },
+    {
+      "t": "17:05",
+      "msg": "Wired all 78 myself by generating overrides + measured metrics; content boxes for the original 9 came out identical to the hand-tuned ones, so sizing was not degraded."
+    },
+    {
+      "t": "17:05",
+      "msg": "Verified in-game with a 12-plant garden: the world reads as one coherent flat-vector game."
+    },
+    {
+      "t": "17:05",
+      "msg": "NEW ISSUE I found: with a full garden, plants overlap heavily across rows (plantH is allowed 1.75x rowH). Readable but cluttered — routing to the coherence critic rather than guessing."
+    },
+    {
+      "t": "17:05",
+      "msg": "Remaining claymation outliers: critters, stage-1 sprout, lock signs, rain clouds, moon/stars/rainbow."
+    },
+    {
+      "t": "18:10",
+      "msg": "FINISHING RUN. Inventory: 18 assets still claymation (7 critters, 5 sky, 2 garden, 4 fx)."
+    },
+    {
+      "t": "18:10",
+      "msg": "Found a bigger gap than the art: DOM modal previews build raw <img> tags and never touch the texture loader, so the letter picker, sticker book and celebration card ALL still show claymation portraits over a flat world."
+    },
+    {
+      "t": "18:10",
+      "msg": "Two agents running: remaining flat art, and the code gaps (DOM previews, sun behind clouds, unused sun expressions, deferred kit brow fix + full plant rebuild)."
     }
   ]
 }
