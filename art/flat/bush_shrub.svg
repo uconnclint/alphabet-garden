@@ -1,26 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs><clipPath id="bushClip"><path d="M222.6,705.9 Q154.2,673.0 217.6,631.3 Q125.3,638.6 171.9,558.7 Q147.8,491.4 219.2,490.0 Q133.9,439.3 227.6,406.5 Q264.7,327.8 328.9,386.5 Q316.1,323.6 380.1,318.3 Q415.0,227.9 468.7,308.5 Q500.5,238.3 558.4,289.2 Q651.1,241.3 631.2,343.8 Q689.6,282.9 717.2,362.6 Q781.6,382.8 744.2,439.0 Q776.6,480.2 828.9,482.3 Q892.0,529.3 820.0,561.0 Q903.7,588.7 828.6,634.8 Q866.2,695.1 795.6,703.4 Q817.1,775.9 742.0,784.0 Q695.2,825.6 638.0,800.0 Q586.2,847.9 528.0,808.0 Q472.6,831.0 420.0,802.0 Q363.2,845.7 318.0,790.0 Q229.3,794.4 222.6,705.9 Z"/></clipPath></defs>
-  <path d="M222.6,705.9 Q154.2,673.0 217.6,631.3 Q125.3,638.6 171.9,558.7 Q147.8,491.4 219.2,490.0 Q133.9,439.3 227.6,406.5 Q264.7,327.8 328.9,386.5 Q316.1,323.6 380.1,318.3 Q415.0,227.9 468.7,308.5 Q500.5,238.3 558.4,289.2 Q651.1,241.3 631.2,343.8 Q689.6,282.9 717.2,362.6 Q781.6,382.8 744.2,439.0 Q776.6,480.2 828.9,482.3 Q892.0,529.3 820.0,561.0 Q903.7,588.7 828.6,634.8 Q866.2,695.1 795.6,703.4 Q817.1,775.9 742.0,784.0 Q695.2,825.6 638.0,800.0 Q586.2,847.9 528.0,808.0 Q472.6,831.0 420.0,802.0 Q363.2,845.7 318.0,790.0 Q229.3,794.4 222.6,705.9 Z" fill="#7ec850"/>
+  <ellipse cx="516" cy="812" rx="268" ry="32" fill="#93d56c"/>
+  <!-- shadow crescent follows the scalloped silhouette itself (the same path
+       shifted toward the light, plus 2 degrees of rotation so the band
+       breathes instead of reading as an extruded rim) -->
+  <path d="M222.6,705.9 Q154.2,673.0 217.6,631.3 Q125.3,638.6 171.9,558.7 Q147.8,491.4 219.2,490.0 Q133.9,439.3 227.6,406.5 Q264.7,327.8 328.9,386.5 Q316.1,323.6 380.1,318.3 Q415.0,227.9 468.7,308.5 Q500.5,238.3 558.4,289.2 Q651.1,241.3 631.2,343.8 Q689.6,282.9 717.2,362.6 Q781.6,382.8 744.2,439.0 Q776.6,480.2 828.9,482.3 Q892.0,529.3 820.0,561.0 Q903.7,588.7 828.6,634.8 Q866.2,695.1 795.6,703.4 Q817.1,775.9 742.0,784.0 Q695.2,825.6 638.0,800.0 Q586.2,847.9 528.0,808.0 Q472.6,831.0 420.0,802.0 Q363.2,845.7 318.0,790.0 Q229.3,794.4 222.6,705.9 Z" fill="#79b85c"/><g clip-path="url(#bushClip)"><path d="M222.6,705.9 Q154.2,673.0 217.6,631.3 Q125.3,638.6 171.9,558.7 Q147.8,491.4 219.2,490.0 Q133.9,439.3 227.6,406.5 Q264.7,327.8 328.9,386.5 Q316.1,323.6 380.1,318.3 Q415.0,227.9 468.7,308.5 Q500.5,238.3 558.4,289.2 Q651.1,241.3 631.2,343.8 Q689.6,282.9 717.2,362.6 Q781.6,382.8 744.2,439.0 Q776.6,480.2 828.9,482.3 Q892.0,529.3 820.0,561.0 Q903.7,588.7 828.6,634.8 Q866.2,695.1 795.6,703.4 Q817.1,775.9 742.0,784.0 Q695.2,825.6 638.0,800.0 Q586.2,847.9 528.0,808.0 Q472.6,831.0 420.0,802.0 Q363.2,845.7 318.0,790.0 Q229.3,794.4 222.6,705.9 Z" fill="#9ddb76" transform="translate(-34.0,-40.0) rotate(2.00 512 600)"/></g>
   <g clip-path="url(#bushClip)">
-    <path d="M110,644 C160,676 196,632 244,660 C296,690 328,644 378,672 C432,702 462,652 514,678 C568,706 598,656 650,678 C704,700 730,640 774,646 C818,652 838,590 872,540 L940,540 L940,880 L110,880 Z" fill="#5da23c"/>
     <!-- internal contour lines: overlapping leaf clumps do the form work -->
-    <path d="M262,432 C332,462 356,538 322,616" fill="none" stroke="#000000"
-          stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M700,368 C650,420 660,492 712,532" fill="none" stroke="#000000"
-          stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M486,320 C444,380 460,448 514,486" fill="none" stroke="#000000"
-          stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M556,660 C606,632 620,584 604,536" fill="none" stroke="#000000"
-          stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="M386,690 C428,668 448,624 442,578" fill="none" stroke="#000000"
-          stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M262,432 C332,462 356,538 322,616" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/><path d="M700,368 C650,420 660,492 712,532" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/><path d="M486,320 C444,380 460,448 514,486" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/><path d="M556,660 C606,632 620,584 604,536" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/><path d="M386,690 C428,668 448,624 442,578" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
   </g>
   <path d="M222.6,705.9 Q154.2,673.0 217.6,631.3 Q125.3,638.6 171.9,558.7 Q147.8,491.4 219.2,490.0 Q133.9,439.3 227.6,406.5 Q264.7,327.8 328.9,386.5 Q316.1,323.6 380.1,318.3 Q415.0,227.9 468.7,308.5 Q500.5,238.3 558.4,289.2 Q651.1,241.3 631.2,343.8 Q689.6,282.9 717.2,362.6 Q781.6,382.8 744.2,439.0 Q776.6,480.2 828.9,482.3 Q892.0,529.3 820.0,561.0 Q903.7,588.7 828.6,634.8 Q866.2,695.1 795.6,703.4 Q817.1,775.9 742.0,784.0 Q695.2,825.6 638.0,800.0 Q586.2,847.9 528.0,808.0 Q472.6,831.0 420.0,802.0 Q363.2,845.7 318.0,790.0 Q229.3,794.4 222.6,705.9 Z" fill="none" stroke="#000000" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
-  <!-- three unequal berries, clustered off-centre: the saturation accent -->
-  <circle cx="386" cy="470" r="30" fill="#c65fd1" stroke="#000000"
-          stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="444" cy="534" r="22" fill="#c65fd1" stroke="#000000"
-          stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="628" cy="436" r="26" fill="#c65fd1" stroke="#000000"
-          stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="386" cy="470" r="30" fill="#c65fd1" stroke="#000000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="444" cy="534" r="22" fill="#c65fd1" stroke="#000000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="628" cy="436" r="26" fill="#c65fd1" stroke="#000000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

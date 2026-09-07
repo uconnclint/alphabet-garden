@@ -31,45 +31,48 @@ CX = 512                    # nominal centre; DO NOT centre everything exactly
 # is derived by the documented rule in KIT.md Sec 2 and is now part of the
 # locked palette -- do not invent hexes outside these two blocks.
 # =====================================================================
-# --- core (FLAT_ART_BRIEF Sec 3) -------------------------------------
-GRASS       = "#7ec850"   # grass
-GRASS_DEEP  = "#5da23c"   # grass-deep
-GRASS_DARK  = "#4a8531"   # grass-dark
-SKY_HI      = "#8fd3ff"   # sky-hi
-SKY_LO      = "#cdefff"   # sky-lo
-SOIL        = "#a9713f"   # soil
-SOIL_DEEP   = "#8a5a33"   # soil-deep
-CREAM       = "#fff7e6"   # cream
-SUN         = "#ffd23f"   # sun
-SUN_DEEP    = "#f0b429"   # sun-deep
-ACCENT      = "#ff9d52"   # accent
-BERRY       = "#c65fd1"   # berry
+# --- core (FLAT_ART_BRIEF Sec 3 -- REVISED palette, post S-0.63 audit) -
+GRASS       = "#9ddb76"   # grass            (was #7ec850)
+GRASS_DEEP  = "#79b85c"   # grass-deep       (was #5da23c)
+GRASS_DARK  = "#6c9959"   # grass-dark       (was #4a8531; derived back-layer green)
+SKY_HI      = "#8fd3ff"   # sky-hi           (unchanged -- already in band)
+SKY_LO      = "#cdefff"   # sky-lo           (unchanged -- already in band)
+SOIL        = "#c2946b"   # soil             (was #a9713f)
+SOIL_DEEP   = "#a37855"   # soil-deep        (was #8a5a33)
+CREAM       = "#fff7e6"   # cream            (unchanged)
+SUN         = "#ffe07a"   # sun              (was #ffd23f)
+SUN_DEEP    = "#f0c665"   # sun-deep         (was #f0b429)
+ACCENT      = "#ffb77e"   # accent           (was #ff9d52; brief's revised value)
+BERRY       = "#c65fd1"   # berry            (unchanged -- rare high-sat accent)
 INK         = "#000000"   # ink
-INK_SOFT    = "#3f3026"   # ink-soft
+INK_SOFT    = "#3f3026"   # ink-soft         (eyes)
+BROW        = "#6b5342"   # brow             (NEW -- brows must not share eye hex)
 
-# --- extended (derived; see KIT.md Sec 2) ----------------------------
-LEAF        = "#b0e070"   # leaf         lit green face   (shadow: GRASS)
-SUN_SHADE   = "#e8a52a"   # sun-shade    shadow for SUN        dV 0.090
-ACCENT_DEEP = "#e0813c"   # accent-deep  shadow for ACCENT     dV 0.122
-FRUIT       = "#e8493c"   # fruit        red accent (apples, pepperoni)
-FRUIT_DEEP  = "#c73a30"   # fruit-deep   shadow for FRUIT      dV 0.130
-EMBER       = "#ef6a3c"   # ember        autumn orange-red
-EMBER_DEEP  = "#cf5530"   # ember-deep   shadow for EMBER      dV 0.125
-STEEL       = "#b8bcc8"   # steel        tinted metal (saucers, wings)
-STEEL_DEEP  = "#969cae"   # steel-deep   shadow for STEEL      dV 0.102
-SKY_DEEP    = "#62b0e6"   # sky-deep     shadow for SKY_HI     dV 0.098
-BARK_LITE   = "#c2884e"   # bark-lite    lit bark face    (shadow: SOIL)
-CREAM_DEEP  = "#e8dcc4"   # cream-deep   shadow for CREAM      dV 0.090
-BEAM        = "#ffeaa8"   # beam         light/glow shapes, flat
+# --- extended (derived; see KIT.md Sec 2 / FLAT_ART_BRIEF Sec 3) -----
+LEAF        = "#c3f598"   # leaf         lit green face   (shadow: GRASS)      (was #b0e070)
+SUN_SHADE   = "#eebf5c"   # sun-shade    shadow for SUN        dV 0.067   (was #e8a52a)
+RAY_SHADE   = "#dbab58"   # ray-shade    shadow for SUN_DEEP   dV 0.082   (was literal #d69526)
+ACCENT_DEEP = "#e09863"   # accent-deep  shadow for ACCENT     dV 0.122   (was #e0813c)
+FRUIT       = "#d96a62"   # fruit        red accent (apples, pepperoni)      (was #e8493c)
+FRUIT_DEEP  = "#b85149"   # fruit-deep   shadow for FRUIT      dV 0.130   (was #c73a30)
+EMBER       = "#d9876c"   # ember        autumn orange-red                   (was #ef6a3c)
+EMBER_DEEP  = "#b86a53"   # ember-deep   shadow for EMBER      dV 0.130   (was #cf5530)
+STEEL       = "#b8bcc8"   # steel        tinted metal (saucers, wings)   (unchanged -- already in band)
+STEEL_DEEP  = "#969cae"   # steel-deep   shadow for STEEL      dV 0.102  (unchanged -- already in band)
+SKY_DEEP    = "#6cacd9"   # sky-deep     shadow for SKY_HI     dV 0.150   (was #62b0e6)
+BARK_LITE   = "#dbad7f"   # bark-lite / soil-lite  lit bark face (shadow: SOIL)  (was #c2884e)
+CREAM_DEEP  = "#e8dcc4"   # cream-deep   shadow for CREAM      dV 0.090  (unchanged -- already in band)
+BEAM        = "#ffeaa8"   # beam         light/glow shapes, flat        (unchanged -- already in band)
+BERRY_DEEP  = "#a44ead"   # berry-deep   shadow for BERRY      dV 0.140   (was literal #a94bb3)
 
 # base -> shadow pairing table.  ALWAYS take a shadow from here.
 SHADE = {
     GRASS: GRASS_DEEP, GRASS_DEEP: GRASS_DARK, LEAF: GRASS,
     SOIL: SOIL_DEEP, BARK_LITE: SOIL,
-    SUN: SUN_SHADE, SUN_DEEP: "#d69526",
+    SUN: SUN_SHADE, SUN_DEEP: RAY_SHADE,
     ACCENT: ACCENT_DEEP, FRUIT: FRUIT_DEEP, EMBER: EMBER_DEEP,
     STEEL: STEEL_DEEP, SKY_HI: SKY_DEEP, CREAM: CREAM_DEEP,
-    BERRY: "#a94bb3", BEAM: SUN,
+    BERRY: BERRY_DEEP, BEAM: SUN,
 }
 
 # =====================================================================
@@ -139,8 +142,15 @@ def place(pts, cx, cy, deg=0.0, sx=1.0, sy=None):
 
 
 def bite(cx, cy, r):
-    """Sub-path circle; with fill-rule=evenodd it removes a nibble.
-    Always place it STRADDLING an edge so it reads as a bite, not a hole."""
+    """Caterpillar nibble: a sub-path circle removed with fill-rule=evenodd.
+
+    MUST sit FULLY INSIDE the parent shape.  A circle that straddles the
+    edge does NOT produce a bite -- under evenodd the part lying outside the
+    parent has winding 1 and renders as a solid filled lune stuck to the
+    silhouette.  That artifact cost pilot v1 a rebuild.  For a true edge
+    bite, push a point of the shape's own outline inward instead
+    (canopy_blob(notch=i) does exactly that).
+    """
     return ("M%.1f,%.1f A%.1f,%.1f 0 1 0 %.1f,%.1f "
             "A%.1f,%.1f 0 1 0 %.1f,%.1f Z"
             % (cx - r, cy, r, r, cx + r, cy, r, r, cx - r, cy))
@@ -208,12 +218,12 @@ def leaf_lobed(cx, cy, L, deg=0.0, jit=(1.0, 0.94, 1.06, 0.97, 1.02)):
     maple leaf drawn from tips alone becomes a spiky asterisk that vanishes
     at game size.  Notches are shallow (0.38-0.46 of L) for the same reason.
     """
-    tips = [(-101, .64), (-50, .88), (0, 1.00), (52, .86), (100, .62)]
-    notch = [(-77, .42), (-26, .46), (26, .44), (77, .40)]
+    tips = [(-103, .64), (-50, .90), (0, 1.00), (52, .88), (102, .62)]
+    notch = [(-78, .38), (-26, .42), (26, .40), (78, .36)]
     seq = [(-153, .16)]
     for i, (a, r) in enumerate(tips):
         k = jit[i % len(jit)]
-        seq += [(a - 15, r * k * .86), (a, r * k), (a + 15, r * k * .86)]
+        seq += [(a - 13, r * k * .82), (a, r * k), (a + 13, r * k * .82)]
         if i < len(notch):
             seq.append(notch[i])
     seq += [(153, .16), (180, .30)]                 # petiole nub
@@ -378,7 +388,7 @@ def trunk_palm(cx, y_top, y_base, hw_top, hw_base, n=7, wob=(0, 5, -4, 6, -3, 4,
     hh = span / (n * 1.72)
     for i in range(n):
         t = i / float(n - 1)
-        cy = y_top + hh + (span - 2 * hh) * t
+        cy = y_top + hh * 1.16 + (span - 2 * hh * 1.16) * t
         hw = hw_top + (hw_base - hw_top) * (t ** 1.25)
         out.append((lozenge(cx + wob[i % len(wob)], cy, hw, hh * 1.16,
                             deg=(-1.6 if i % 2 else 1.4)), hw, cy))
@@ -483,7 +493,7 @@ def _mouth_marks(kind):
 
 
 def _brow_marks(kind):
-    """Brows are hue-matched brown, never black, and often omitted."""
+    """Brows are hue-matched brown (BROW, never SOIL_DEEP or the eye hex)."""
     lx, ly = _EL
     rx, ry = _ER
     if kind == "surprised":
@@ -492,21 +502,21 @@ def _brow_marks(kind):
                 '<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
                 'stroke-width="13" %s/>'
                 % (lx - 22, ly - 56, lx, ly - 76, lx + 22, ly - 58,
-                   SOIL_DEEP, RJ,
+                   BROW, RJ,
                    rx - 21, ry - 58, rx + 1, ry - 79, rx + 23, ry - 60,
-                   SOIL_DEEP, RJ))
+                   BROW, RJ))
     if kind == "mischief":
         return ('<path d="M%d,%d L%d,%d" fill="none" stroke="%s" '
                 'stroke-width="13" %s/>'
                 '<path d="M%d,%d L%d,%d" fill="none" stroke="%s" '
                 'stroke-width="13" %s/>'
-                % (lx - 24, ly - 52, lx + 22, ly - 36, SOIL_DEEP, RJ,
-                   rx + 23, ry - 54, rx - 21, ry - 38, SOIL_DEEP, RJ))
+                % (lx - 24, ly - 52, lx + 22, ly - 36, BROW, RJ,
+                   rx + 23, ry - 54, rx - 21, ry - 38, BROW, RJ))
     if kind == "sleepy":
         return ('<path d="M%d,%d Q%d,%d %d,%d" fill="none" stroke="%s" '
                 'stroke-width="12" %s/>'
                 % (lx - 22, ly - 48, lx, ly - 40, lx + 22, ly - 50,
-                   SOIL_DEEP, RJ))
+                   BROW, RJ))
     return ""
 
 

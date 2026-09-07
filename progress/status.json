@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T14:04:46.070Z",
+  "updated": "2026-09-07T14:32:30.395Z",
   "project": "Alphabet Garden — Toca-grade graphics overhaul",
   "branch": "toca-polish",
   "wave": 1,
@@ -110,10 +110,10 @@
       "id": "critters",
       "group": "Characters",
       "name": "Critters — flight paths & wing anim",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
-      "score": null,
-      "gap": "",
+      "score": 1,
+      "gap": "Layer is wired and completely empty (0 children) — a regression from the pre-port DOM game which had butterflies, bees, ladybug, bird, owl, bat and fireflies.",
       "note": ""
     },
     {
@@ -124,37 +124,37 @@
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": "Authored SVG gives plants a real swappable expression system (>=6 expressions as named groups) — impossible with static PNGs. Folded into the plant pilot."
+      "note": "6-state face rig built into the kit (neutral/happy/delighted/sleepy/surprised/mischievous) as swappable groups — enables blink and reaction animation."
     },
     {
       "id": "growth",
       "group": "Plants",
       "name": "Growth animation (seed→sprout→bloom)",
-      "status": "queued",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": ""
+      "note": "Measured at standard: anticipation -11.6% over 133ms, overshoot 1.202x reciprocal, rotation kick unwinding through +1.34deg, layered celebration. Critic marked it do-not-regress."
     },
     {
       "id": "plant-idle",
       "group": "Plants",
       "name": "Plant idle motion & secondary sway",
-      "status": "queued",
+      "status": "critiquing",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Per-plant random phase AND period; judged in the motion review."
     },
     {
       "id": "plant-art",
       "group": "Plants",
       "name": "Plant art quality pass (78 plants)",
-      "status": "building",
-      "rounds": 1,
-      "score": 4,
-      "gap": "Image-processing the glossy 3D renders into flat art destroys character — the butterfly bush lost its face and its butterflies became blobs. Plants must be authored as native flat vector.",
-      "note": "NOT VIABLE verdict confirmed by my own inspection of the compare sheets. Flatness was solved (C4 3->7-9, bit-exact fills up to 514px) but C2/C3 fail non-tunably: in a 3D render a design edge and a lighting edge are pixel-identical. Now authoring all 78 as SVG; 6-plant pilot running to set the shared visual language."
+      "status": "critiquing",
+      "rounds": 3,
+      "score": null,
+      "gap": "",
+      "note": "Recoloured at the kit source: combined median S 0.630 -> 0.479, pixels above S0.60 59.4% -> 9.2% (both in target). Zero retired hexes remain; corners still alpha 0; fills still bit-exact to 530px. Now at the FAN-OUT GATE — a critic is judging both the 6 plants and whether the kit itself is rich enough to express 78 without everything becoming the same shrub."
     },
     {
       "id": "hud",
@@ -220,20 +220,20 @@
       "id": "touch-feel",
       "group": "Feel",
       "name": "Tap/press feedback & juice",
-      "status": "queued",
-      "rounds": 0,
-      "score": null,
-      "gap": "",
+      "status": "building",
+      "rounds": 1,
+      "score": 4,
+      "gap": "Taps on sky, hills, clouds and open grass produce 0 tweens and 0 particles; press cycle has zero rotation kick and zero position pop (both measured exactly 0.000).",
       "note": ""
     },
     {
       "id": "transitions",
       "group": "Feel",
       "name": "Screen transitions",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
-      "score": null,
-      "gap": "",
+      "score": 3,
+      "gap": "Title screen is a plain 800ms crossfade and every modal/button uses default ease with no sibling stagger — 26 letter buttons all arrive on one frame.",
       "note": ""
     },
     {
@@ -281,10 +281,10 @@
       "group": "Foundation",
       "name": "Game scene port to Three.js",
       "status": "building",
-      "rounds": 0,
-      "score": null,
-      "gap": "",
-      "note": "Porting the live game world (plots, growth, critters, sky, day/night) onto the stage while preserving all save/voice/logic."
+      "rounds": 2,
+      "score": 5,
+      "gap": "Everything that is not a plant or the sun is frozen and unresponsive — 8 dirt mounds, 8 sign posts, grass, hills and an EMPTY critter layer never move, and taps on sky/hills/clouds/grass produce literally nothing.",
+      "note": "Motion critic measured frame-by-frame. C9 6/10 (motion fraction 26.4% vs >=30% rule). C10 auto-capped at 4 by linear easing on DOM confetti. Confirmed GOOD: press cycle reciprocal + volume-conserved, bloom anticipation -11.6% over 133ms, bloom overshoot 1.202x with rotation unwind, per-plant desynced periods."
     }
   ],
   "log": [
@@ -407,6 +407,78 @@
     {
       "t": "10:04",
       "msg": "World art round 3 building against the revised palette + 10-item fix list."
+    },
+    {
+      "t": "10:10",
+      "msg": "Scene port COMPLETE and committed — verified live in a fronted tab; sky, hills, clouds, sun, plots and ambient motes all rendering."
+    },
+    {
+      "t": "10:10",
+      "msg": "Process fix: rAF is suspended in BACKGROUND tabs, which made a builder think animation was dead. Critic brief now tells critics to front the tab and count ticks first."
+    },
+    {
+      "t": "10:10",
+      "msg": "Spawned motion/feel critic (C9 idle life + C10 response & juice) — judgeable independently of the art restyle."
+    },
+    {
+      "t": "10:10",
+      "msg": "My own read of the running game: a cloud collides with the HUD, clouds muddle the hill depth, and 8 repeated Grow-3-more text signs are heavy for pre-readers (instant tell 27)."
+    },
+    {
+      "t": "10:22",
+      "msg": "Plant pilot COMPLETE: 6 plants + a shared kit expressed in code so 72 downstream plants inherit fixes automatically."
+    },
+    {
+      "t": "10:22",
+      "msg": "Caught before fan-out: the pilot used the OLD saturated palette (zero new tokens present). Recolouring at the kit source now — this is exactly why we piloted before scaling."
+    },
+    {
+      "t": "10:22",
+      "msg": "Pilot also caught 2 stale flatten-experiment PNGs with no SVG master (robot rosebush, zombie tree) — being removed so they cannot ship as authored work."
+    },
+    {
+      "t": "10:22",
+      "msg": "Kit documents 5 authoring traps found the hard way, incl. an evenodd fill-rule bug that put a floating orange disc on the pizza crust."
+    },
+    {
+      "t": "10:28",
+      "msg": "Motion critic FAILED the scene: C9 6/10, C10 4/10 (auto-capped by linear easing on DOM confetti)."
+    },
+    {
+      "t": "10:28",
+      "msg": "Critic caught a subtle Three.js bug in its OWN method: Sprites rotate via material.rotation, not object3D.rotation.z — it re-measured everything on the correct channel."
+    },
+    {
+      "t": "10:28",
+      "msg": "Regression found: the critters layer is empty. The pre-port DOM game had butterflies, bees and night fireflies."
+    },
+    {
+      "t": "10:28",
+      "msg": "Accessibility bug found: reduced-motion mode removes tap squash entirely, so presses give ZERO acknowledgement. Reduced motion must reduce motion, not remove feedback."
+    },
+    {
+      "t": "10:28",
+      "msg": "Critic was honest that the blind A/B was inconclusive (reference video stalled) rather than inventing a verdict."
+    },
+    {
+      "t": "10:28",
+      "msg": "Growth animation PASSED at 8/10 and is marked do-not-regress."
+    },
+    {
+      "t": "10:32",
+      "msg": "Plant recolour COMPLETE: combined median S 0.630 -> 0.479, %>S0.60 59.4% -> 9.2%. Target hit."
+    },
+    {
+      "t": "10:32",
+      "msg": "Recolour agent caught MY error: the shadow-tone table in FLAT_ART_BRIEF still held old pre-revision hexes, contradicting the Layer-1 table above it. Re-synced."
+    },
+    {
+      "t": "10:32",
+      "msg": "It also found 2 hardcoded hexes in _build_plants.py bypassing the kit — now named tokens, so all colour flows from one source."
+    },
+    {
+      "t": "10:32",
+      "msg": "FAN-OUT GATE: critic judging the 6 pilots AND the kit fitness. 72 plants stay queued until this passes."
     }
   ]
 }

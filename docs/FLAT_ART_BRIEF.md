@@ -145,15 +145,44 @@ the same shadows.
 
 | token | hex | shadow for | ΔV |
 |---|---|---|---|
-| `grass-deep` | `#5da23c` | `grass` | 0.149 |
-| `soil-deep` | `#8a5a33` | `soil` | 0.122 |
-| `soil-lite` | `#c2884e` | lit crest of tilled soil / raised clods | 0.098 |
-| `sun-shade` | `#e8a52a` | `sun` (body) | 0.090 |
-| `ray-shade` | `#d69526` | `sun-deep` (rays) | 0.102 |
+| `grass-deep` | `#79b85c` | `grass` | 0.137 |
+| `grass-dark` | `#6c9959` | `grass-deep` — a further/back-layer green, small pattern marks only | 0.122 |
+| `soil-deep` | `#a37855` | `soil` | 0.122 |
+| `soil-lite` | `#dbad7f` | lit crest of tilled soil / raised clods (its own shadow is `soil`) | 0.098 |
+| `sun-shade` | `#eebf5c` | `sun` (body) | 0.067 |
+| `ray-shade` | `#dbab58` | `sun-deep` (rays) | 0.082 |
 | `cloud-shade` | `#c6d8e6` | `cream` — hue-rotated to 206°, because a cloud's shadow must go cool | 0.098 |
+
+*(Note: `sun-shade`'s ΔV against the revised `sun` is only 0.067 — under the C4 0.08 floor, same
+known exception as the pre-revision table. Accepted because the alternative is de-saturating `sun`
+itself below the brief's own hex, which is fixed. Don't "fix" this by inventing a third yellow.)*
 
 When a fill has no shadow token here, derive one the same way and **add it to this table** so the
 next author reuses it rather than inventing a near-miss.
+
+### Extended tokens (added during the Sep 2026 recolour pass)
+
+The six pilot plants (`s-sunflower`, `a-apple-tree`, `m-maple-tree`, `b-butterfly-bush`,
+`p-pizza-palm`, `u-ufo-tree`) needed hues the tables above don't cover — a lit canopy-face green,
+red/orange accents for fruit and autumn leaves, tinted metal for the UFO saucers, a cool sky
+shadow. These were out of band at S 0.60–0.77 under the old palette; all were pulled into S
+0.38–0.60 (hue held, value lifted toward 0.85+) by the same §3.4 rule and are now locked. Reuse
+these — do not re-derive your own near-miss for "a green," "a red," "a metal grey," etc.
+
+| token | hex | shadow for / role | ΔV |
+|---|---|---|---|
+| `leaf` | `#c3f598` | lit green canopy face (shadow: `grass`) | 0.101 |
+| `accent-deep` | `#e09863` | shadow for `accent` | 0.122 |
+| `fruit` | `#d96a62` | red accent — apples, pepperoni (kept punchier: S 0.55, the top of the accent band) | — |
+| `fruit-deep` | `#b85149` | shadow for `fruit` | 0.129 |
+| `ember` | `#d9876c` | autumn orange-red (maple canopy) | — |
+| `ember-deep` | `#b86a53` | shadow for `ember` | 0.129 |
+| `steel` | `#b8bcc8` | tinted metal — saucers, wings (already in band pre-revision, unchanged) | — |
+| `steel-deep` | `#969cae` | shadow for `steel` (unchanged) | 0.102 |
+| `sky-deep` | `#6cacd9` | shadow for `sky-hi` (UFO dome) | 0.150 |
+| `cream-deep` | `#e8dcc4` | shadow for `cream` (already in band pre-revision, unchanged) | 0.090 |
+| `beam` | `#ffeaa8` | flat light/glow shapes — tractor beams, halos (already in band, unchanged) | — |
+| `berry-deep` | `#a44ead` | shadow for `berry` | 0.140 |
 
 ---
 

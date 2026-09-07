@@ -16,12 +16,49 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from _kit import *                                            # noqa: F401,F403
 
-# --- reuse the batch-2 rasteriser -------------------------------------
-_spec = importlib.util.spec_from_file_location(
-    "_build_flat", os.path.join(HERE, "..", "_build_flat.py"))
-_bf = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_bf)
-render = _bf.render                     # render(name, svg, w, h, out_png, 2)
+# --- rasteriser: reuse ../_build_flat.py's `render` when it is available,
+# otherwise fall back to an identical local copy.  That file is shared with
+# the scenery batch and other agents edit it, so this must not hard-fail.
+# ---------------------------------------------------------------------
+TMP = os.path.join(HERE, "..", ".render-tmp")
+
+
+def _render_local(name, svg, w, h, out_png, scale=2):
+    """SVG -> HTML -> headless-Chrome screenshot at 2x -> LANCZOS to 1x."""
+    import subprocess
+    from PIL import Image
+    chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    os.makedirs(TMP, exist_ok=True)
+    html = os.path.join(TMP, name + ".html")
+    with open(html, "w") as fh:
+        fh.write('<!doctype html><meta charset="utf-8"><style>'
+                 'html,body{margin:0;padding:0;background:transparent;}'
+                 'svg{display:block;}</style>' + svg)
+    big = out_png + ".2x.png"
+    r = subprocess.run([
+        chrome, "--headless", "--disable-gpu", "--hide-scrollbars",
+        "--force-device-scale-factor=%d" % scale,
+        "--default-background-color=00000000",
+        "--window-size=%d,%d" % (w, h), "--screenshot=" + big,
+        "file://" + html], capture_output=True, text=True)
+    if not os.path.exists(big):
+        print(r.stderr[-800:])
+        return False
+    im = Image.open(big).convert("RGBA").resize((w, h), Image.LANCZOS)
+    im.save(out_png)
+    os.remove(big)
+    return True
+
+
+try:
+    _spec = importlib.util.spec_from_file_location(
+        "_build_flat_shared", os.path.join(HERE, "..", "_build_flat.py"))
+    _bf = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_bf)
+    render = _bf.render                 # render(name, svg, w, h, out_png, 2)
+except Exception as _e:                 # noqa: BLE001 - any breakage at all
+    print("note: ../_build_flat.py unusable (%s); using local rasteriser" % _e)
+    render = _render_local
 
 OUT = HERE
 
@@ -43,7 +80,7 @@ def sunflower():
              (-hw, -(r_in + (r_out - r_in) * .45)), (-hw * .58, -r_out * .86)]
         return smooth_closed(p)
 
-    LEN_JIT = [1.00, .95, 1.04, .97, 1.02, .93, 1.05, .78, 1.01, .96,
+    LEN_JIT = [1.00, .95, 1.04, .97, 1.02, .93, 1.05, .70, 1.01, .96,
                1.03, .94, 1.00]          # index 7 = the deliberately stub petal
     ANG_JIT = [0, 2.2, -1.8, 1.4, -2.6, 1.9, -1.2, 4.8, -2.1, 1.6, -1.5,
                2.4, -0.9]
@@ -62,7 +99,7 @@ def sunflower():
 
     # ---- leaves (behind the stem) ----
     LB = leaf_pointed(474, 880, 296, 182, deg=-63, curl=.18)
-    LB += " " + bite(398, 702, 46)                       # ODDITY: nibbled leaf
+    LB += " " + bite(343, 762, 30)              # ODDITY: caterpillar nibble
     d.form(LB, GRASS, sweep(368, 786, 165, 132, lo=.20, hi=-.34),
            GRASS_DEEP, ol=OL_MAIN, evenodd=True)
     d.line("M470,868 C428,820 380,776 330,738", OL_MAIN)
@@ -81,7 +118,7 @@ def sunflower():
                   % (cid, "/>".join(back)))
     d.add("".join('%s fill="%s"/>' % (p, SUN_SHADE) for p in back))
     d.add('<g clip-path="url(#%s)"><path d="%s" fill="%s"/></g>'
-          % (cid, sweep(HX, HY, 300, 280, lo=.30, hi=-.40), "#d69526"))
+          % (cid, sweep(HX, HY, 300, 280, lo=.30, hi=-.40), RAY_SHADE))
     d.add("".join('%s fill="none" stroke="%s" stroke-width="%d" %s/>'
                   % (p, INK, OL_MAIN, RJ) for p in back))
 
@@ -165,7 +202,7 @@ def apple_tree():
         p = fruit_blob(ax, ay, r, dg)
         eo = False
         if bitten:                                   # ODDITY: a bitten apple
-            p += " " + bite(ax + r * .96, ay - r * .10, r * .46)
+            p += " " + bite(ax + r * .32, ay - r * .04, r * .32)
             eo = True
         d.add('<path d="M%.0f,%.0f C%.0f,%.0f %.0f,%.0f %.0f,%.0f" '
               'fill="none" stroke="%s" stroke-width="%d" %s/>'
@@ -328,7 +365,7 @@ def butterfly_bush():
             (600, 664, 78, 46, 10, GRASS_DEEP, False)):
         p = leaf_round(mx, my, L, Wd, dg)
         if nib:
-            p += " " + bite(mx + 34, my - L * .70, 22)
+            p += " " + bite(795, 586, 13)
         d.add('<path d="%s" fill="%s"%s/>'
               % (p, col, ' fill-rule="evenodd"' if nib else ""))
 
@@ -346,8 +383,8 @@ def butterfly_bush():
 # =====================================================================
 def pizza_palm():
     d = Doc()
-    HX, HY = 512, 424
-    R0, R1, R2 = 96, 306, 372
+    HX, HY = 512, 450
+    R0, R1, R2 = 100, 324, 396
     ANG = [-86, -44, -2, 41, 83]
     HA = [17.0, 18.0, 16.5, 17.5, 16.0]      # < half the 43 deg pitch -> gaps
     LENK = [0.94, 1.02, 1.00, 0.97, 0.92]
@@ -357,7 +394,7 @@ def pizza_palm():
         return (HX + r * math.sin(a), HY - r * math.cos(a))
 
     # ---- trunk first, behind the slices ----
-    rings = trunk_palm(512, 406, BASE_Y, 72, 170, n=7)
+    rings = trunk_palm(512, 432, BASE_Y, 74, 172, n=7)
     for i, (pth, hw, cy) in enumerate(rings):
         d.form(pth, BARK_LITE,
                sweep(512, cy, hw, hw * .40, lo=.26, hi=-.40, seed=i * 1.7),
@@ -374,10 +411,7 @@ def pizza_palm():
             arc(r1 - 6, 1.0) + [polar(r2 * 1.0, base_a + ha * 1.02)]
             + list(reversed(arc(r2, 1.03)))
             + [polar(r2 * 0.99, base_a - ha * 1.02)])
-        eo = (i == 4)          # ODDITY: someone has taken a bite out of one
-        bx, by = polar(r2 * 1.00, base_a + ha * .30)
-        if eo:
-            crust += " " + bite(bx, by, 66)
+        eo = False
         d.form(crust, ACCENT,
                sweep(HX, HY, 300, 300, lo=.30, hi=-.44), ACCENT_DEEP,
                ol=OL_MAIN, evenodd=eo)
@@ -388,16 +422,14 @@ def pizza_palm():
             + arc(r1 + 6, 0.99)
             + [polar(R0 + (r1 - R0) * .45, base_a + ha * .96),
                polar(R0 * .92, base_a + ha * .80)])
-        if eo:
-            cheese += " " + bite(bx, by, 66)
         d.form(cheese, SUN, sweep(HX, HY, 300, 300, lo=.32, hi=-.46),
                SUN_SHADE, ol=OL_MAIN, evenodd=eo)
         # pepperoni
-        for j, (rr, off, pr) in enumerate(((0.44, -0.42, 33), (0.62, 0.40, 30),
-                                           (0.82, -0.14, 34))):
+        for j, (rr, off, pr) in enumerate(((0.40, -0.46, 34), (0.63, 0.44, 31),
+                                           (0.85, -0.20, 35))):
             px, py = polar(R0 + (r1 - R0) * rr, base_a + ha * off)
             if i == 1 and j == 2:            # ODDITY: one crooked pepperoni
-                px, py = polar(r1 * 1.02, base_a + ha * .58)
+                px, py = polar(r1 * 1.10, base_a + ha * .74)
             d.form(canopy_blob(px, py, pr, pr * .94, n=8,
                                jit=(1, .98, 1.02, .99, 1.01, .98, 1.02, 1),
                                bul=(3, 2, 4, 2, 3, 2, 4, 3)),
@@ -405,13 +437,13 @@ def pizza_palm():
                    FRUIT_DEEP, ol=OL_FINE + 2)
 
     # ---- the face hub ----
-    hub = canopy_blob(HX, HY - 4, 104, 100, n=10,
+    hub = canopy_blob(HX, HY - 4, 110, 106, n=10,
                       jit=(1, .99, 1.01, .995, 1.005, .99, 1.01, 1, .995,
                            1.005),
                       bul=(6, 4, 7, 5, 6, 4, 7, 5, 6, 4))
-    d.form(hub, SUN, sweep(HX, HY, 104, 100, lo=.34, hi=-.46), SUN_SHADE,
+    d.form(hub, SUN, sweep(HX, HY, 110, 106, lo=.34, hi=-.46), SUN_SHADE,
            ol=OL_MAIN)
-    d.add(face(HX - 4, HY - 2, 168, default="delighted", tilt=-3.0))
+    d.add(face(HX - 4, HY - 2, 178, default="delighted", tilt=-3.0))
     return d.svg()
 
 
@@ -591,7 +623,7 @@ def kit_sheet():
              ("sun", SUN, SUN_SHADE), ("accent", ACCENT, ACCENT_DEEP),
              ("fruit", FRUIT, FRUIT_DEEP), ("ember", EMBER, EMBER_DEEP),
              ("steel", STEEL, STEEL_DEEP), ("sky-hi", SKY_HI, SKY_DEEP),
-             ("cream", CREAM, CREAM_DEEP), ("berry", BERRY, "#a94bb3")]
+             ("cream", CREAM, CREAM_DEEP), ("berry", BERRY, BERRY_DEEP)]
     for i, (nm, b, s) in enumerate(pairs):
         px = 1010 + (i % 3) * 272
         py = 288 + (i // 3) * 116
