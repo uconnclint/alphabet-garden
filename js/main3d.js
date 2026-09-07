@@ -31,11 +31,18 @@ if (!game) {
 
   // Everything the world needs on its FIRST frame. Plant art (78 files) is deliberately not in
   // here — it loads per plot, on demand, so a kid with one seed planted downloads one PNG.
+  // The '@b'/'@c' names are variant aliases, not extra files on disk: js/data/flat-assets.js
+  // maps them onto the authored flat variants, and textures.js falls back to the un-suffixed
+  // original for any that have not been authored. See that file for the whole scheme.
   const CORE = [
     'sky/sun.png', 'sky/moon.png', 'sky/star.png',
-    'sky/cloud_puffy.png', 'sky/cloud_wisp.png', 'sky/rain_cloud.png', 'sky/rainbow.png',
-    'garden/hills_backdrop.png', 'garden/grass_foreground.png',
-    'garden/dirt_plot_empty.png', 'garden/dirt_plot_seeded.png',
+    'sky/cloud_puffy.png', 'sky/cloud_puffy@b.png', 'sky/cloud_puffy@c.png',
+    'sky/cloud_wisp.png', 'sky/rain_cloud.png', 'sky/rainbow.png',
+    'garden/hills_backdrop.png', 'garden/hills_backdrop@b.png',
+    'garden/grass_foreground.png', 'garden/grass_foreground@b.png', 'garden/grass_foreground@c.png',
+    'garden/bush.png', 'garden/bush@b.png', 'garden/bush@c.png',
+    'garden/dirt_plot_empty.png', 'garden/dirt_plot_empty@b.png', 'garden/dirt_plot_empty@c.png',
+    'garden/dirt_plot_seeded.png', 'garden/dirt_plot_seeded@b.png', 'garden/dirt_plot_seeded@c.png',
     'garden/seed.png', 'garden/sprout.png', 'garden/lock_sign.png',
     'fx/sparkle.png', 'fx/poof_cloud.png', 'fx/water_splash.png', 'fx/celebration_star.png'
   ];

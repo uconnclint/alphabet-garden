@@ -7,7 +7,7 @@
 //   sky          gradient plate (day + night), stars, sun, moon
 //   farParallax  hills, slow clouds
 //   midParallax  fast clouds, rain clouds, rainbow
-//   ground       meadow plate + grass fringe
+//   ground       meadow plate, horizon shrubs, grass tufts
 //   plots        dirt patches, lock signs, invisible tap pads
 //   plants       the plants themselves
 //   critters     bees, butterflies, owls
@@ -22,8 +22,24 @@
 import { createSprite, THREE } from '../systems/stage.js';
 import { tweens, isReducedMotion, onReducedMotionChange } from '../systems/tween.js';
 import * as Textures from '../systems/textures.js';
+import { variantUrl, metricsFor } from '../data/flat-assets.js';
 
 const ROW_Z = 1.2;
+
+/* ── content fitting ─────────────────────────────────────────────────────────────
+ * The flat-vector art is authored inside a generous canvas — the dirt bed lives in the
+ * lower half of a square, a plant's leaves stop 5% short of the top — so "make this sprite
+ * 200 units tall" is no longer the same instruction as "make this OBJECT 200 units tall".
+ * Everything below sizes and anchors against the asset's measured content box
+ * (js/data/flat-assets.js) instead of its canvas.
+ *
+ * These three defaults are what an asset that has NOT been re-authored gets. Each one
+ * reproduces exactly where that sprite used to sit, so the claymation fallback path is
+ * pixel-identical to before. */
+const DEF_CENTER = { u: [0, 1], v: [0, 1], ax: 0.5, ay: 0.5 };            // floats: sun, clouds
+const DEF_GROUND = { u: [0, 1], v: [0, 1], ax: 0.5, ay: 1 };              // stands on the ground
+// 0.62 reproduces the old `soilY - dirt.scale.y * 0.12` plant offset for claymation soil.
+const DEF_DIRT = { u: [0, 1], v: [0, 1], ax: 0.5, ay: 0.5, plant: 0.62 };
 
 const DAY_CRITTERS = ['critters/butterfly_pink.png', 'critters/bee.png', 'critters/ladybug.png',
                       'critters/butterfly_blue.png', 'critters/bluebird.png'];
@@ -162,24 +178,38 @@ export function createGardenScene(o) {
   // Late-arriving art: the sync peek above may return null on the very first frame.
   Textures.load('sky/star.png').then(t => stars.forEach(s => sizeTo(s, t, s.userData.baseScale.y)));
 
-  const sun = createSprite(Textures.get('sky/sun.png'), { height: 180 });
+  const SUN_URL = 'sky/sun.png';
+  const sun = createSprite(Textures.get(SUN_URL), { height: 180 });
   const moon = createSprite(Textures.get('sky/moon.png'), { height: 150, opacity: 0 });
   L.sky.add(sun); L.sky.add(moon);
   sun.position.z = 0.3; moon.position.z = 0.3;
-  Textures.load('sky/sun.png').then(t => sizeTo(sun, t, 180));
+  Textures.load(SUN_URL).then(t => { applyFit(sun, t, SUN_URL, 180, DEF_CENTER); relayout(); });
   Textures.load('sky/moon.png').then(t => sizeTo(moon, t, 150));
 
   /* ── parallax: hills + clouds ───────────────────────────────────────── */
-  const hills = createSprite(Textures.get('garden/hills_backdrop.png'), { height: 300, opacity: 0.6 });
-  L.farParallax.add(hills);
-  Textures.load('garden/hills_backdrop.png').then(t => {
+  // Two bands, not one. The flat hill is a low tileable ridge with no outline, so a single
+  // band left a lot of bare sky between the ridge line and the clouds; a second, paler,
+  // taller band behind it gives the backdrop the depth the old dome silhouette had.
+  const HILL_URL = variantUrl('garden/hills_backdrop.png', 0);
+  const HILL_FAR_URL = variantUrl('garden/hills_backdrop.png', 1);
+  const hillsFar = createSprite(Textures.get(HILL_FAR_URL), { height: 300, opacity: 0.55 });
+  const hills = createSprite(Textures.get(HILL_URL), { height: 300, opacity: 0.6 });
+  L.farParallax.add(hillsFar); L.farParallax.add(hills);
+  hills.position.z = 0.1;
+  Textures.load(HILL_FAR_URL).then(t => {
+    hillsFar.material.map = t; hillsFar.material.needsUpdate = true; relayout();
+  });
+  Textures.load(HILL_URL).then(t => {
     hills.material.map = t; hills.material.needsUpdate = true; relayout();
   });
 
   const clouds = [];
   for (let i = 0; i < 5; i++) {
-    const url = Math.random() < 0.5 ? 'sky/cloud_puffy.png' : 'sky/cloud_wisp.png';
+    // Deterministic variant per cloud rather than a coin flip between two files: three
+    // different puffy shapes, and cloud 0 never has to be the same one as cloud 3.
+    const url = variantUrl('sky/cloud_puffy.png', i * 2 + 1);
     const c = createSprite(Textures.get(url), { height: 100, opacity: 0.95 });
+    c.userData.url = url;
     // Different speeds per cloud AND per layer — parallax is the whole point, and identical
     // drift rates read as a single flat sheet sliding past.
     c.userData.speed = 9 + Math.random() * 26;
@@ -195,20 +225,45 @@ export function createGardenScene(o) {
     { width: 100, height: 100 });
   L.ground.add(meadow);
 
-  const fringe = createSprite(Textures.get('garden/grass_foreground.png'), { height: 70 });
-  fringe.position.z = 0.4;
-  L.ground.add(fringe);
-  Textures.load('garden/grass_foreground.png').then(t => {
-    // Clone before tiling: textures.js hands back one shared, clamped instance and other
-    // sprites (none today, but tomorrow) would inherit the repeat.
-    const rep = t.clone();
-    rep.wrapS = THREE.RepeatWrapping;
-    rep.needsUpdate = true;
-    fringe.material.map = rep;
-    fringe.material.needsUpdate = true;
-    fringe.userData.tile = rep;
-    relayout();
-  });
+  // The old grass fringe was ONE sprite stretched across the world with the texture set to
+  // repeat. The flat art is a TUFT, not a strip — tiling it would stamp the identical clump
+  // every 100 units, which is instant tell #23 with extra steps. So the fringe is now a row of
+  // discrete tufts, cycling three authored variants, each with its own size and lean.
+  const TUFT_MAX = 18;
+  const tufts = [];
+  for (let i = 0; i < TUFT_MAX; i++) {
+    const url = variantUrl('garden/grass_foreground.png', i);
+    const t = createSprite(Textures.get(url), { height: 70, opacity: 0 });
+    t.position.z = 0.4;
+    t.userData.url = url;
+    // Index-derived, not Math.random(): the meadow must not reshuffle itself on a resize.
+    t.userData.jitterX = ((i * 37) % 13) / 13 - 0.5;
+    t.userData.sizeK = 0.80 + ((i * 29) % 11) / 11 * 0.44;
+    t.userData.lift = ((i * 17) % 7) / 7;
+    L.ground.add(t);
+    tufts.push(t);
+    Textures.load(url).then(tex => {
+      t.material.map = tex; t.material.needsUpdate = true; relayout();
+    });
+  }
+
+  // Set dressing with no claymation ancestor: three shrubs sitting on the horizon, behind the
+  // grass and behind every plot. They give the meadow a skyline, which is what the flat hill
+  // band (deliberately outline-free and low-contrast) cannot do on its own.
+  const bushes = [];
+  for (let i = 0; i < 3; i++) {
+    const url = variantUrl('garden/bush.png', i);
+    const b2 = createSprite(Textures.get(url), { height: 120, opacity: 0 });
+    b2.position.z = 0.2;
+    b2.userData.url = url;
+    b2.userData.at = [0.08, 0.40, 0.86][i];
+    b2.userData.sizeK = [1, 0.84, 0.92][i];
+    L.ground.add(b2);
+    bushes.push(b2);
+    Textures.load(url).then(tex => {
+      b2.material.map = tex; b2.material.needsUpdate = true; relayout();
+    });
+  }
 
   const rainbow = createSprite(Textures.get('sky/rainbow.png'), { height: 260, opacity: 0 });
   L.midParallax.add(rainbow);
@@ -221,7 +276,11 @@ export function createGardenScene(o) {
   const plots = [];
 
   for (let i = 0; i < TOTAL; i++) {
-    const dirt = createSprite(Textures.get('garden/dirt_plot_empty.png'), { width: 200 });
+    // One of three authored beds per plot, chosen from the PLOT INDEX so a plot looks the same
+    // on every re-render, every resize and every reload. Empty and seeded share the variant.
+    const emptyUrl = variantUrl('garden/dirt_plot_empty.png', i);
+    const seededUrl = variantUrl('garden/dirt_plot_seeded.png', i);
+    const dirt = createSprite(Textures.get(emptyUrl), { width: 200 });
     L.plots.add(dirt);
 
     const plant = createSprite(null, { width: 10, height: 10, opacity: 0 });
@@ -252,6 +311,10 @@ export function createGardenScene(o) {
     const cell = {
       i: i, dirt: dirt, plant: plant, tag: tag, track: track, fill: fill,
       lock: lock, label: label, pad: pad, plus: plus,
+      emptyUrl: emptyUrl, seededUrl: seededUrl, dirtUrl: emptyUrl,
+      // bedH: the VISIBLE height of the bed (the sprite is taller — the flat plot is drawn in
+      // the lower half of its canvas). plantY: where a plant's base meets the dug hollow.
+      bedH: 0, plantY: 0,
       col: 0, row: 0, cx: 0, soilY: 0, dirtTint: 0xffffff,
       texUrl: null, texStage: -1, texToken: 0, plantBase: { x: 10, y: 10 },
       idle: null, propIdle: null, busy: false, locked: false, pressing: null,
@@ -262,21 +325,88 @@ export function createGardenScene(o) {
     // The tap target itself is registered in layout(), because its size is the cell size.
   }
 
-  Textures.loadAll(['garden/dirt_plot_empty.png', 'garden/dirt_plot_seeded.png', 'garden/lock_sign.png'])
+  // Every bed variant actually in play, plus the sign — the first frame must not show a
+  // procedural blob where the primary tap target belongs.
+  const bedUrls = ['garden/lock_sign.png'];
+  plots.forEach(c => {
+    if (bedUrls.indexOf(c.emptyUrl) < 0) bedUrls.push(c.emptyUrl);
+    if (bedUrls.indexOf(c.seededUrl) < 0) bedUrls.push(c.seededUrl);
+  });
+  Textures.loadAll(bedUrls)
     .then(() => { plots.forEach(c => syncPlot(c.i)); relayout(); });
 
   /* ── helpers ────────────────────────────────────────────────────────── */
 
-  function sizeTo(spr, tex, height) {
+  function texRatio(tex, fallback) {
     const img = tex && tex.image;
-    const ratio = (img && img.width && img.height) ? img.width / img.height : 1;
-    const w = height * ratio;
+    return (img && img.width && img.height) ? img.width / img.height : (fallback || 1);
+  }
+
+  /** Canvas-height sizing. Still correct for everything we draw ourselves (badges, meters). */
+  function sizeTo(spr, tex, height) {
+    const w = height * texRatio(tex);
     spr.material.map = tex;
     spr.material.needsUpdate = true;
     spr.scale.set(w, height, 1);
     spr.userData.baseScale.x = w;
     spr.userData.baseScale.y = height;
     return { x: w, y: height };
+  }
+
+  /**
+   * The SPRITE scale needed to make `url`'s visible content exactly `contentH` tall.
+   * Split out from applyFit because the growth timeline has to know the final pose before
+   * it swaps the art in (it animates *toward* it).
+   */
+  function fitScale(tex, url, contentH, def) {
+    const m = metricsFor(url, def) || DEF_CENTER;
+    const y = contentH / Math.max(0.05, m.v[1] - m.v[0]);
+    return { x: y * texRatio(tex), y: y, m: m };
+  }
+
+  /** Point a sprite at `url`'s art, sized by content height and pivoted on its anchor. */
+  function applyFit(spr, tex, url, contentH, def) {
+    const f = fitScale(tex, url, contentH, def);
+    spr.material.map = tex;
+    spr.material.needsUpdate = true;
+    spr.scale.set(f.x, f.y, 1);
+    spr.userData.baseScale = { x: f.x, y: f.y };
+    // `center` is the pivot AND the meaning of `position` — an object anchored on its contact
+    // point squashes into the ground instead of swinging about the middle of an empty quad.
+    // input.js already accounts for center when it measures a hit box.
+    spr.center.set(f.m.ax, 1 - f.m.ay);
+    return { x: f.x, y: f.y };
+  }
+
+  /**
+   * Size and place one plot's bed, and derive everything anchored to it.
+   *
+   * The flat bed is a wide shallow trough drawn in the lower half of a square canvas, with
+   * loose clods flung outside its main mass and a baked contact shadow. Three consequences,
+   * all handled here:
+   *   • WIDTH is fitted to the bed's own span, not the alpha box — otherwise a variant that
+   *     happens to throw its clods further would draw a visibly smaller plot.
+   *   • The sprite is pivoted on the bed's CONTACT LINE, so `position` means "where the plot
+   *     touches the meadow" and the press-squash compresses into the ground.
+   *   • `plantY` is the dug hollow, which is well ABOVE the contact line in this 3/4 view.
+   *     A plant anchored to soilY would stand in front of the plot instead of in it.
+   */
+  function placeDirt(cell) {
+    const tex = cell.dirt.material.map;
+    const m = metricsFor(cell.dirtUrl, DEF_DIRT) || DEF_DIRT;
+    const w = lay.dirtW / Math.max(0.05, m.u[1] - m.u[0]);
+    const h = w / texRatio(tex, 2);
+    cell.dirt.scale.set(w, h, 1);
+    cell.dirt.userData.baseScale = { x: w, y: h };
+    cell.dirt.center.set(m.ax, 1 - m.ay);
+    cell.bedH = h * (m.v[1] - m.v[0]);
+    cell.plantY = cell.soilY + h * (m.ay - (m.plant != null ? m.plant : m.ay));
+
+    const z = cell.row * ROW_Z;
+    cell.dirt.position.set(cell.cx, cell.soilY, z);
+    cell.plant.position.set(cell.cx, cell.plantY, z);
+    // The ＋ marks where to tap, so it belongs in the hollow, not on the front rim.
+    cell.plus.position.set(cell.cx, cell.plantY + Math.max(8, lay.rowH * 0.08), z + 0.3);
   }
 
   function stageTexUrl(p) {
@@ -380,13 +510,31 @@ export function createGardenScene(o) {
     const h = stageHeight(p.stage);
     return Textures.load(url).then(tex => {
       if (cell.texToken !== token) return null;   // a newer stage/plant won the race
-      cell.plantBase = sizeTo(cell.plant, tex, h);
+      // Content-fitted: `h` is how tall the PLANT is, not how tall its canvas is, so a flat
+      // plant with 5% of headroom baked in does not draw 5% short of an unauthored one.
+      cell.plantBase = applyFit(cell.plant, tex, url, h, DEF_GROUND);
       cell.plant.material.opacity = 1;
       cell.texUrl = url;
       cell.texStage = p.stage;
       if (!opts || opts.idle !== false) startIdle(cell);
       return tex;
     });
+  }
+
+  /**
+   * Re-fit an already-loaded plant to the CURRENT layout.
+   *
+   * syncPlot only touches the plant art when the stage or the plant changed, so before this
+   * existed a resize moved every plant to its new plot but left it drawn at the size the old
+   * viewport asked for — rotate a tablet to portrait and a full-grown tree stayed desktop-sized
+   * and overflowed its cell. Synchronous and token-free on purpose: it reuses the texture that
+   * is already on the sprite, so it can never race a growth performance (which it skips anyway).
+   */
+  function refitPlant(cell) {
+    const p = game.plot(cell.i);
+    const tex = cell.plant.material.map;
+    if (!p || cell.busy || !cell.texUrl || !tex) return;
+    cell.plantBase = applyFit(cell.plant, tex, cell.texUrl, stageHeight(p.stage), DEF_GROUND);
   }
 
   /* ── plot sync (state → sprites, no animation) ──────────────────────── */
@@ -424,15 +572,15 @@ export function createGardenScene(o) {
     setDirtTint(cell, 0xffffff);
 
     const seeded = !!p && p.stage <= 1;
-    const dirtTex = Textures.get(seeded ? 'garden/dirt_plot_seeded.png' : 'garden/dirt_plot_empty.png');
+    const dirtUrl = seeded ? cell.seededUrl : cell.emptyUrl;
+    const dirtTex = Textures.get(dirtUrl);
     if (dirtTex && cell.dirt.material.map !== dirtTex) {
-      const w = lay.dirtW;
-      const img = dirtTex.image;
-      const ratio = (img && img.width && img.height) ? img.width / img.height : 2;
       cell.dirt.material.map = dirtTex;
       cell.dirt.material.needsUpdate = true;
-      cell.dirt.scale.set(w, w / ratio, 1);
-      cell.dirt.userData.baseScale = { x: w, y: w / ratio };
+      cell.dirtUrl = dirtUrl;
+      // Proportions and anchor can differ between the two beds, so re-derive rather than
+      // reusing the old scale — this is also what keeps the plant sitting in the hollow.
+      placeDirt(cell);
     }
 
     if (!p) {
@@ -531,21 +679,22 @@ export function createGardenScene(o) {
       const spr = cell.plant;
       const from = { x: spr.scale.x || 1, y: spr.scale.y || 1 };
       const newH = stageHeight(p.stage);
-      const img = tex.image;
-      const ratio = (img && img.width && img.height) ? img.width / img.height : 1;
-      const base = { x: newH * ratio, y: newH };
+      // The target pose has to be known BEFORE the swap (the timeline animates toward it),
+      // and it must be the same content-fitted pose applyFit will install.
+      const fitted = fitScale(tex, url, newH, DEF_GROUND);
+      const base = { x: fitted.x, y: fitted.y };
 
       if (isReducedMotion()) {
-        cell.plantBase = sizeTo(spr, tex, newH);
+        cell.plantBase = applyFit(spr, tex, url, newH, DEF_GROUND);
         spr.material.opacity = 1;
         cell.texUrl = url;
         cell.texStage = p.stage;
-        fx.emit('sparkle', cell.cx, cell.soilY + base.y * 0.5, { count: 4 });
+        fx.emit('sparkle', cell.cx, cell.plantY + base.y * 0.5, { count: 4 });
         finishGrowth();
         return;
       }
 
-      const sparkleY = cell.soilY + base.y * 0.55;
+      const sparkleY = cell.plantY + base.y * 0.55;
 
       // The growth performance OWNS this plant for the next 710ms. Clearing first is not
       // belt-and-braces: tween.js claims properties on an animation's FIRST TICK, so a squash
@@ -562,7 +711,7 @@ export function createGardenScene(o) {
             { duration: 130, ease: 'backIn', from: { 'scale.x': from.x, 'scale.y': from.y } })
         // 2. THE SWAP, hidden inside a puff of soil.
         .call(() => {
-          cell.plantBase = sizeTo(spr, tex, newH);
+          cell.plantBase = applyFit(spr, tex, url, newH, DEF_GROUND);
           cell.texUrl = url;
           cell.texStage = p.stage;
           spr.material.opacity = 1;
@@ -622,8 +771,14 @@ export function createGardenScene(o) {
       });
     });
 
-    // The wider world notices too — the grass fringe and the nearest cloud both take a beat.
-    tweens.delay(90, () => tweens.nudge(fringe, { angle: 0.006, ms: 320 }));
+    // The wider world notices too — the nearest grass tuft and the nearest cloud take a beat.
+    let tuft = null, td = Infinity;
+    tufts.forEach(t => {
+      if (t.material.opacity <= 0.02) return;
+      const d = Math.abs(t.position.x - cell.cx);
+      if (d < td) { td = d; tuft = t; }
+    });
+    if (tuft) tweens.delay(90, () => tweens.nudge(tuft, { angle: 0.05, ms: 320 }));
     let best = null, bd = Infinity;
     clouds.forEach(c => {
       const d = Math.abs(c.position.x - cell.cx);
@@ -654,7 +809,11 @@ export function createGardenScene(o) {
     lay.rowH = (lay.top - bottom) / lay.rows;
     lay.colW = Math.min(W / (lay.cols + 0.25), 330);
     lay.left = -lay.colW * lay.cols / 2;
-    lay.dirtW = Math.min(lay.colW * 0.92, lay.rowH * 2.2);
+    // The bed is the game's primary tap target and has to READ as the focal object. The flat
+    // plot is a wide shallow trough (~2.4:1 visible), where the claymation art was a tall
+    // dome, so the old 0.92/2.2 pair left it the shortest thing on screen. Widening it to
+    // nearly the full cell buys back the height the new proportions cost.
+    lay.dirtW = Math.min(lay.colW * 0.98, lay.rowH * 2.5);
     // Plants deliberately overrun their row (a garden is dense, not a spreadsheet) — but on a
     // phone six tight rows meant the front row swallowed the one behind it, so portrait gets a
     // shorter plant.
@@ -669,29 +828,55 @@ export function createGardenScene(o) {
     meadow.userData.baseScale = { x: W, y: groundH };
     meadow.position.set(0, b.bottom + groundH / 2, 0);
 
-    const fringeH = Math.max(46, H * 0.06);
-    fringe.scale.set(W, fringeH, 1);
-    fringe.userData.baseScale = { x: W, y: fringeH };
-    fringe.position.set(0, lay.horizonY - fringeH * 0.25, 0.4);
-    if (fringe.userData.tile) {
-      // Tile horizontally rather than stretching, or the blades smear on a wide screen.
-      fringe.userData.tile.repeat.set(Math.max(2, Math.round(W / (fringeH * 3))), 1);
-    }
+    // Grass fringe: a ROW of tufts standing on the horizon, spaced so they read as clumps in
+    // a meadow rather than as a cut-out strip. Count follows the width; the rest are parked
+    // invisible rather than destroyed, so a rotate back to landscape is free.
+    const tuftH = Math.max(50, Math.min(H * 0.075, W * 0.10));
+    const tuftN = Math.max(5, Math.min(TUFT_MAX, Math.round(W / (tuftH * 1.15))));
+    tufts.forEach((t, i) => {
+      if (i >= tuftN) { t.material.opacity = 0; return; }
+      t.material.opacity = 1;
+      const h = tuftH * t.userData.sizeK;
+      if (t.material.map) applyFit(t, t.material.map, t.userData.url, h, DEF_GROUND);
+      const step = W / tuftN;
+      t.position.set(b.left + (i + 0.5) * step + t.userData.jitterX * step * 0.45,
+        lay.horizonY + h * (0.10 + t.userData.lift * 0.16), 0.4);
+    });
+
+    const bushH = Math.min(H * 0.115, W * 0.17);
+    bushes.forEach(b2 => {
+      const h = bushH * b2.userData.sizeK;
+      if (b2.material.map) {
+        applyFit(b2, b2.material.map, b2.userData.url, h, DEF_GROUND);
+        b2.material.opacity = 1;
+      }
+      b2.position.set(b.left + W * b2.userData.at, lay.horizonY + h * 0.16, 0.2);
+    });
 
     // Hills are deliberately stretched to the full width — they are a silhouette band, not art
     // whose aspect anyone can read, and letterboxed hills would show the sky plate behind them.
-    const hillH = H * 0.30;
-    hills.scale.set(W * 1.06, hillH, 1);
-    hills.userData.baseScale = { x: W * 1.06, y: hillH };
-    hills.position.set(0, lay.horizonY + hillH * 0.30, 0);
+    // The flat band is bottom-anchored (its ridge sits in the lower half of its canvas), so
+    // pinning it just under the horizon is what stops a strip of sky showing beneath it.
+    function bandTo(spr, url, bandH, y) {
+      const m = metricsFor(url, DEF_CENTER) || DEF_CENTER;
+      const h = bandH / Math.max(0.05, m.v[1] - m.v[0]);
+      spr.scale.set(W * 1.06, h, 1);
+      spr.userData.baseScale = { x: W * 1.06, y: h };
+      spr.center.set(m.ax, 1 - m.ay);
+      spr.position.set(0, y, spr.position.z);
+    }
+    bandTo(hillsFar, HILL_FAR_URL, H * 0.20, lay.horizonY + H * 0.055);
+    bandTo(hills, HILL_URL, H * 0.17, lay.horizonY - 4);
 
     // Sun and moon key off the SHORTER axis too, and sit below the HUD reserve: on a phone the
     // four DOM tool buttons live exactly where a height-only sun would be.
     const sunH = Math.min(H * 0.19, W * 0.24);
-    if (sun.material.map) sizeTo(sun, sun.material.map, sunH);
+    if (sun.material.map) applyFit(sun, sun.material.map, SUN_URL, sunH, DEF_CENTER);
     if (moon.material.map) sizeTo(moon, moon.material.map, sunH * 0.82);
     const skyY = b.top - hudReserve * (landscape ? 0.35 : 1) - sunH * 0.55;
-    sun.position.set(b.right - sun.scale.x * 0.58, skyY, 0.3);
+    // Inset by the VISIBLE half-width: the flat sun carries ~11% of transparent margin on
+    // each side, and insetting by the raw sprite width would push it off toward the middle.
+    sun.position.set(b.right - sunH * 0.52, skyY, 0.3);
     moon.position.set(b.right - moon.scale.x * 0.58, skyY, 0.3);
 
     stars.forEach(s2 => {
@@ -700,9 +885,13 @@ export function createGardenScene(o) {
 
     // Clouds are sized against the SHORTER axis too. Keying purely off world height made them
     // swallow a portrait phone's sky, because a portrait world is only ~380 units wide.
-    const cloudH = Math.min(H * 0.125, W * 0.28);
+    // Retuned for content fitting: the old numbers were SPRITE heights, and the claymation
+    // cloud only filled about two thirds of its canvas. Asking for the same figure as a
+    // CONTENT height made every cloud half again as big — on a phone they swallowed the sky
+    // and, because the sun sits in the layer behind them, hid the sun completely.
+    const cloudH = Math.min(H * 0.085, W * 0.19);
     clouds.forEach(c => {
-      if (c.material.map) sizeTo(c, c.material.map, cloudH * c.userData.sizeK);
+      if (c.material.map) applyFit(c, c.material.map, c.userData.url, cloudH * c.userData.sizeK, DEF_CENTER);
       c.position.y = b.top - c.userData.ry * H;
       if (c.position.x === 0) c.position.x = b.left + Math.random() * W;
     });
@@ -718,24 +907,23 @@ export function createGardenScene(o) {
       const z = cell.row * ROW_Z;
 
       const dw = lay.dirtW;
-      const dratio = cell.dirt.userData.baseScale.x / (cell.dirt.userData.baseScale.y || 1);
-      cell.dirt.scale.set(dw, dw / dratio, 1);
-      cell.dirt.userData.baseScale = { x: dw, y: dw / dratio };
-      cell.dirt.position.set(cell.cx, cell.soilY, z);
+      // Bed, plant anchor and the ＋ all come out of one measurement of the bed art.
+      sizeTo(cell.plus, plusTexture(), Math.max(24, lay.rowH * 0.26));
+      placeDirt(cell);
 
-      cell.plant.position.set(cell.cx, cell.soilY - cell.dirt.scale.y * 0.12, z);
-
-      cell.tag.position.set(cell.cx - dw * 0.40, cell.soilY + lay.rowH * 0.18, z);
-      cell.track.position.set(cell.cx, cell.soilY - cell.dirt.scale.y * 0.30, z);
+      // The badge rides on the bed's left shoulder, and the meter hangs just below its
+      // contact line — both keyed off the bed's VISIBLE height, not the sprite's.
+      cell.tag.position.set(cell.cx - dw * 0.44, cell.soilY + Math.max(lay.rowH * 0.16, cell.bedH * 0.46), z);
+      // The meter moved ONTO the bed's front rim. Below the contact line it landed on the bed
+      // of the row in front (the flat beds are wide and the rows overlap by design), and a
+      // pale pill on dark soil reads better than a pale pill on grass anyway.
+      cell.track.position.set(cell.cx, cell.soilY + Math.max(8, cell.bedH * 0.13), z);
       const tw = dw * 0.62, th = Math.max(11, lay.rowH * 0.11);
       cell.track.scale.set(tw, th, 1);
       cell.track.userData.baseScale = { x: tw, y: th };
       cell.fillH = th * 0.72;
       cell.fill.scale.y = cell.fillH;
       cell.fill.position.set(cell.cx - tw / 2, cell.track.position.y, z + 0.1);
-
-      sizeTo(cell.plus, plusTexture(), Math.max(24, lay.rowH * 0.26));
-      cell.plus.position.set(cell.cx, cell.soilY + cell.dirt.scale.y * 0.06, z + 0.3);
 
       cell.lock.position.set(cell.cx, cell.soilY + lay.rowH * 0.36, z + 0.2);
       if (cell.lock.material.map) sizeTo(cell.lock, cell.lock.material.map, lay.rowH * 0.42);
@@ -750,7 +938,10 @@ export function createGardenScene(o) {
     // Sprite sizes changed, so every base scale the idle loops captured at their old size is
     // stale — restart them or the plants breathe around a pose that no longer exists.
     syncAll();
-    plots.forEach(c => { if (!c.busy && !c.locked && game.plot(c.i)) startIdle(c); });
+    plots.forEach(c => {
+      refitPlant(c);
+      if (!c.busy && !c.locked && game.plot(c.i)) startIdle(c);
+    });
   }
 
   // input.register replaces the whole config, so layout has to hand the handlers back in.
@@ -838,12 +1029,29 @@ export function createGardenScene(o) {
   function paintDayNight() {
     const n = sky.night;
     skyNight.material.opacity = n;
-    hills.material.opacity = 0.6 - 0.28 * n;
+    // The flat hill band is a pale, outline-free layer-2 colour that is MEANT to sit almost
+    // opaque — the old 0.6 was compensating for a much darker painted silhouette, and at that
+    // value the new band all but vanished into the sky.
+    hills.material.opacity = 0.95 - 0.22 * n;
+    hillsFar.material.opacity = 0.68 - 0.18 * n;
     // Meadow, plants and soil all dim toward a cool blue-green after dark rather than going
     // grey. Without the soil in here the plots stayed in broad daylight under a starry sky.
     const g = 1 - 0.74 * n;
     meadow.material.color.setRGB(g * 0.80, g * 0.98, g * 1.05);
-    fringe.material.color.setRGB(g * 0.80, g * 0.98, g * 1.05);
+    tufts.forEach(t => t.material.color.setRGB(g * 0.80, g * 0.98, g * 1.05));
+    // Distance buys the far scenery a lighter wash, or the horizon goes black before the
+    // foreground has finished dimming. Written per-channel so the multiplier is EXACTLY 1 in
+    // daylight: the flat hill and shrub palettes are authored to sit against the meadow as
+    // they are, and a permanent blue shift on them (which the meadow's own wash carries, for
+    // its own historical reasons) turned the ridge line teal at noon.
+    const hr = 1 - 0.62 * n, hgc = 1 - 0.50 * n, hb = 1 - 0.34 * n;
+    // The flat cloud is a near-cream field where the claymation one was a soft grey, so an
+    // untinted cloud now reads as a hole punched in the night sky. Washed more gently than
+    // the ground — a cloud still catches the moon.
+    clouds.forEach(c => c.material.color.setRGB(1 - 0.50 * n, 1 - 0.44 * n, 1 - 0.26 * n));
+    bushes.forEach(b2 => b2.material.color.setRGB(hr, hgc, hb));
+    hills.material.color.setRGB(hr, hgc, hb);
+    hillsFar.material.color.setRGB(hr, hgc, hb);
     plots.forEach(c => {
       setPlantShade(c);
       setDirtTint(c, c.dirtTint != null ? c.dirtTint : 0xffffff);
@@ -927,7 +1135,7 @@ export function createGardenScene(o) {
   });
 
   // The far scenery is not a painted backdrop either. The hills drift a hair against the
-  // parallax and the grass fringe leans in the same breeze the plants do — both far enough
+  // parallax and the grass tufts lean in the same breeze the plants do — both far enough
   // below the plant amplitudes to stay atmospheric rather than distracting.
   tweens.breathe(hills, { amount: 0.006, ms: 5200, phase: 0.2 });
   tweens.driver(elapsed => {
@@ -935,8 +1143,17 @@ export function createGardenScene(o) {
     hills.position.x = Math.sin(elapsed / 9000) * (stage.worldWidth * 0.008);
     return false;
   }, { target: hills, keys: ['position.x'] });
-  tweens.swayLoop(fringe, { angle: 0.005, ms: 4300, phase: 0.55 });
-  tweens.breathe(fringe, { amount: 0.010, ms: 3100, phase: 0.15 });
+  // Each tuft leans on its own phase — a row of clumps nodding in unison would be worse than
+  // the stretched strip it replaced. Anchored on their contact shadows, so they pivot at the
+  // ground like real grass rather than swinging from the middle.
+  tufts.forEach((t, k) => {
+    tweens.swayLoop(t, { angle: 0.030 + (k % 3) * 0.009, ms: 3600 + k * 190, phase: (k * 0.37) % 1 });
+    tweens.breathe(t, { amount: 0.014 + (k % 4) * 0.004, ms: 2900 + k * 150, phase: (k * 0.61) % 1 });
+  });
+  bushes.forEach((b2, k) => {
+    tweens.swayLoop(b2, { angle: 0.014 + k * 0.004, ms: 4600 + k * 480, phase: (k * 0.41) % 1 });
+    tweens.breathe(b2, { amount: 0.010 + k * 0.003, ms: 3800 + k * 360, phase: (k * 0.73) % 1 });
+  });
 
   // The water in each meter ripples. scale.x is the level and is off limits, so this only ever
   // writes scale.y — which is why it is a hand-rolled driver rather than a breathe().
@@ -968,9 +1185,11 @@ export function createGardenScene(o) {
 
   /**
    * The nearest DISCRETE prop to a world point — clouds, critters, the sun or moon, a mound, a
-   * plant, a sign. Deliberately excludes the full-bleed plates (sky, meadow, hills, grass fringe):
-   * tilting a band that spans the whole world by 2° swings its corners off screen and shows the
-   * sky behind, so those get their own idle motion instead and never take the tap ack.
+   * plant, a sign, and now the horizon tufts and shrubs (they used to be one stretched fringe
+   * sprite and could not be considered; as discrete flat props they can).
+   * Deliberately still excludes the full-bleed plates (sky, meadow, hill bands): tilting a band
+   * that spans the whole world by 2° swings its corners off screen and shows the sky behind, so
+   * those get their own idle motion instead and never take the tap ack.
    *
    * There are always sixteen mounds on screen, so this never comes back empty.
    */
@@ -983,12 +1202,14 @@ export function createGardenScene(o) {
     }
     clouds.forEach(c => consider(c, c.position.x, c.position.y));
     critters.forEach(c => consider(c, c.position.x, c.position.y));
+    tufts.forEach(t => consider(t, t.position.x, t.position.y));
+    bushes.forEach(b2 => consider(b2, b2.position.x, b2.position.y));
     consider(sun, sun.position.x, sun.position.y);
     consider(moon, moon.position.x, moon.position.y);
     plots.forEach(c => {
       consider(c.dirt, c.cx, c.soilY);
       if (c.locked) consider(c.lock, c.cx, c.lock.position.y);
-      else if (game.plot(c.i)) consider(c.plant, c.cx, c.soilY + c.plantBase.y * 0.5);
+      else if (game.plot(c.i)) consider(c.plant, c.cx, c.plantY + c.plantBase.y * 0.5);
     });
     return best;
   }
@@ -1192,7 +1413,7 @@ export function createGardenScene(o) {
       const cell = plots[d.i];
       const p = game.plot(d.i);
       // Droplets fall from above the plant and burst on it.
-      fx.emit('waterDroplets', cell.cx, cell.soilY + cell.plantBase.y * 0.85,
+      fx.emit('waterDroplets', cell.cx, cell.plantY + cell.plantBase.y * 0.85,
         { count: 14, angle: [-Math.PI * 0.7, -Math.PI * 0.3], speed: [60, 170], gravity: -900 });
       if (p) {
         if (!cell.busy) tweens.squashStretch(cell.plant, 0.15, 520);
@@ -1202,7 +1423,7 @@ export function createGardenScene(o) {
 
     game.on('sparkle', d => {
       const cell = plots[d.i];
-      fx.emit('sparkle', cell.cx, cell.soilY + Math.max(30, cell.plantBase.y * 0.6),
+      fx.emit('sparkle', cell.cx, cell.plantY + Math.max(30, cell.plantBase.y * 0.6),
         { count: d.n, spread: lay.dirtW * 0.3 });
     }),
 

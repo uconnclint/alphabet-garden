@@ -26,6 +26,7 @@
 //   dispose(url) / disposeAll()
 
 import * as THREE from '../../vendor/three.module.js';
+import { flatSrc, stripVariant } from '../data/flat-assets.js';
 
 const cache = new Map();      // url -> THREE.Texture
 const inflight = new Map();   // url -> Promise<THREE.Texture>
@@ -49,11 +50,26 @@ export function setBasePath(p) {
   basePath = p || '';
 }
 
+/**
+ * Logical name → real file.
+ *
+ * The flat-vector override map (js/data/flat-assets.js) gets first refusal: if the asset has
+ * been re-authored, its flat file wins and basePath is bypassed entirely (the override already
+ * carries a full path from the document root). Otherwise the name falls through to the
+ * original `art/assets/` art exactly as before — which is what lets 69 not-yet-authored plants
+ * keep working while 9 authored ones light up.
+ *
+ * A '@b'/'@c' variant suffix with no override is STRIPPED rather than requested: a half-filled
+ * variant set degrades to three identical sprites, never to three 404s.
+ */
 function resolve(url) {
   if (!url) return url;
-  if (/^([a-z]+:)?\/\//i.test(url) || url.startsWith('/') || url.startsWith('./') ||
-      url.startsWith('../') || url.startsWith('data:')) return url;
-  return basePath + url;
+  const flat = flatSrc(url);
+  if (flat) return flat;
+  const plain = stripVariant(url);
+  if (/^([a-z]+:)?\/\//i.test(plain) || plain.startsWith('/') || plain.startsWith('./') ||
+      plain.startsWith('../') || plain.startsWith('data:')) return plain;
+  return basePath + plain;
 }
 
 /**
