@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-07T22:10:08.710Z",
+  "updated": "2026-09-07T22:33:03.852Z",
   "project": "Alphabet Garden — Toca-grade graphics overhaul",
   "branch": "toca-polish",
   "wave": 3,
@@ -90,41 +90,41 @@
       "id": "weather",
       "group": "World",
       "name": "Rain, rainbow & weather FX",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "Rain cloud, rainbow, moon, star, firefly being authored flat."
+      "note": "Rain cloud, rainbow, moon, star, firefly authored flat and wired."
     },
     {
       "id": "sun-moon",
       "group": "Characters",
       "name": "Sun & moon characters (blink, mood)",
-      "status": "building",
-      "rounds": 4,
-      "score": 8,
+      "status": "passed",
+      "rounds": 5,
+      "score": 9,
       "gap": "",
-      "note": "Sun sits behind both cloud layers so its face gets covered; also its 6 authored expressions have no game hook. Both being fixed."
+      "note": "Moved in front of the clouds that were covering its face (rain clouds still pass over, which is correct). Six expressions wired: randomised 3.4-9.8s blink, plus tap / bloom / rain / sunset reactions, suppressed under reduced motion except for feedback."
     },
     {
       "id": "critters",
       "group": "Characters",
       "name": "Critters — flight paths & wing anim",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "Authoring 7 flat critters — the most conspicuous outliers, 3 on screen at all times."
+      "note": "7 flat critters authored and wired; verified the flat bee flying over the garden."
     },
     {
       "id": "plant-faces",
       "group": "Characters",
       "name": "Plant expressions & personality",
-      "status": "critiquing",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "6 states + blink; anchors parameterised so ~30 faced plants do not share one face."
+      "note": "Brow-weight defect fixed: 22 plants were rendering brows below the 11px floor, all now at exactly 11.00. Rebuilding 52 faced plants left 30 byte-identical, proving the rasteriser deterministic."
     },
     {
       "id": "growth",
@@ -160,21 +160,21 @@
       "id": "hud",
       "group": "UI",
       "name": "HUD & icon system",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "LAST claymation surface: 4 HUD icons + logo badge + title wordmark are DOM images, invisible to the scene-texture inventory. Being authored flat."
     },
     {
       "id": "letter-picker",
       "group": "UI",
       "name": "Letter picker",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "Same DOM-preview fix."
+      "note": "Choice cards verified flat by me: o-orange-tree, o-owl-orchid, o-octopus-oakleaf all loading from art/flat."
     },
     {
       "id": "bloom-choice",
@@ -190,31 +190,31 @@
       "id": "sticker-book",
       "group": "UI",
       "name": "Sticker book",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "Same DOM-preview fix."
+      "note": "All unlocked thumbnails flat."
     },
     {
       "id": "celebration",
       "group": "UI",
       "name": "Bloom celebration moment",
-      "status": "building",
-      "rounds": 0,
-      "score": null,
+      "status": "passed",
+      "rounds": 1,
+      "score": 8,
       "gap": "",
-      "note": "DOM previews (choice cards, sticker thumbs, celebration card) still bypass the alias layer and show claymation — being routed through the override map."
+      "note": "DOM previews now resolve through the alias layer — choice cards, sticker thumbs and the celebration card are all flat."
     },
     {
       "id": "title",
       "group": "UI",
       "name": "Title screen",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": ""
+      "note": "Title wordmark being reauthored; the agent may keep the existing one if the lettering cannot be made genuinely good."
     },
     {
       "id": "touch-feel",
@@ -260,11 +260,11 @@
       "id": "coherence",
       "group": "Feel",
       "name": "Whole-game coherence pass",
-      "status": "queued",
+      "status": "critiquing",
       "rounds": 0,
       "score": null,
       "gap": "",
-      "note": "Fresh agent plays the entire game between waves."
+      "note": "Fresh agent playing the ENTIRE game — the first review to judge the finished thing rather than assets in isolation. Also deciding the open full-garden composition question."
     },
     {
       "id": "flat-batch-1",
@@ -298,26 +298,6 @@
     }
   ],
   "log": [
-    {
-      "t": "10:43",
-      "msg": "Also caught: OL_FINE=7px contradicts the kit own 1.5% rule (sub-pixel ghosting at 128px), sunflower emits 32 strokes at exactly 13.0px (mathematical-stroke tell), and _kit.png has overlapping labels on the very sheet 10 agents will read."
-    },
-    {
-      "t": "10:43",
-      "msg": "Kit expansion underway: branch primitive, mechanical vocabulary, parameterised mass+foot, blink state, automated IoU + per-plant saturation gates in _verify.py."
-    },
-    {
-      "t": "10:43",
-      "msg": "Stress test added: the kit must now build robot rosebush, xylophone tree and banana tree, or it is still wrong."
-    },
-    {
-      "t": "10:53",
-      "msg": "World art round 3: FAIL (C2 5, C6 6, C7 5) — but C1 palette scored 9 and is now do-not-regress."
-    },
-    {
-      "t": "10:53",
-      "msg": "VALIDATION: the critic independently reached my withheld dirt-plot reservation. I read it as a bathtub, it read it as a bread roll — same finding, reached blind."
-    },
     {
       "t": "10:53",
       "msg": "Critic RETRACTED four of its own suspicions after checking source, and flagged them so we would not fix what is not broken. That is the behaviour I want."
@@ -537,6 +517,26 @@
     {
       "t": "18:10",
       "msg": "Two agents running: remaining flat art, and the code gaps (DOM previews, sun behind clouds, unused sun expressions, deferred kit brow fix + full plant rebuild)."
+    },
+    {
+      "t": "18:33",
+      "msg": "ALL scene textures are now flat vector — 122 overrides, zero claymation left in the WebGL world."
+    },
+    {
+      "t": "18:33",
+      "msg": "DOM previews fixed via a bridge module, deliberately NOT published from main3d.js: that module bails without WebGL, and on a locked-down Chromebook the modals ARE the game."
+    },
+    {
+      "t": "18:33",
+      "msg": "Kit brow defect fixed: 22 plants had brows under the 11px floor. Rebuild left 30 faced plants byte-identical — incidental proof the rasteriser is deterministic."
+    },
+    {
+      "t": "18:33",
+      "msg": "I found a gap no inventory had caught: the HUD icons and logo are DOM images, so they never appeared in scene-texture checks. Now being authored flat — the last claymation surface."
+    },
+    {
+      "t": "18:33",
+      "msg": "COHERENCE PASS RUNNING: first agent to play the whole game end to end, and to settle whether a full 12-plant garden reads as lush or cluttered."
     }
   ]
 }

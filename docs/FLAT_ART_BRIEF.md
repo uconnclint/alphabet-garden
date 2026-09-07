@@ -256,6 +256,37 @@ these — do not re-derive your own near-miss for "a green," "a red," "a metal g
 | `beam` | `#ffeaa8` | flat light/glow shapes — tractor beams, halos (already in band, unchanged) | — |
 | `berry-deep` | `#a44ead` | shadow for `berry` | 0.140 |
 
+### Extended tokens (added by the Sep 2026 world pass: critters, sky, garden, fx)
+
+The last 18 claymation assets — the seven flying critters, five sky props, the sprout and the
+lock sign, and the four fx particles (`art/flat/_build_world.py`) — needed six hues the tables
+above do not cover: a bat/butterfly violet, a butterfly pink, and a shadow for `cloud-shade`,
+which had none. All six were derived by the §3.4 rule (hue family held, saturation nudged up,
+value dropped into the C4 ΔV 0.08–0.18 window), all sit inside the S 0.05–0.55 / V 0.55–0.97
+band, and none lands in the muddy V 0.35–0.55 band. **Reuse these — do not re-derive your own
+near-miss for "a purple" or "a pink".**
+
+| token | hex | shadow for / role | S / V | ΔV |
+|---|---|---|---|---|
+| `violet-lite` | `#c9b6ea` | bat wing membrane, blue butterfly wing (shadow: `violet`) | 0.222 / 0.918 | — |
+| `violet` | `#a58fd1` | bat body / ear; shadow for `violet-lite` | 0.316 / 0.820 | 0.098 |
+| `violet-deep` | `#8a74b3` | shadow for `violet` | 0.352 / 0.702 | 0.118 |
+| `blossom` | `#f2a7c4` | pink butterfly wing | 0.310 / 0.949 | — |
+| `blossom-deep` | `#d489a8` | shadow for `blossom` | 0.354 / 0.831 | 0.118 |
+| `cloud-deep` | `#a3bccc` | shadow for `cloud-shade` — the rain cloud's own shade face | 0.201 / 0.800 | 0.102 |
+
+Two notes for the next author, both learned here:
+
+- **`beam` and `cream` and `sun` are all V 1.00.** A "bright thing inside a glow" built from
+  `beam` on `sun` has ΔV 0.000 and the bright thing disappears. The firefly's lantern is
+  `cream` inside a `sun` starburst (ΔV 0.000 in value but S 0.098 vs 0.522 — and it is the
+  black outline that actually separates them); the sparkle stacks `ray-shade` → `sun` (ΔV
+  0.141) → a `cream` chip.
+- **`bark-deep` has no legal shadow.** Its own shadow by the §3.4 rule lands at V ≈ 0.54,
+  inside the muddy band. Where a brown needs a second value step (the owl's folded wings),
+  use `bark` over a *generous* `bark-deep` face rather than inventing a third brown.
+
+
 ---
 
 ## 4. Technical gotchas (learned the hard way)

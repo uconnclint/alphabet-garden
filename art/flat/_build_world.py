@@ -52,14 +52,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "plants"))
 from _kit import *                                     # noqa: F401,F403
 from _kit import (INK, INK_SOFT, CREAM, CREAM_DEEP, ACCENT, ACCENT_DEEP,
-                  SUN, SUN_DEEP, SUN_SHADE, RAY_SHADE, BEAM, FRUIT,
-                  FRUIT_DEEP, GRASS, GRASS_DEEP, GRASS_DARK, LEAF, BARK,
-                  BARK_DEEP, BARK_LITE, SKY_HI, SKY_DEEP, STEEL, STEEL_DEEP,
-                  STEEL_DARK, BERRY, RJ, Doc, face, smooth_closed,
-                  smooth_open, place, jitter, spread, sweep, sweep_hard,
-                  chip, poly, hard_poly, slab, horn, ribbon, bow, branch,
-                  leaf_round, leaf_pointed, vein, canopy_blob, lobe_profile,
-                  star4, stem_slim, root_pts)
+                  SUN, SUN_DEEP, RAY_SHADE, BEAM, FRUIT, FRUIT_DEEP, GRASS,
+                  GRASS_DEEP, GRASS_DARK, LEAF, BARK, BARK_DEEP, BARK_LITE,
+                  SKY_HI, SKY_DEEP, STEEL, STEEL_DEEP, STEEL_DARK, BERRY,
+                  RJ, Doc, face, smooth_closed, place, jitter, sweep,
+                  sweep_hard, chip, poly, hard_poly, slab, horn, ribbon,
+                  bow, leaf_round, vein, canopy_blob, lobe_profile,
+                  stem_slim)
 
 _spec = importlib.util.spec_from_file_location(
     "_build_flat_shared", os.path.join(HERE, "_build_flat.py"))
@@ -220,11 +219,6 @@ def dot(cx, cy, r, col):
     return '<circle cx="%.1f" cy="%.1f" r="%.1f" fill="%s"/>' % (cx, cy, r, col)
 
 
-def stroke(d, col, w):
-    return ('<path d="%s" fill="none" stroke="%s" stroke-width="%.1f" %s/>'
-            % (d, col, w, RJ))
-
-
 def flat_form(doc, d, base, shade, shadow_d):
     """Two-tone form blocking with NO outline -- the fx-particle exception."""
     cid = doc._cid()
@@ -256,10 +250,10 @@ def butterfly_pink():
     pair, cream polka dots."""
     d = Doc(768, 768)
     wings = [  # (cx, cy, rx, ry, deg, seed)
-        (200, 286, 178, 148, -13, 1.3),
-        (568, 276, 170, 144, 12, 2.7),
-        (250, 552, 140, 122, 16, 4.1),
-        (520, 560, 148, 114, -11, 5.9),
+        (198, 300, 178, 148, -13, 1.3),
+        (568, 300, 170, 144, 12, 2.7),
+        (232, 512, 142, 124, 16, 4.1),
+        (546, 512, 150, 116, -11, 5.9),
     ]
     for cx, cy, rx, ry, deg, sd in wings:
         w = oval(cx, cy, rx, ry, deg, n=9, seed=sd, wob=0.075)
@@ -277,7 +271,9 @@ def butterfly_pink():
     d.add(dot(268, 70, 17, INK_SOFT))
     d.add(dot(512, 82, 15, INK_SOFT))
     # abdomen -- slimmer than the head, tapering to a round tip
-    ab = ribbon(bow(384, 300, 392, 622, 0.02, 6), [92, 86, 76, 64, 52, 42],
+    th = oval(384, 404, 108, 94, -3, n=9, seed=3.3, wob=0.05)
+    d.form(th, ACCENT, lr(384, 404, 108, 94, 3.3), shade=ACCENT_DEEP, ol=OL_C)
+    ab = ribbon(bow(384, 296, 392, 624, 0.02, 6), [110, 102, 90, 74, 58, 46],
                 cap0="round", cap1="round")
     d.form(ab, ACCENT, lr(388, 460, 46, 160, 2.0, 0.20, -0.24, 0.05),
            shade=ACCENT_DEEP, ol=OL_C)
@@ -338,23 +334,25 @@ def bee():
     """Horizontal capsule: round head + striped abdomen, two SMALL separated
     wings sitting high.  The only critter whose mass runs sideways."""
     d = Doc(768, 768)
-    for cx, cy, rx, ry, deg, sd in [(348, 226, 96, 56, -38, 1.7),
-                                    (536, 224, 90, 52, 17, 2.9)]:
+    # the two wings must overlap EACH OTHER and the body, or the three
+    # masses enclose a lens-shaped transparent hole over the bee's shoulders
+    for cx, cy, rx, ry, deg, sd in [(352, 232, 98, 58, -38, 1.7),
+                                    (456, 238, 92, 54, 17, 2.9)]:
         w = oval(cx, cy, rx, ry, deg, n=9, seed=sd, wob=0.06)
         d.form(w, CREAM, lr(cx, cy, rx, ry, sd), shade=CREAM_DEEP, ol=OL_CF)
-    for x0, y0, x1, y1 in [(330, 520, 296, 610), (424, 548, 422, 646),
-                           (524, 536, 560, 600)]:
+    for x0, y0, x1, y1 in [(326, 522, 286, 638), (410, 548, 404, 682),
+                           (500, 534, 540, 626)]:
         d.line("M%d,%d C%d,%d %d,%d %d,%d"
                % (x0, y0, x0 - 6, y0 + 50, x1 - 10, y1 - 38, x1, y1),
                ol=14, col=INK_SOFT)
     d.add('<path d="%s" fill="%s" stroke="%s" stroke-width="%d" %s/>'
-          % (horn(690, 424, 82, 60, deg=104), INK_SOFT, INK, OL_CF, RJ))
-    ab = oval(536, 414, 170, 150, 7, n=9, seed=4.4, wob=0.05)
+          % (horn(652, 424, 78, 58, deg=104), INK_SOFT, INK, OL_CF, RJ))
+    ab = oval(508, 410, 168, 152, 7, n=9, seed=4.4, wob=0.05)
     bands = ("".join(
         '<path d="%s" fill="%s"/>'
-        % (slab(cx, 414 + dy, 60, 340, 0.30, deg=9), INK_SOFT)
-        for cx, dy in ((492, 0), (598, 6))))
-    d.form(ab, SUN_DEEP, lr(536, 414, 170, 150, 4.4),
+        % (slab(cx, 410 + dy, 60, 340, 0.30, deg=9), INK_SOFT)
+        for cx, dy in ((466, 0), (570, 6))))
+    d.form(ab, SUN_DEEP, lr(508, 410, 168, 152, 4.4),
            shade=RAY_SHADE, ol=OL_C, inner=bands)
     hd = oval(296, 396, 160, 154, -5, n=9, seed=6.6, wob=0.045)
     d.form(hd, SUN_DEEP, lr(296, 396, 160, 154, 6.6),
@@ -448,8 +446,11 @@ def owl():
     for cx, cy, rx, ry, deg, sd in [(176, 476, 76, 174, -8, 3.3),
                                     (588, 462, 72, 166, 7, 5.1)]:
         w = oval(cx, cy, rx, ry, deg, n=9, seed=sd, wob=0.06)
-        d.form(w, BARK_DEEP, lr(cx, cy, rx, ry, sd),
-               shade="#8a6446", ol=OL_CF)
+        # BARK over a generous BARK_DEEP face: the value step that separates
+        # the folded wing from the body, with no undocumented third brown
+        # (BARK_DEEP's own shadow would land in the muddy V 0.35-0.55 band).
+        d.form(w, BARK, lr(cx, cy, rx, ry, sd, 0.86, 0.44),
+               shade=BARK_DEEP, ol=OL_CF)
     bl = oval(376, 566, 172, 158, -3, n=11, seed=7.2, wob=0.05)
     d.form(bl, CREAM, lr(376, 566, 172, 158, 7.2), shade=CREAM_DEEP, ol=OL_CF)
     for y in (508, 578, 648):
@@ -511,22 +512,25 @@ def bat():
 # SKY
 # =====================================================================
 def moon():
-    """1024.  A sleepy crescent, built as ONE closed path (never evenodd)."""
+    """1024.  A sleepy crescent, built as ONE closed path (never evenodd, which
+    would punch an enclosed transparent hole).  The face sits on the FAT lower
+    belly, where the crescent is 380px wide -- put it at the waist and half of
+    it hangs over the hollow."""
     d = Doc(1024, 1024)
-    cr = crescent_moon((478, 518), 440, (658, 436), 366, n=24, wob=8.0)
+    cr = crescent_moon((518, 518), 440, (738, 420), 372, n=24, wob=8.0)
     craters = "".join(dot(cx, cy, r, CREAM_DEEP) for cx, cy, r in
-                      [(322, 262, 54), (196, 470, 40), (330, 754, 46),
-                       (470, 852, 30), (232, 664, 22)])
-    d.form(cr, CREAM, lr(478, 518, 440, 440, 1.5, 0.50, 0.04, 0.05),
+                      [(360, 286, 52), (206, 470, 36), (172, 610, 20),
+                       (392, 856, 40), (556, 904, 24)])
+    d.form(cr, CREAM, lr(518, 518, 440, 440, 1.5, 0.50, 0.04, 0.05),
            shade=CREAM_DEEP, ol=OL_K, inner=craters)
     # a little star asleep in the crescent's hollow -- the oddity
-    st = smooth_closed(star_pts(792, 596, 118, 5, 0.50, deg=14,
+    st = smooth_closed(star_pts(826, 600, 106, 5, 0.50, deg=14,
                                 jit=(1.0, 0.9, 1.05, 0.95, 1.02)))
-    d.form(st, SUN, sweep(792, 596, 118, 118, 0.26, -0.30, 0.06, 2.5),
+    d.form(st, SUN, lr(826, 600, 106, 106, 2.5, 0.40, -0.10),
            shade=RAY_SHADE, ol=OL_KF)
-    d.add(face(384, 524, 224, mass_w=420, default="sleepy",
-               eyes=((-52, -10), (54, -4)), eye_r=(23, 27), mouth=(4, 54),
-               mouth_k=0.86, tilt=-5))
+    d.add(face(300, 658, 190, mass_w=352, default="sleepy",
+               eyes=((-52, -10), (54, -4)), eye_r=(24, 28), mouth=(4, 54),
+               mouth_k=0.72, tilt=-5))
     return d.svg()
 
 
@@ -542,34 +546,37 @@ def star():
 
 
 def firefly():
-    """512.  Green body, FLAT hard-edged tail glow -- no blur, no gradient."""
+    """512.  ONE round body with the face on it and ONE glowing tail bulb.
+    An earlier head + thorax + tail chain read as a caterpillar; three round
+    segments in a row always will.  The glow is a FLAT spiky halo -- no blur,
+    no filter, no gradient; the spikes are what make a flat shape read as
+    light."""
     d = Doc(512, 512)
-    # the glow is a flat shape, not a filter: a lobed BEAM halo, no outline
-    J, B = lobe_profile(5.5, 10, 0.10, (10, 26))
-    d.fill(canopy_blob(292, 372, 122, 116, 10, J, B), BEAM)
-    # wings
-    for cx, cy, L, Wd, deg, sd in [(228, 214, 176, 104, 44, 1.2),
-                                   (250, 226, 148, 92, 78, 3.4)]:
+    hp, hk = [], jitter(4.2, 14, 0.10, 1.0)
+    for i in range(14):
+        a = 2 * math.pi * i / 14 + 0.2
+        rr = (142 if i % 2 == 0 else 96) * hk[i]
+        hp.append((rr * math.cos(a), rr * math.sin(a) * 0.96))
+    d.fill(smooth_closed(place(hp, 302, 352)), SUN)
+    # the bulb is CREAM inside a SUN starburst: BEAM would have matched the
+    # halo's value exactly (both V 1.00) and the lamp would have vanished
+    bulb = oval(300, 350, 88, 84, 8, n=9, seed=6.1, wob=0.05)
+    d.form(bulb, CREAM, lr(300, 350, 88, 84, 6.1), shade=CREAM_DEEP, ol=OL_S)
+    # wings splayed OUT off the shoulders -- upright they read as rabbit ears
+    for cx, cy, L, Wd, deg, sd in [(154, 206, 138, 92, -48, 1.2),
+                                   (226, 200, 122, 84, 42, 3.4)]:
         w = leaf_round(cx, cy, L, Wd, deg=deg)
-        d.form(w, CREAM, sweep(cx + 40, cy - 60, 70, 60, 0.26, -0.30, 0.08, sd),
+        d.form(w, CREAM, lr(cx, cy - L * 0.55, Wd * 0.5, L * 0.4, sd),
                shade=CREAM_DEEP, ol=OL_SF)
-    # thorax + tail bulb
-    th = oval(212, 280, 92, 84, -14, n=9, seed=2.8, wob=0.05)
-    d.form(th, GRASS_DEEP, sweep(212, 280, 92, 84, 0.28, -0.32, 0.07, 2.8),
-           shade=GRASS_DARK, ol=OL_S)
-    tb = oval(290, 368, 84, 76, 8, n=9, seed=6.1, wob=0.05)
-    d.form(tb, CREAM, sweep(290, 368, 84, 76, 0.30, -0.28, 0.07, 6.1),
-           shade=CREAM_DEEP, ol=OL_S)
-    # head
-    hd = oval(152, 190, 80, 76, -6, n=9, seed=8.9, wob=0.045)
-    d.form(hd, GRASS_DEEP, sweep(152, 190, 80, 76, 0.30, -0.30, 0.07, 8.9),
-           shade=GRASS_DARK, ol=OL_S)
-    d.line("M118,124 C104,88 100,74 86,60", ol=9, col=INK_SOFT)
-    d.line("M182,120 C190,86 194,72 208,58", ol=9, col=INK_SOFT)
-    d.add(dot(84, 58, 10, INK_SOFT))
-    d.add(dot(210, 56, 9, INK_SOFT))
-    d.add(dot(388, 448, 14, BEAM))          # one stray spark: the oddity
-    d.add(face(150, 194, 84, mass_w=156, default="happy",
+    d.line("M158,168 C142,120 136,100 120,74", ol=10, col=INK_SOFT)
+    d.line("M224,164 C236,116 242,96 260,72", ol=10, col=INK_SOFT)
+    d.add(dot(118, 72, 12, INK_SOFT))
+    d.add(dot(262, 70, 10, INK_SOFT))
+    bd = oval(188, 250, 126, 118, -8, n=11, seed=2.8, wob=0.04)
+    d.form(bd, GRASS_DEEP, lr(188, 250, 126, 118, 2.8), shade=GRASS_DARK,
+           ol=OL_S)
+    d.add(dot(400, 468, 14, SUN))          # one stray spark: the oddity
+    d.add(face(186, 254, 136, mass_w=252, default="happy",
                eyes=((-50, -8), (52, -12)), eye_r=(26, 30), mouth=(2, 46),
                mouth_k=0.9, tilt=-4))
     return d.svg()
@@ -589,7 +596,7 @@ def rain_cloud():
     # the cloud mass
     J, B = lobe_profile(12.7, 11, 0.085, (34, 78))
     cl = canopy_blob(506, 386, 402, 246, 11, J, B, start=-92, notch=7)
-    d.form(cl, CLOUD_SHADE, lr(506, 386, 402, 246, 4.2, 0.54, 0.10, 0.06),
+    d.form(cl, CLOUD_SHADE, lr(506, 386, 402, 246, 4.2, 0.68, 0.24, 0.05),
            shade=CLOUD_DEEP, ol=OL_K)
     # lightning bolt, flat, hard-edged
     bl = poly([(806, 486), (694, 664), (778, 672), (700, 830), (876, 616),
@@ -605,25 +612,27 @@ def rain_cloud():
 def rainbow():
     """1536x1024, renders ~260px wide-arc.  Six flat bands + two foot clouds."""
     d = Doc(1536, 1024)
-    CX, CY = 768, 884
-    RXO, RYO = 726, 784
+    CX, CY = 768, 878
+    RXO, RYO = 688, 758
     BANDS = [(FRUIT, 1.00), (ACCENT, 1.06), (SUN, 0.96), (GRASS, 1.02),
              (SKY_HI, 0.98), (BERRY, 1.04)]         # one band deliberately fat
     tot = sum(b[1] for b in BANDS)
-    step_x = (RXO - 268) / tot
-    step_y = (RYO - 318) / tot
+    step_x = (RXO - 252) / tot
+    step_y = (RYO - 306) / tot
     rxo, ryo = RXO, RYO
     for col, k in BANDS:
         rxi, ryi = rxo - step_x * k, ryo - step_y * k
-        d.fill(arc_band(CX, CY, rxo, ryo, rxi, ryi, 179, 358, 44, 0.006, 2.0),
-               col)
+        # each band reaches 4px PAST its neighbour: two independently wobbled
+        # arcs that merely share a radius leave hairline transparent slivers
+        d.fill(arc_band(CX, CY, rxo + 4, ryo + 4, rxi - 4, ryi - 4,
+                        179, 358, 44, 0.006, 2.0), col)
         rxo, ryo = rxi, ryi
     # ONE silhouette outline over the whole arc; band seams are colour only
     sil = arc_band(CX, CY, RXO, RYO, rxo, ryo, 179, 358, 44, 0.006, 2.0)
     d.line(sil, ol=11)
     # foot clouds, different sizes, the right one lower (the arc is not mirrored)
-    for cx, cy, rx, ry, sd in [(150, 852, 148, 92, 3.1), (1404, 878, 176, 104,
-                                                          6.4)]:
+    for cx, cy, rx, ry, sd in [(176, 800, 146, 92, 3.1),
+                               (1352, 826, 170, 102, 6.4)]:
         J, B = lobe_profile(sd, 9, 0.09, (20, 46))
         cd = canopy_blob(cx, cy, rx, ry, 9, J, B)
         d.form(cd, CREAM, sweep(cx, cy, rx, ry, 0.24, -0.32, 0.07, sd),
@@ -644,14 +653,14 @@ def sprout():
     d.form(st, GRASS, sweep(504, 660, 40, 300, 0.16, -0.24, 0.05, 3.2),
            shade=GRASS_DEEP, ol=OL_K)
     # two cotyledon leaves, deliberately unequal, the bigger one nibbled
-    l1 = leaf_round(462, 414, 322, 282, deg=-42, curl=0.14)
+    l1 = leaf_round(468, 424, 330, 274, deg=-54, curl=0.14)
     d.form(l1, LEAF, sweep(300, 268, 150, 130, 0.24, -0.34, 0.08, 4.4),
            shade=GRASS, ol=OL_K)
-    d.line(vein(462, 414, 322, deg=-42), ol=OL_KF, col=GRASS_DEEP)
-    l2 = leaf_round(552, 398, 356, 296, deg=39, curl=-0.12)
+    d.line(vein(468, 424, 330, deg=-54), ol=OL_KF, col=GRASS_DEEP)
+    l2 = leaf_round(534, 418, 362, 288, deg=50, curl=-0.12)
     d.form(l2, LEAF, sweep(716, 246, 158, 138, 0.22, -0.34, 0.08, 6.6),
            shade=GRASS, ol=OL_K)
-    d.line(vein(552, 398, 356, deg=39), ol=OL_KF, col=GRASS_DEEP)
+    d.line(vein(534, 418, 362, deg=50), ol=OL_KF, col=GRASS_DEEP)
     # a third baby leaf just breaking -- the oddity
     l3 = leaf_round(520, 552, 138, 112, deg=88, curl=0.10)
     d.form(l3, GRASS, sweep(600, 528, 62, 52, 0.20, -0.30, 0.08, 8.1),
@@ -693,7 +702,6 @@ def lock_sign():
     # padlock: shackle first, then the body over its feet
     d.line("M452,322 C444,116 576,112 568,322", ol=76, col=INK)
     d.line("M452,322 C444,116 576,112 568,322", ol=52, col=STEEL_DEEP)
-    d.line("M446,236 C444,166 470,146 502,140", ol=18, col=STEEL_DARK)
     lb = slab(509, 316, 218, 208, 0.24, deg=1.4, skew=0.05)
     d.form(lb, STEEL, sweep_hard(509, 316, 110, 104, 0.30, 0.06),
            shade=STEEL_DEEP, ol=OL_K)
@@ -717,20 +725,19 @@ def lock_sign():
 # FX PARTICLES  (see the outline decision in the module docstring)
 # =====================================================================
 def sparkle():
-    """512, additive, 8-30px.  NO outline: black is a no-op under additive
-    blending, so an outline would only eat the arms."""
+    """512, additive, 8-30px.  NO outline: black adds nothing under additive
+    blending, so an outline would be invisible and would only eat the arms.
+    Form instead comes from three concentric flat steps -- RAY_SHADE arms,
+    a SUN core (dV .141) and one flat cream chip."""
     d = Doc(512, 512)
-    big = smooth_closed(star_pts(252, 244, 200, 4, 0.24, deg=6,
-                                 jit=(1.0, 0.88, 1.04, 0.94)))
-    flat_form(d, big, RAY_SHADE, RAY_SHADE, "M0,0")
-    core = smooth_closed(star_pts(252, 244, 140, 4, 0.30, deg=6,
-                                  jit=(1.0, 0.9, 1.03, 0.95)))
-    d.fill(core, SUN)
-    d.fill(chip(238, 224, 46, deg=-30), CREAM)
-    small = smooth_closed(star_pts(404, 402, 70, 4, 0.26, deg=22,
-                                   jit=(1.0, 0.9, 1.06, 0.92)))
-    d.fill(small, RAY_SHADE)
-    d.fill(smooth_closed(star_pts(404, 402, 44, 4, 0.32, deg=22)), SUN)
+    d.fill(smooth_closed(star_pts(252, 246, 206, 4, 0.38, deg=6,
+                                  jit=(1.0, 0.88, 1.05, 0.94))), RAY_SHADE)
+    d.fill(smooth_closed(star_pts(252, 246, 142, 4, 0.46, deg=6,
+                                  jit=(1.0, 0.9, 1.03, 0.95))), SUN)
+    d.fill(chip(232, 218, 48, deg=-30), CREAM)
+    d.fill(smooth_closed(star_pts(408, 400, 78, 4, 0.40, deg=24,
+                                  jit=(1.0, 0.9, 1.06, 0.92))), RAY_SHADE)
+    d.fill(smooth_closed(star_pts(408, 400, 50, 4, 0.48, deg=24)), SUN)
     return d.svg()
 
 
@@ -751,26 +758,26 @@ def celebration_star():
 
 def water_splash():
     """768, opaque, 16-34px.  NO outline: 1.4% of its 485px object lands at
-    0.3px at working size, which greys the blue instead of drawing a line."""
+    0.3px at working size, so it would not draw a line, it would only grey
+    the blue.  A narrow plume, three flung drops and a cream foam crown --
+    four masses, which is all that survives at 16px."""
     d = Doc(768, 768)
-    # foam base first
-    J, B = lobe_profile(9.4, 9, 0.10, (16, 40))
-    d.fill(canopy_blob(384, 578, 218, 74, 9, J, B), CREAM)
-    d.fill(canopy_blob(384, 596, 200, 52, 9, J, B), CREAM_DEEP)
-    # flanking droplets, unequal, angled outward
-    for cx, cy, w, h, deg, sd in [(112, 372, 116, 196, -34, 1.5),
-                                  (238, 262, 96, 172, -18, 2.7),
-                                  (536, 268, 104, 184, 20, 3.9),
-                                  (664, 396, 100, 168, 36, 5.1)]:
+    # foam crown: a low mass with three up-lobes, cream over cream-deep
+    J, B = lobe_profile(9.4, 9, 0.12, (18, 46))
+    d.fill(canopy_blob(384, 566, 232, 78, 9, J, B), CREAM_DEEP)
+    d.fill(canopy_blob(378, 552, 214, 62, 9, J, B), CREAM)
+    for cx, cy, w, h, deg, sd in [(150, 390, 152, 208, -48, 1.5),
+                                  (622, 376, 146, 200, 44, 3.9),
+                                  (266, 256, 118, 170, -22, 2.7),
+                                  (512, 272, 110, 160, 20, 5.1)]:
         dr = teardrop(cx, cy, w, h, deg, sd)
         flat_form(d, dr, SKY_HI, SKY_DEEP,
-                  sweep(cx, cy, w * 0.5, h * 0.5, 0.14, -0.30, 0.07, sd))
-    # central plume
-    pl = teardrop(388, 328, 196, 356, 3, 7.3)
+                  lr(cx, cy, w * 0.5, h * 0.5, sd, 0.34, -0.16))
+    pl = teardrop(386, 314, 214, 396, 3, 7.3)
     flat_form(d, pl, SKY_HI, SKY_DEEP,
-              sweep(388, 328, 98, 178, 0.12, -0.32, 0.06, 7.3))
-    d.fill(chip(330, 262, 56, deg=-24), CREAM)
-    d.fill(chip(150, 340, 26, deg=-30), CREAM)
+              lr(386, 314, 107, 198, 7.3, 0.30, -0.20, 0.05))
+    d.fill(chip(344, 236, 52, deg=-24), CREAM)
+    d.fill(chip(150, 314, 28, deg=-30), CREAM)
     return d.svg()
 
 
@@ -782,11 +789,11 @@ def poof_cloud():
     J, B = lobe_profile(21.3, 13, 0.11, (30, 74))
     pf = canopy_blob(378, 386, 322, 288, 13, J, B, start=-98, notch=9)
     inner = "".join(
-        '<path d="%s" fill="none" stroke="%s" stroke-width="9" %s/>' % (dd,
-                                                                        CREAM_DEEP, RJ)
-        for dd in ["M186,320 C232,264 316,252 366,300",
-                   "M420,238 C480,220 546,256 556,318",
-                   "M232,486 C286,530 366,528 412,486"])
+        '<path d="%s" fill="none" stroke="%s" stroke-width="15" %s/>'
+        % (dd, CREAM_DEEP, RJ)
+        for dd in ["M176,314 C226,250 320,240 374,296",
+                   "M420,224 C486,206 556,246 568,314",
+                   "M226,492 C284,542 370,540 420,492"])
     d.form(pf, CREAM, sweep(378, 386, 322, 288, 0.24, -0.34, 0.07, 5.4),
            shade=CREAM_DEEP, ol=10, inner=inner)
     return d.svg()
@@ -815,15 +822,62 @@ ASSETS = [
 ]
 
 
+# =====================================================================
+# REGISTRATION PASS
+# "Keep each asset's existing canvas size and anchor" is not something you
+# can eyeball into a point list.  So every asset is rendered once, its alpha
+# box is measured, and the drawing is then wrapped in ONE uniform
+# translate+scale that lands that box on the alpha box of the claymation PNG
+# it replaces (measured live from `art/assets/`, not copied into a table).
+# Uniform scale, so outline weight stays the same fraction of object height;
+# `min()` on the two axes, so a design with a different aspect can never
+# overflow the canvas edge.
+# =====================================================================
+def clay_box(name):
+    """(u0, u1, v0, v1) of the claymation PNG this asset replaces."""
+    from PIL import Image
+    im = Image.open(os.path.join(HERE, "..", "assets", name + ".png"))
+    w, h = im.size
+    x0, y0, x1, y1 = im.convert("RGBA").split()[3].getbbox()
+    return (x0 / w, x1 / w, y0 / h, y1 / h)
+
+
+def wrap_xf(svg, tx, ty, s):
+    """One uniform transform around the whole drawing.  The clipPaths in
+    <defs> are userSpaceOnUse, so they follow their referencing element's
+    coordinate system and move with it -- no need to transform them too."""
+    i = svg.index("</defs>") + len("</defs>")
+    j = svg.rindex("</svg>")
+    return (svg[:i] + '\n  <g transform="translate(%.3f,%.3f) scale(%.5f)">'
+            % (tx, ty, s) + svg[i:j] + "</g>\n" + svg[j:])
+
+
+def fit_to(svg, name, w, h, tmp_png):
+    from PIL import Image
+    if not render("_fit_" + name.split("/")[-1], svg, w, h, tmp_png):
+        return svg
+    bb = Image.open(tmp_png).convert("RGBA").split()[3].getbbox()
+    os.remove(tmp_png)
+    if not bb:
+        return svg
+    x0, y0, x1, y1 = bb
+    u0, u1, v0, v1 = clay_box(name)
+    tw, th = (u1 - u0) * w, (v1 - v0) * h
+    sc = min(tw / float(x1 - x0), th / float(y1 - y0))
+    tx = (u0 + u1) * 0.5 * w - sc * (x0 + x1) * 0.5
+    ty = (v0 + v1) * 0.5 * h - sc * (y0 + y1) * 0.5
+    return wrap_xf(svg, tx, ty, sc)
+
+
 def main(argv):
     want = set(argv[1:])
     for name, fn, w, h in ASSETS:
         short = name.split("/")[-1]
         if want and short not in want and name not in want:
             continue
-        svg = fn()
         path = os.path.join(OUT, name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        svg = fit_to(fn(), name, w, h, path + ".fit.png")
         with open(path + ".svg", "w") as fh:
             fh.write(svg.strip() + "\n")
         ok = render(short, svg, w, h, path + ".png")
