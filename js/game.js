@@ -147,13 +147,13 @@ const sfx = {
   page:   () => noise(0.15, 1800, 0.06)
 };
 
-/* ---------- voice (pre-rendered ElevenLabs clips) ----------
-   Plays a real ElevenLabs clip (art/audio/<key>.mp3) when present.
-   If a clip has not been generated yet, it gracefully falls back to
-   the browser's speech synthesis using the same words — so the game is
-   always fully narrated, and each clip added later replaces its fallback
-   automatically with no code changes. */
+/* ---------- voice (pre-rendered Chatterbox clips, voice: Jade) ----------
+   Plays a real narration clip (art/audio/<key>.m4a) when present.
+   If a clip is missing, it gracefully falls back to the browser's speech
+   synthesis using the same words — so the game is always fully narrated,
+   and each clip added later replaces its fallback with no code changes. */
 const ART_AUDIO = 'art/audio/';
+const ART_AUDIO_EXT = '.m4a';
 let currentVoice = null;
 const voiceCache = {};       // key -> HTMLAudioElement, or 'missing'
 const VOICE_UI_TEXT = {
@@ -193,7 +193,7 @@ function voice(key) {
   if (cached === 'missing') { speakFallback(key); return; }
   let a = cached;
   if (!a) {
-    a = new Audio(ART_AUDIO + key + '.mp3');
+    a = new Audio(ART_AUDIO + key + ART_AUDIO_EXT);
     a.preload = 'auto';
     a.addEventListener('error', function () {
       voiceCache[key] = 'missing';
