@@ -45,8 +45,8 @@ GRASS_DEEP  = "#79b85c"   # grass-deep       (was #5da23c)
 GRASS_DARK  = "#6c9959"   # grass-dark       (was #4a8531; derived back-layer green)
 SKY_HI      = "#8fd3ff"   # sky-hi           (unchanged -- already in band)
 SKY_LO      = "#cdefff"   # sky-lo           (unchanged -- already in band)
-SOIL        = "#c2946b"   # soil             (was #a9713f)
-SOIL_DEEP   = "#a37855"   # soil-deep        (was #8a5a33)
+BARK        = "#c2946b"   # bark            plant trunk base (ground soil is a SEPARATE, hotter family)
+BARK_DEEP   = "#a37855"   # bark-deep       trunk shadow face
 CREAM       = "#fff7e6"   # cream            (unchanged)
 SUN         = "#ffe07a"   # sun              (was #ffd23f)
 SUN_DEEP    = "#f0c665"   # sun-deep         (was #f0b429)
@@ -72,7 +72,7 @@ STEEL       = "#b8bcc8"   # steel        tinted metal (saucers, panels, wings)
 STEEL_DEEP  = "#969cae"   # steel-deep   shadow for STEEL      dV 0.102
 STEEL_DARK  = "#7f8697"   # steel-dark   bolts, grille slots, deep metal dV 0.098
 SKY_DEEP    = "#6cacd9"   # sky-deep     shadow for SKY_HI     dV 0.150
-BARK_LITE   = "#dbad7f"   # bark-lite / soil-lite  lit bark face (shadow: SOIL)
+BARK_LITE   = "#dbad7f"   # bark-lite       lit bark face (shadow: BARK)
 CREAM_DEEP  = "#e8dcc4"   # cream-deep   shadow for CREAM      dV 0.090
 BEAM        = "#ffeaa8"   # beam         light/glow shapes, flat
 BERRY_DEEP  = "#a44ead"   # berry-deep   shadow for BERRY      dV 0.140
@@ -80,7 +80,7 @@ BERRY_DEEP  = "#a44ead"   # berry-deep   shadow for BERRY      dV 0.140
 # base -> shadow pairing table.  ALWAYS take a shadow from here.
 SHADE = {
     GRASS: GRASS_DEEP, GRASS_DEEP: GRASS_DARK, LEAF: GRASS,
-    SOIL: SOIL_DEEP, BARK_LITE: SOIL,
+    BARK: BARK_DEEP, BARK_LITE: BARK,
     SUN: SUN_SHADE, SUN_DEEP: RAY_SHADE,
     ACCENT: ACCENT_DEEP, FRUIT: FRUIT_DEEP, EMBER: EMBER_DEEP,
     STEEL: STEEL_DEEP, STEEL_DEEP: STEEL_DARK,
@@ -881,7 +881,7 @@ def _mouth_marks(kind, G):
 
 
 def _brow_marks(kind, G):
-    """Brows are hue-matched brown (BROW, never SOIL_DEEP or the eye hex)."""
+    """Brows are hue-matched brown (BROW, never BARK_DEEP or the eye hex)."""
     (lx, ly), (rx, ry) = G["eyes"]
     lift = G["brow_lift"]
     if kind == "surprised":
@@ -934,7 +934,7 @@ def face(cx, cy, width_px, *, mass_w, default="happy", tilt=0.0,
     slide off the silhouette; now a positional 4th argument raises TypeError
     instead of being silently accepted as `mass_w`.
 
-    Parameterise `eyes` / `eye_r` / `mouth` per plant.  Same six states on
+    Parameterise `eyes` / `eye_r` / `mouth` per plant.  Same seven states on
     thirty plants is Instant Tell #19; the rig will not stop you, but the
     critic will.
     """

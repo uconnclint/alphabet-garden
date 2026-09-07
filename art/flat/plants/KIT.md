@@ -495,7 +495,8 @@ For a true *edge* bite, push a point of the shape's own outline inward instead �
 - [ ] survives the **black silhouette at 25 %** — and its props don't merge into the mass
 - [ ] **survives 128 × 150 px.** Look at it at that size. This is the size players see.
 - [ ] exactly one deliberate oddity
-- [ ] faced plants: all six `face-*` groups present, only the default visible
+- [ ] faced plants: all seven `face-*` groups present (including `face-blink`), only the
+      default visible
 
 `python3 art/flat/plants/_verify.py <id>` does the numeric half and writes a contact sheet
 (original | flat | silhouette@25 % | game size) to `_compare/<id>-flat.png`.

@@ -153,7 +153,7 @@ def sunflower():
                   'fill="%s" transform="rotate(%d %.1f %.1f)"/>'
                   % (sx, sy, sr, sr * .82, INK_SOFT, (i * 37) % 60 - 30,
                      sx, sy))
-    d.form(disc, SOIL, sweep(HX, HY, 136, 128, lo=.28, hi=-.46), SOIL_DEEP,
+    d.form(disc, BARK, sweep(HX, HY, 136, 128, lo=.28, hi=-.46), BARK_DEEP,
            inner=seeds)
     return d.svg()
 
@@ -167,8 +167,8 @@ def apple_tree():
     d = Doc()
     d.form(trunk_chunky(508, 380, BASE_Y, 178, 334, root_seed=2.6, lean=8,
                         root_lobes=3, root_depth=(18, 30)),
-           SOIL, sweep(524, 760, 168, 250, lo=.18, hi=-.14, wob=.06),
-           SOIL_DEEP,
+           BARK, sweep(524, 760, 168, 250, lo=.18, hi=-.14, wob=.06),
+           BARK_DEEP,
            inner=('<path d="M424,560 C440,660 430,760 448,900" fill="none" '
                   'stroke="%s" stroke-width="%d" %s/>'
                   '<path d="M604,600 C592,700 606,798 596,916" fill="none" '
@@ -215,7 +215,7 @@ def apple_tree():
               'fill="none" stroke="%s" stroke-width="%d" %s/>'
               % (ax + 2, ay - r * .62, ax + 6, ay - r * 1.02,
                  ax + 16, ay - r * 1.16, ax + 26, ay - r * 1.30,
-                 SOIL_DEEP, OL_PROP, RJ))
+                 BARK_DEEP, OL_PROP, RJ))
         d.form(p, FRUIT, sweep(ax, ay, r, r, lo=.30, hi=-.46), FRUIT_DEEP,
                ol=OL_PROP, evenodd=eo,
                inner='<path d="%s" fill="%s" opacity="0.85"/>'
@@ -246,16 +246,16 @@ def maple_tree():
              (562, 792, 872, 588, 78, 40, -0.22)]
     for (x0, y0, x1, y1, w0, w1, k) in LIMBS:
         d.form(branch(x0, y0, x1, y1, w0, w1, k),
-               SOIL, sweep((x0 + x1) / 2, (y0 + y1) / 2, 120, 120,
+               BARK, sweep((x0 + x1) / 2, (y0 + y1) / 2, 120, 120,
                            lo=.24, hi=-.30, seed=x1 * .02),
-               SOIL_DEEP, ol=OL_MAIN)
+               BARK_DEEP, ol=OL_MAIN)
 
     # ---- a SHORT trunk: the tree's mass is in the limbs, not the column --
     # trunk runs UP into the middle plume so it has no visible flat top
     d.form(trunk_chunky(512, 500, BASE_Y, 118, 300, root_seed=27.5, lean=-14,
                         root_lobes=3, root_depth=(20, 34), flare=1.08),
-           SOIL, sweep(516, 850, 150, 170, lo=.14, hi=-.18, wob=.05),
-           SOIL_DEEP,
+           BARK, sweep(516, 850, 150, 170, lo=.14, hi=-.18, wob=.05),
+           BARK_DEEP,
            inner=('<path d="M436,760 C450,830 442,890 456,948" fill="none" '
                   'stroke="%s" stroke-width="%d" %s/>'
                   '<path d="M584,772 C574,844 588,896 578,952" fill="none" '
@@ -291,7 +291,7 @@ def maple_tree():
         py = ly + L * .52 * math.cos(math.radians(dg))
         d.add('<path d="M%.0f,%.0f L%.0f,%.0f" fill="none" stroke="%s" '
               'stroke-width="%d" %s/>'
-              % (lx, ly, px, py, SOIL_DEEP, OL_FINE, RJ))
+              % (lx, ly, px, py, BARK_DEEP, OL_FINE, RJ))
         d.form(leaf_lobed(lx, ly, L, dg,
                           jit=jitter(lx * .01, 5, 0.07, 1.0)), col,
                sweep(lx, ly, L, L, lo=.30, hi=-.44, wob=.10, seed=lx * .02),
@@ -433,7 +433,7 @@ def pizza_palm():
     for i, (pth, hw, cy) in enumerate(rings):
         d.form(pth, BARK_LITE,
                sweep(512, cy, hw, hw * .40, lo=.26, hi=-.40, seed=i * 1.7),
-               SOIL, ol=OL_MAIN)
+               BARK, ol=OL_MAIN)
 
     # ---- five slices ----
     for i, base_a in enumerate(ANG):
@@ -552,8 +552,8 @@ def ufo_tree():
 
     d.form(trunk_chunky(504, 680, BASE_Y, 156, 306, root_seed=38.4, lean=6,
                         root_lobes=3, root_depth=(16, 28)),
-           SOIL, sweep(518, 860, 150, 170, lo=.18, hi=-.14, wob=.06),
-           SOIL_DEEP,
+           BARK, sweep(518, 860, 150, 170, lo=.18, hi=-.14, wob=.06),
+           BARK_DEEP,
            inner=('<path d="M424,740 C440,812 430,872 448,940" fill="none" '
                   'stroke="%s" stroke-width="%d" %s/>'
                   '<path d="M598,762 C588,830 602,882 592,944" fill="none" '
@@ -742,8 +742,8 @@ def xylophone_tree():
     # ---- trunk: wide, splayed, claw-footed ----
     d.form(trunk_chunky(498, 622, BASE_Y, 286, 452, root_seed=64.1, lean=4,
                         root_lobes=4, root_depth=(34, 62), flare=1.14),
-           SOIL, sweep(516, 800, 220, 210, lo=.16, hi=-.20, wob=.05),
-           SOIL_DEEP,
+           BARK, sweep(516, 800, 220, 210, lo=.16, hi=-.20, wob=.05),
+           BARK_DEEP,
            inner=("".join(
                '<path d="%s" fill="none" stroke="%s" stroke-width="%d" %s/>'
                % (sd, INK, OL_MAIN, RJ)
@@ -752,15 +752,15 @@ def xylophone_tree():
 
     # a wobbly cap so the stump has no dead-straight top edge
     JC, BC = lobe_profile(70.5, 9, jit=0.03, bul=(6, 16))
-    d.form(canopy_blob(500, 640, 176, 44, 9, JC, BC, start=-96), SOIL,
-           sweep(500, 640, 176, 44, lo=.20, hi=-.34), SOIL_DEEP)
+    d.form(canopy_blob(500, 640, 176, 44, 9, JC, BC, start=-96), BARK,
+           sweep(500, 640, 176, 44, lo=.20, hi=-.34), BARK_DEEP)
 
     # ---- two side arms holding the mallets ----
     for (x0, y0, x1, y1, w0, w1, k) in ((392, 740, 172, 676, 78, 58, 0.14),
                                         (614, 730, 852, 690, 74, 56, 0.17)):
-        d.form(branch(x0, y0, x1, y1, w0, w1, k), SOIL,
+        d.form(branch(x0, y0, x1, y1, w0, w1, k), BARK,
                sweep((x0 + x1) / 2, (y0 + y1) / 2, 110, 60, lo=.22, hi=-.28),
-               SOIL_DEEP, ol=OL_MAIN)
+               BARK_DEEP, ol=OL_MAIN)
 
     # ---- the trunk's face: 168 wide on a ~336-wide shaft = 50.0% ----
     d.add(face(492, 764, 168, mass_w=336, default="mischief", tilt=2.0,
@@ -770,7 +770,7 @@ def xylophone_tree():
     # ---- rails behind the bars (straight, machined) ----
     for (ry, rw) in ((246, 792), (452, 836)):
         d.form(slab(506, ry, rw, 34, 0.48, deg=1.5), BARK_LITE,
-               sweep_hard(506, ry, rw * .5, 17, lo=.20, hi=-.30), SOIL,
+               sweep_hard(506, ry, rw * .5, 17, lo=.20, hi=-.30), BARK,
                ol=OL_PROP)
 
     # ---- the bars ----
@@ -793,11 +793,11 @@ def xylophone_tree():
     for (hx, hy, tx, ty, hr, k) in ((128, 372, 190, 664, 62, 0.13),
                                     (912, 366, 838, 678, 58, -0.15)):
         d.form(branch(hx, hy, tx, ty, 34, 30, k), BARK_LITE,
-               sweep_hard((hx + tx) / 2, (hy + ty) / 2, 70, 120), SOIL,
+               sweep_hard((hx + tx) / 2, (hy + ty) / 2, 70, 120), BARK,
                ol=OL_PROP)
         J, B = lobe_profile(hx * .01, 9, jit=0.03, bul=(4, 8))
         d.form(canopy_blob(hx, hy, hr, hr * .84, 9, J, B), BARK_LITE,
-               sweep(hx, hy, hr, hr, lo=.28, hi=-.44), SOIL, ol=OL_PROP)
+               sweep(hx, hy, hr, hr, lo=.28, hi=-.44), BARK, ol=OL_PROP)
     return d.svg()
 
 
@@ -887,9 +887,13 @@ def banana_tree():
 # =====================================================================
 # KIT REFERENCE SHEET
 # =====================================================================
+KIT_SHEET_W, KIT_SHEET_H = 2160, 1700
+
+
 def kit_sheet():
-    d = Doc(2040, 1560)
-    d.add('<rect x="0" y="0" width="2040" height="1560" fill="%s"/>' % CREAM)
+    d = Doc(KIT_SHEET_W, KIT_SHEET_H)
+    d.add('<rect x="0" y="0" width="%d" height="%d" fill="%s"/>'
+          % (KIT_SHEET_W, KIT_SHEET_H, CREAM))
     F = "Verdana,DejaVu Sans,sans-serif"
 
     def T(x, y, sz, txt, col=INK_SOFT, w="bold"):
@@ -910,17 +914,21 @@ def kit_sheet():
       ACCENT_DEEP, "normal")
 
     # ---------------- leaves ----------------
+    # REVISED (fan-out gate fix): crescent and horn used to sit only 172px
+    # apart centre-to-centre and their silhouettes visibly touched. They now
+    # get their own wider slots (each pushed further from its neighbour)
+    # with more headroom besides.
     T(44, 226, 26, "ORGANIC VOCABULARY &#8212; leaves, crescents, horns")
     lv = [("round", leaf_round(120, 454, 180, 116, -6), GRASS, 120, 372),
           ("pointed", leaf_pointed(310, 460, 196, 104, 4), GRASS, 310, 374),
           ("lobed / maple", leaf_lobed(486, 374, 98, -8), EMBER, 486, 374),
-          ("frond", leaf_frond(652, 458, 190, 116, -4), GRASS, 666, 374),
-          ("crescent", crescent(796, 300, 190, 78, 150, -0.34), SUN,
-           838, 376),
-          ("horn", horn(968, 460, 178, 86, -4, 0.14), GRASS, 962, 386)]
+          ("frond", leaf_frond(640, 458, 180, 108, -4), GRASS, 654, 374),
+          ("crescent", crescent(772, 296, 174, 70, 140, -0.30), SUN,
+           806, 372),
+          ("horn", horn(1032, 460, 168, 78, 8, 0.14), GRASS, 1032, 384)]
     for nm, pth, col, sx, sy in lv:
         d.form(pth, col, sweep(sx, sy, 96, 96, lo=.30, hi=-.44), ol=OL_PROP)
-    for i, x in enumerate((70, 254, 414, 610, 764, 940)):
+    for i, x in enumerate((70, 254, 414, 596, 760, 1000)):
         T(x, 520, 20, lv[i][0])
 
     # ---------------- trunks + branch ----------------
@@ -928,19 +936,19 @@ def kit_sheet():
     d.form(stem_slim(130, 650, 980, 58, root_seed=1.0, lean=14, w_base=160),
            GRASS, sweep(140, 834, 84, 180, lo=.06, hi=-.10), GRASS_DEEP)
     T(50, 1026, 20, "slim stem")
-    d.form(trunk_chunky(354, 650, 980, 150, 292, root_seed=2.0), SOIL,
-           sweep(366, 840, 140, 180, lo=.18, hi=-.14), SOIL_DEEP)
+    d.form(trunk_chunky(354, 650, 980, 150, 292, root_seed=2.0), BARK,
+           sweep(366, 840, 140, 180, lo=.18, hi=-.14), BARK_DEEP)
     T(276, 1026, 20, "chunky trunk")
     for i, (pth, hw, cy) in enumerate(trunk_palm(600, 650, 980, 62, 140, n=6)):
         d.form(pth, BARK_LITE, sweep(600, cy, hw, hw * .4, lo=.26, hi=-.40,
-                                     seed=i * 1.7), SOIL)
+                                     seed=i * 1.7), BARK)
     T(512, 1026, 20, "segmented palm")
     for i, (sd, w, cy, h) in enumerate(trunk_stack(830, 650, 980, 86, 122,
                                                    4, seed=3.0)):
         d.form(sd, STEEL, sweep_hard(830, cy, w * .5, h * .5), STEEL_DEEP)
     T(744, 1026, 20, "machined stack")
-    d.form(branch(760, 900, 986, 700, 74, 40, -0.20), SOIL,
-           sweep(870, 800, 110, 90, lo=.22, hi=-.30), SOIL_DEEP)
+    d.form(branch(760, 900, 986, 700, 74, 40, -0.20), BARK,
+           sweep(870, 800, 110, 90, lo=.22, hi=-.30), BARK_DEEP)
     T(930, 1026, 20, "branch")
     d.add('<path d="M50,980 L1000,980" stroke="%s" stroke-width="6" '
           'stroke-dasharray="20 16" fill="none"/>' % ACCENT)
@@ -952,39 +960,49 @@ def kit_sheet():
       ACCENT_DEEP, "normal")
 
     # ---------------- rectilinear ----------------
+    # REVISED (fan-out gate fix): the tallest graduated bar used to reach
+    # y=1154, well above the title's baseline at y=1186 -- the artwork
+    # visibly struck through "smooth_closed". panel/slab/bolt/bars are now
+    # shifted down 40px so even the tallest bar clears the title with room
+    # to spare. The plinth used to sit at the right end of this same row
+    # (cx=1160, 250px wide) -- wide and far-right enough that it overlapped
+    # BOTH the "graduated bars" label beside it and face-surprised on the
+    # right-hand column below it. It now gets its own row underneath,
+    # left-aligned under "panel + grille" -- a different Y band from
+    # everything else on this sheet, so it cannot collide with either.
     T(44, 1186, 26, "RECTILINEAR / MECHANICAL &#8212; the opt-out of "
                     "smooth_closed")
-    out, inn = panel(150, 1300, 210, 150, r=0.08, inset=0.28)
-    d.form(out, STEEL, sweep_hard(150, 1300, 105, 75), STEEL_DEEP)
+    out, inn = panel(150, 1340, 210, 150, r=0.08, inset=0.28)
+    d.form(out, STEEL, sweep_hard(150, 1340, 105, 75), STEEL_DEEP)
     d.form(inn, STEEL_DEEP, None, None, ol=OL_PROP)
-    for sd in grille(150, 1300, 100, 56, 4):
+    for sd in grille(150, 1340, 100, 56, 4):
         d.form(sd, STEEL_DARK, None, None, ol=OL_FINE)
-    T(60, 1420, 20, "panel + grille")
-    d.form(slab(370, 1300, 170, 150, 0.07), SKY_HI,
-           sweep_hard(370, 1300, 85, 75), SKY_DEEP)
-    T(322, 1420, 20, "slab")
+    T(60, 1460, 20, "panel + grille")
+    d.form(slab(370, 1340, 170, 150, 0.07), SKY_HI,
+           sweep_hard(370, 1340, 85, 75), SKY_DEEP)
+    T(322, 1460, 20, "slab")
     for i, bx in enumerate((560, 630, 700)):
-        hd, sl = bolt(bx, 1290, 26, deg=i * 29)
+        hd, sl = bolt(bx, 1330, 26, deg=i * 29)
         d.form(hd, STEEL, None, None, ol=OL_FINE)
         d.line(sl, OL_FINE, STEEL_DARK)
-    T(576, 1420, 20, "bolt")
+    T(576, 1460, 20, "bolt")
     for i, hh in enumerate(graduated(5, 176, 96)):
-        d.form(slab(800 + i * 74, 1330 - hh * .5, 60, hh, 0.09), BAR5[i],
-               sweep_hard(800 + i * 74, 1330 - hh * .5, 30, hh * .5),
+        d.form(slab(800 + i * 74, 1370 - hh * .5, 60, hh, 0.09), BAR5[i],
+               sweep_hard(800 + i * 74, 1370 - hh * .5, 30, hh * .5),
                SHADE[BAR5[i]], ol=OL_PROP)
-    T(818, 1420, 20, "graduated bars")
-    plate, pads = plinth(1160, 1400, 250, 84, feet=3)
+    T(818, 1460, 20, "graduated bars")
+    plate, pads = plinth(280, 1590, 220, 80, feet=3)
     for p in pads:
         d.form(p, STEEL_DEEP, None, None, ol=OL_PROP)
-    d.form(plate, STEEL, sweep_hard(1160, 1370, 125, 42), STEEL_DEEP)
-    T(1090, 1450, 20, "plinth (machined foot)")
+    d.form(plate, STEEL, sweep_hard(280, 1562, 110, 40), STEEL_DEEP)
+    T(190, 1650, 20, "plinth (machined foot)")
 
     # ---------------- two-tone ----------------
     T(1180, 226, 26, "TWO-TONE RECIPE  (base / shadow)")
     T(1180, 256, 18, "shadow = base hue, ~10 deg cooler, S +0.05, "
                      "V -0.09..-0.14, hard edge", INK_SOFT, "normal")
     pairs = [("grass", GRASS, GRASS_DEEP), ("leaf", LEAF, GRASS),
-             ("soil", SOIL, SOIL_DEEP), ("bark-lite", BARK_LITE, SOIL),
+             ("soil", BARK, BARK_DEEP), ("bark-lite", BARK_LITE, BARK),
              ("sun", SUN, SUN_SHADE), ("accent", ACCENT, ACCENT_DEEP),
              ("fruit", FRUIT, FRUIT_DEEP), ("ember", EMBER, EMBER_DEEP),
              ("steel", STEEL, STEEL_DEEP), ("steel-deep", STEEL_DEEP,
@@ -1003,15 +1021,20 @@ def kit_sheet():
     # ---------------- faces ----------------
     # 7 states in a 4+3 grid, each label directly UNDER its own head with
     # 96px of clear air before the next row (v1 buried row 1's labels).
+    # REVISED (fan-out gate fix): the "45-60% of its mass" caption used to
+    # be one line that ran off the right edge of the (then 2040px-wide)
+    # canvas -- it was clipped mid-word at "45-60% of its ma". It is now
+    # wrapped onto two lines, AND the canvas is wider besides, so it has
+    # margin to spare rather than exactly reaching the edge.
     T(1180, 900, 26, "FACE SYSTEM &#8212; 7 SWAPPABLE STATES")
     T(1180, 930, 18, "silly + wacky only. state = eyes(1) + mouth(1) "
                      "[+ brows(1)]. Blush always on.", INK_SOFT, "normal")
     T(1180, 956, 18, "anchors, eye radius and mouth are per-plant "
-                     "arguments; face width must be 45-60% of its mass.",
-      ACCENT_DEEP, "normal")
+                     "arguments -- face width must be", ACCENT_DEEP, "normal")
+    T(1180, 980, 18, "45-60% of its mass.", ACCENT_DEEP, "normal")
     for i, ex in enumerate(EXPRESSIONS):
         px = 1258 + (i % 4) * 196
-        py = 1090 + (i // 4) * 268
+        py = 1112 + (i // 4) * 268
         J, B = lobe_profile(i * 5.3 + 2.0, 10, jit=0.015, bul=(6, 9))
         d.form(canopy_blob(px, py, 84, 80, 10, J, B), LEAF,
                sweep(px, py, 84, 80, lo=.34, hi=-.46), GRASS)
@@ -1043,7 +1066,8 @@ if __name__ == "__main__":
         svg = kit_sheet()
         with open(os.path.join(OUT, "_kit.svg"), "w") as fh:
             fh.write(svg.strip() + "\n")
-        ok = render("_kit", svg, 2040, 1560, os.path.join(OUT, "_kit.png"))
+        ok = render("_kit", svg, KIT_SHEET_W, KIT_SHEET_H,
+                    os.path.join(OUT, "_kit.png"))
         print("%-18s %s" % ("_kit", "OK" if ok else "FAIL"))
     for name, fn in jobs:
         svg = fn()

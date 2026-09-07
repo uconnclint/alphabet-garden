@@ -127,6 +127,20 @@ on-palette, and still would have failed review. Every new asset must fix all fou
 | `cream` | `#fff7e6` | panels, near-white (never pure `#FFFFFF`) |
 | `cloud-shade` | `#c6d8e6` | cloud shadow — hue-rotated cool to 206° |
 
+### Layer 1b — BARK (plant trunks) — a different material from ground soil
+
+> Ground soil and plant bark are **not the same family** and must not share hexes. The dirt plot was
+> deliberately pushed to S .568 so it carries the frame's focal weight and a child can see where to
+> tap; if trunks matched it, every plant would compete with the plot and that hierarchy would collapse.
+> Bark therefore stays cooler and less saturated. These are `_kit.py`'s live values — the executable
+> source of truth for plant art.
+
+| token | hex | use |
+|---|---|---|
+| `bark` | `#c2946b` | trunk / stem base |
+| `bark-deep` | `#a37855` | trunk shadow face |
+| `bark-lite` | `#dbad7f` | lit bark face |
+
 ### Layer 2 — far background (NO black outline; must sit back)
 
 Never share a hex with Layer 1. Target **S ≤ 0.24, V 0.87–0.93**.
