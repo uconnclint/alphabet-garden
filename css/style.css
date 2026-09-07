@@ -73,20 +73,31 @@ body.night {
   display: flex; align-items: center; gap: 12px; padding: 10px 16px;
   pointer-events: none;
   background: linear-gradient(rgba(110,198,255,.55), rgba(110,198,255,0));
+  /* The four tool buttons are the whole game's controls — mute and shovel included — so they
+     must never be the thing that gets pushed off the right edge. `wrap` is the hard floor
+     under every tier below: when the wordmark, the stat pills and the tools genuinely cannot
+     share a line (a 320px iPad slide-over, or a device whose cursive fallback font is wider
+     than ours), the tool row drops to a second line intact instead of overflowing. It only
+     ever triggers below ~340px; everywhere else the media queries keep it on one line.
+     GardenScene measures the HUD's real height, so a wrapped HUD moves the sun down with it.
+     The right-hand grouping is held by `justify-content:flex-end` + the wordmark's auto margin
+     rather than by an auto margin on the stats: that way a wrapped tool row is still flush
+     right, and nothing moves on the layouts that do not wrap. */
+  flex-wrap: wrap; row-gap: 8px; justify-content: flex-end;
 }
 #hud > * { pointer-events: auto; }
 #hud-title {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px; margin-right: auto;
   font-size: clamp(18px, 3vw, 28px); font-weight: bold; color: #fff;
   text-shadow: 2px 2px 0 rgba(60, 90, 30, .5); letter-spacing: 1px;
 }
 .hud-logo { width: 40px; height: 40px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
-#hud-stats { display: flex; gap: 8px; margin-left: auto; }
+#hud-stats { display: flex; gap: 8px; }
 .stat {
   background: rgba(255, 255, 255, .85); border-radius: 20px; padding: 6px 12px;
   font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.12); white-space: nowrap;
 }
-#hud-buttons { display: flex; gap: 7px; }
+#hud-buttons { display: flex; gap: 7px; flex: none; }
 .hud-btn {
   width: 52px; height: 52px; padding: 7px; border: none; border-radius: 50%;
   background: #fff; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.15);
@@ -94,7 +105,11 @@ body.night {
               box-shadow .16s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex: none;
 }
-/* narrow phones: hide the wordmark, shrink chrome so all four tools fit */
+/* Narrow screens: give up the wordmark, then the badge, then stat-pill size — in that order,
+   and always before the tool buttons, which stay at 44px (the house-style touch minimum) at
+   every width. The numbers below are budgeted against the WORST text the pills ever hold
+   ("128" grown, "78/78" stickers), not the "0" they start at: a mid-year classroom device is
+   exactly the one that used to lose the sound and shovel buttons off the right edge. */
 @media (max-width: 620px) {
   #hud { gap: 6px; padding: 8px 8px; }
   #hud-title { font-size: 0; gap: 0; }
@@ -103,9 +118,20 @@ body.night {
   .hud-btn { width: 44px; height: 44px; padding: 6px; }
   #hud-buttons { gap: 5px; }
 }
-@media (max-width: 400px) {
+/* 520, not 400: at 401-406px the badge plus full stat pills plus four 44px tools overflowed by
+   a few pixels and the sound toggle fell off the screen. The badge is the cheapest thing to
+   drop — it is decoration, and the title screen has already shown it. */
+@media (max-width: 520px) {
   #hud-title { display: none; }
   .stat { font-size: 12px; padding: 5px 7px; }
+}
+/* Smallest supported box (320px: iPhone SE, iPad Slide Over). Everything tightens except the
+   buttons, which are already at the 44px floor and stay there. */
+@media (max-width: 360px) {
+  #hud { gap: 4px; padding: 8px 6px; }
+  #hud-stats { gap: 5px; }
+  #hud-buttons { gap: 4px; }
+  .stat { font-size: 11px; padding: 4px 6px; }
 }
 .hud-btn img { width: 100%; height: 100%; object-fit: contain; -webkit-user-drag: none; pointer-events: none; }
 /* Press and hover are RECIPROCAL — squash one axis, stretch the other. A uniform scale()

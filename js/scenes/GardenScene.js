@@ -877,8 +877,14 @@ export function createGardenScene(o) {
     lay.rows = Math.ceil(TOTAL / lay.cols);
     lay.horizonY = b.top - H * (landscape ? 0.40 : 0.30);
 
-    // The DOM HUD floats over the canvas; keep the top row clear of it.
-    const hudReserve = 100 * s.unitsPerPx;
+    // The DOM HUD floats over the canvas; keep the top row and the sun clear of it. MEASURED,
+    // not assumed: the HUD is allowed to wrap its tool row onto a second line on a 320px screen
+    // (see #hud in style.css), and a hard-coded 100px would then let the sun sit behind the
+    // buttons. The 100px floor is the figure this scene was tuned against, so nothing moves at
+    // any size that already fit on one line.
+    const hudEl = document.getElementById('hud');
+    const hudPx = hudEl ? hudEl.getBoundingClientRect().height + 14 : 0;
+    const hudReserve = Math.max(100, hudPx) * s.unitsPerPx;
     lay.top = Math.min(lay.horizonY - 16, b.top - hudReserve - 16);
     const bottom = b.bottom + 52;
     lay.rowH = (lay.top - bottom) / lay.rows;
@@ -1081,6 +1087,23 @@ export function createGardenScene(o) {
   }
 
   stage.onResize(layout);
+
+  // The HUD can change height without the window changing size — the stat pills grow a digit,
+  // or a media query wraps the tool row — and `hudReserve` above is measured from it. Watch it
+  // directly rather than hoping a window resize happens to coincide. Cheap: it fires only on a
+  // real box change, and relayout() does not touch the DOM, so this cannot feed back on itself.
+  let hudObserver = null;
+  const hudNode = document.getElementById('hud');
+  if (hudNode && typeof ResizeObserver !== 'undefined') {
+    let lastH = -1;
+    hudObserver = new ResizeObserver(() => {
+      const h = hudNode.getBoundingClientRect().height;
+      if (Math.abs(h - lastH) < 0.5) return;
+      lastH = h;
+      relayout();
+    });
+    hudObserver.observe(hudNode);
+  }
 
   /* ── day / night ────────────────────────────────────────────────────── */
 
@@ -1630,6 +1653,9 @@ export function createGardenScene(o) {
 
   return {
     plots: plots,
+    // Exposed for the dev handle in main3d.js: layout bugs on a classroom iPad are far easier
+    // to diagnose from the numbers than from a screenshot.
+    lay: lay,
     relayout: relayout,
     burstConfetti: burstConfetti,
     // The clock lives in game.js and only ticks once a minute; this is how a dev (or a future
@@ -1640,6 +1666,7 @@ export function createGardenScene(o) {
       offUpdate();
       offReduced();
       pollen.cancel();
+      if (hudObserver) hudObserver.disconnect();
       plots.forEach(stopIdle);
       plots.forEach(stopPropIdle);
     }
