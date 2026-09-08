@@ -159,6 +159,15 @@ body.night {
 .modal-card {
   position: relative; background: var(--card); border-radius: 28px; padding: 26px 26px 24px;
   max-width: min(92vw, 560px); max-height: 88vh; overflow-y: auto;
+  /* A flex item defaults to min-width:auto, which lets min-content beat max-width — that is how
+     the letter grid used to shove the card past both screen edges, clipping the title on the left
+     and the last column on the right. min-width:0 lets max-width actually win; overflow-x:hidden
+     is the hard stop so nothing can ever scroll sideways again. */
+  min-width: 0; overflow-x: hidden;
+  /* width, not just max-width: once min-width:0 lets the card shrink, nothing was pushing it back
+     out, so it collapsed to its content and the letters came out 18px wide. width:100% makes it
+     claim the space the max-width allows, and .wide's larger cap still wins. */
+  width: 100%;
   border: 6px solid var(--accent2);
   box-shadow: 0 12px 0 rgba(0,0,0,.18);
   /* §5.3: a modal enters from 0.88 on backOut over 320ms. */
@@ -178,9 +187,21 @@ body.night {
 .modal-close:active { transform: translateY(2px) scale(1.08, 0.92); }
 
 /* letter grid */
-#letter-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+/* minmax(0,1fr), not 1fr: a bare 1fr track still refuses to go below its content's min-content
+   width, so five big letters could force the grid — and the card — wider than the screen.
+   container-type lets the letter scale off the BUTTON instead of the viewport, which is what
+   actually went wrong: at a 714px viewport the buttons were 54px wide carrying 28.6px text. */
+#letter-grid {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
+  container-type: inline-size;
+}
 .letter-btn {
-  aspect-ratio: 1; font-family: var(--font); font-size: clamp(22px, 4vw, 34px); font-weight: bold;
+  aspect-ratio: 1; font-family: var(--font); font-weight: bold;
+  /* cqi = 1% of the grid's inline size; ~13cqi lands a comfortable letter in a 1/5 column.
+     The vw term is the fallback for browsers without container queries, and the clamp keeps
+     both inside sane bounds. min-width:0 stops the button itself from refusing to shrink. */
+  font-size: clamp(15px, 13cqi, 34px);
+  min-width: 0; overflow: hidden;
   border: none; border-radius: 18px; cursor: pointer; color: #fff;
   box-shadow: 0 5px 0 rgba(0,0,0,.2);
   transition: transform .14s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -367,4 +388,10 @@ body.playing #hud { animation: screen-in .46s cubic-bezier(0.16, 1, 0.30, 1) bac
 #boot-help pre {
   background: #2f3a30; color: #eaf5e6; border-radius: 10px; padding: 10px 12px; margin: 0 0 8px;
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; overflow-x: auto;
+}
+
+/* Container-query units are the primary sizing above; this is the fallback for older engines
+   (some managed Chromebooks lag a release or two behind). Same intent, viewport-based. */
+@supports not (font-size: 1cqi) {
+  .letter-btn { font-size: clamp(15px, 3.4vw, 30px); }
 }
