@@ -9,17 +9,25 @@ Your garden is saved and keeps growing across visits — even while you are away
 
 ## Play
 
-It is a static site — no build step. Open `index.html`, or serve the folder:
+**Double-click `start-garden.command`.** It serves the folder and opens your browser.
+
+Or from a terminal in this folder:
 
 ```bash
-python3 -m http.server 8437
-# then visit http://localhost:8437
+python3 -m http.server 8000
 ```
+
+then visit `http://localhost:8000`.
+
+> **Do not open `index.html` directly.** The world layer is loaded as ES modules, and browsers
+> block those over `file://` for security, so the garden never draws and you get an empty green
+> screen. The game detects this and shows instructions rather than failing silently, but it
+> genuinely has to be served.
 
 ## Features
 
 - **78 hand-crafted plants** — 26 letters × 3 (one real, one silly, one wacky)
-- **Custom claymation art** for every plant, critter, effect, and UI element
+- **Custom flat-vector art** for every plant, critter, effect, and UI element
 - **Persistent garden** saved to `localStorage`, with offline growth between sessions
 - **Sticker book** tracking all 78 discoveries
 - **Living world** — day/night cycle, drifting clouds, butterflies and fireflies,

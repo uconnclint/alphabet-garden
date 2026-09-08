@@ -90,6 +90,50 @@
 <!-- The flat-art alias layer, published for game.js's DOM previews. Must come before
      main3d.js and must stay a module: it is the only bridge between the ES-module override
      map and the classic-script UI. See js/data/flat-art-bridge.js. -->
+
+<!-- ══════════ BOOT GUARD ══════════
+     A CLASSIC script on purpose: it must run in exactly the situations where the module
+     world layer cannot. Two real failures it covers, both of which used to show a silent
+     green screen with a working HUD over it:
+       1. Opened from the filesystem (file://). Browsers refuse ES modules over file:// for
+          security, so js/main3d.js never executes and nothing ever draws.
+       2. No WebGL — a blocklisted GPU, a locked-down Chromebook, or a lost context.
+     Either way the child must be told something friendly instead of staring at a void. -->
+<script>
+(function () {
+  var FILE = location.protocol === 'file:';
+  function show() {
+    if (document.getElementById('boot-help')) return;
+    var d = document.createElement('div');
+    d.id = 'boot-help';
+    d.innerHTML =
+      '<div class="bh-card">' +
+        '<div class="bh-emoji">\uD83C\uDF31</div>' +
+        '<h2>The garden needs a moment\u2019s help</h2>' +
+        '<p class="bh-kid">Ask a grown-up to start the garden for you!</p>' +
+        '<div class="bh-grown">' +
+          (FILE
+            ? '<p><b>Grown-ups:</b> this game has to be <i>served</i>, not opened straight from the ' +
+              'folder \u2014 browsers block part of it when the address starts with ' +
+              '<code>file://</code>.</p>' +
+              '<p>Open Terminal in this folder and run:</p>' +
+              '<pre>python3 -m http.server 8000</pre>' +
+              '<p>then visit <code>http://localhost:8000</code>. ' +
+              'Or just double-click <code>start-garden.command</code>.</p>'
+            : '<p><b>Grown-ups:</b> this device could not start the graphics layer (WebGL). ' +
+              'Try closing other tabs and reloading. On a school device, hardware graphics may be ' +
+              'switched off in policy.</p>') +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(d);
+  }
+  // Give the real boot a fair chance first; main3d publishes window.__garden3d when it succeeds.
+  setTimeout(function () { if (!window.__garden3d) show(); }, FILE ? 400 : 4000);
+  window.addEventListener('error', function (e) {
+    if (e && e.message && /WebGL|context/i.test(e.message)) show();
+  });
+})();
+</script>
 <script type="module" src="js/data/flat-art-bridge.js"></script>
 <script type="module" src="js/main3d.js"></script>
 </body>
